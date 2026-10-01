@@ -1,0 +1,12 @@
+{
+  "name": "@sim/code-runtime",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "@sim/domain": "workspace:*",
+    "@sim/semantic-events": "workspace:*",
+    "acorn": "^8.15.0"
+  }
+}

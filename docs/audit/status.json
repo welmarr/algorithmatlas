@@ -1,0 +1,369 @@
+{
+  "repositoryPath": "D:\\Simulator",
+  "auditCommit": null,
+  "branch": "master",
+  "generatedAt": "2026-10-01T22:28:18Z",
+  "workingTreeDirty": true,
+  "untrackedFilesBeforeAuditReports": 71,
+  "remoteConfigured": false,
+  "tests": {
+    "vitest": { "files": 4, "passed": 25, "failed": 0, "skipped": 0 },
+    "playwright": { "files": 1, "passed": 6, "failed": 0, "skipped": 0 },
+    "productionDependencyAdvisories": { "high": 3, "moderate": 2 }
+  },
+  "components": [
+    {
+      "id": "domain-model",
+      "status": "PARTIAL",
+      "evidence": [
+        "packages/domain/src/index.ts",
+        "docs/audit/CURRENT_IMPLEMENTATION.md"
+      ],
+      "limitations": ["Several interfaces have no runtime objects"]
+    },
+    {
+      "id": "event-protocol",
+      "status": "PARTIAL",
+      "evidence": [
+        "packages/semantic-events/src/index.ts",
+        "tests/simulation.test.ts"
+      ],
+      "limitations": ["No event-specific payload schemas"]
+    },
+    {
+      "id": "event-vocabulary",
+      "status": "PARTIAL",
+      "evidence": [
+        "packages/semantic-events/src/index.ts",
+        "docs/audit/ARCHITECTURE_REALITY.md"
+      ],
+      "limitations": ["45 declared; 22 emitted on default runs"]
+    },
+    {
+      "id": "simulation-core",
+      "status": "COMPLETE",
+      "evidence": [
+        "packages/simulation-core/src/index.ts",
+        "tests/simulation.test.ts"
+      ],
+      "limitations": ["In-memory bounded scope"]
+    },
+    {
+      "id": "timeline",
+      "status": "COMPLETE",
+      "evidence": [
+        "packages/simulation-core/src/index.ts",
+        "tests/simulation.test.ts"
+      ],
+      "limitations": []
+    },
+    {
+      "id": "play-pause",
+      "status": "COMPLETE",
+      "evidence": [
+        "packages/simulation-core/src/index.ts",
+        "docs/audit/TEST_REPORT.md"
+      ],
+      "limitations": ["No full timed browser test"]
+    },
+    {
+      "id": "next-previous",
+      "status": "COMPLETE",
+      "evidence": [
+        "packages/simulation-core/src/index.ts",
+        "tests/e2e/player.spec.ts"
+      ],
+      "limitations": []
+    },
+    {
+      "id": "seek",
+      "status": "COMPLETE",
+      "evidence": [
+        "packages/simulation-core/src/index.ts",
+        "tests/simulation.test.ts"
+      ],
+      "limitations": []
+    },
+    {
+      "id": "replay",
+      "status": "COMPLETE",
+      "evidence": [
+        "packages/simulation-core/src/index.ts",
+        "docs/audit/TEST_REPORT.md"
+      ],
+      "limitations": ["Output string is outside canonical replay state"]
+    },
+    {
+      "id": "snapshots",
+      "status": "COMPLETE",
+      "evidence": [
+        "packages/simulation-core/src/index.ts",
+        "tests/simulation.test.ts"
+      ],
+      "limitations": ["No persistence or very-large-entity benchmark"]
+    },
+    {
+      "id": "array-renderer",
+      "status": "COMPLETE",
+      "evidence": [
+        "apps/web/src/components/Visuals.tsx",
+        "tests/e2e/player.spec.ts"
+      ],
+      "limitations": ["One-dimensional arrays"]
+    },
+    {
+      "id": "grid-renderer",
+      "status": "PARTIAL",
+      "evidence": [
+        "apps/web/src/components/Visuals.tsx",
+        "docs/audit/TEST_REPORT.md"
+      ],
+      "limitations": ["No structured grid editor or screen-reader audit"]
+    },
+    {
+      "id": "graph-renderer",
+      "status": "PARTIAL",
+      "evidence": [
+        "apps/web/src/components/Visuals.tsx",
+        "packages/problems/src/index.ts"
+      ],
+      "limitations": ["Undirected unweighted graph only; no parent arrows"]
+    },
+    {
+      "id": "tree-renderer",
+      "status": "PARTIAL",
+      "evidence": [
+        "apps/web/src/components/Visuals.tsx",
+        "docs/audit/KNOWN_ISSUES.md"
+      ],
+      "limitations": ["Fixed layout; mobile overflow"]
+    },
+    {
+      "id": "dp-renderer",
+      "status": "PARTIAL",
+      "evidence": [
+        "apps/web/src/components/Visuals.tsx",
+        "docs/audit/KNOWN_ISSUES.md"
+      ],
+      "limitations": ["One-dimensional DP; mobile overflow"]
+    },
+    {
+      "id": "queue-renderer",
+      "status": "NOT STARTED",
+      "evidence": [
+        "apps/web/src/components/Visuals.tsx",
+        "packages/simulation-core/src/index.ts"
+      ],
+      "limitations": ["Collection text only"]
+    },
+    {
+      "id": "stack-renderer",
+      "status": "NOT STARTED",
+      "evidence": ["apps/web/src/components/Visuals.tsx"],
+      "limitations": ["No producer or component"]
+    },
+    {
+      "id": "heap-renderer",
+      "status": "NOT STARTED",
+      "evidence": ["apps/web/src/components/Visuals.tsx"],
+      "limitations": ["No producer or component"]
+    },
+    {
+      "id": "variable-panel",
+      "status": "COMPLETE",
+      "evidence": ["apps/web/src/components/ProblemWorkspace.tsx"],
+      "limitations": ["Graph parent metadata is not shown"]
+    },
+    {
+      "id": "code-highlighting",
+      "status": "PARTIAL",
+      "evidence": [
+        "apps/web/src/components/ProblemWorkspace.tsx",
+        "packages/code-runtime/src/index.ts"
+      ],
+      "limitations": ["Four problems use manual illustrative line numbers"]
+    },
+    {
+      "id": "problem-sdk",
+      "status": "PARTIAL",
+      "evidence": ["packages/problem-sdk/src/index.ts"],
+      "limitations": ["No external pack loader or version migration"]
+    },
+    {
+      "id": "custom-inputs",
+      "status": "COMPLETE",
+      "evidence": [
+        "packages/problems/src/index.ts",
+        "docs/audit/TEST_REPORT.md"
+      ],
+      "limitations": ["JSON-only; no persistence"]
+    },
+    {
+      "id": "algorithm-lab",
+      "status": "PARTIAL",
+      "evidence": ["apps/web/src/app/lab/page.tsx"],
+      "limitations": ["Link hub only"]
+    },
+    {
+      "id": "comparison",
+      "status": "NOT STARTED",
+      "evidence": ["docs/ROADMAP.md"],
+      "limitations": ["No route or simultaneous-run model"]
+    },
+    {
+      "id": "user-code-execution",
+      "status": "PARTIAL",
+      "evidence": [
+        "packages/code-runtime/src/index.ts",
+        "tests/code-runtime.test.ts"
+      ],
+      "limitations": ["Restricted JS on Increasing Array only"]
+    },
+    {
+      "id": "tree-sitter",
+      "status": "PLANNED",
+      "evidence": ["docs/adr/ADR-007-tree-sitter.md"],
+      "limitations": ["Acorn used instead for current subset"]
+    },
+    {
+      "id": "raw-trace",
+      "status": "PARTIAL",
+      "evidence": [
+        "packages/code-runtime/src/index.ts",
+        "packages/domain/src/index.ts"
+      ],
+      "limitations": ["Only one problem produces raw records"]
+    },
+    {
+      "id": "semantic-engine",
+      "status": "PARTIAL",
+      "evidence": [
+        "packages/code-runtime/src/index.ts",
+        "packages/problems/src/index.ts"
+      ],
+      "limitations": ["No general semantic interpreter"]
+    },
+    {
+      "id": "teaching-steps",
+      "status": "NOT STARTED",
+      "evidence": ["apps/web/src/components/ProblemWorkspace.tsx"],
+      "limitations": ["One algorithm event equals one UI step"]
+    },
+    {
+      "id": "sandbox",
+      "status": "NOT STARTED",
+      "evidence": ["SECURITY.md", "docs/adr/ADR-010-sandbox.md"],
+      "limitations": [
+        "Restricted browser interpreter is not isolated arbitrary-code sandbox"
+      ]
+    },
+    {
+      "id": "webassembly",
+      "status": "PLANNED",
+      "evidence": ["docs/adr/ADR-012-wasm.md"],
+      "limitations": ["No WASM module"]
+    },
+    {
+      "id": "ai-connectors",
+      "status": "PARTIAL",
+      "evidence": ["packages/ai-sdk/src/index.ts", "tests/ai.test.ts"],
+      "limitations": ["No live provider integration verified"]
+    },
+    {
+      "id": "ai-response-standardization",
+      "status": "PARTIAL",
+      "evidence": ["packages/ai-sdk/src/index.ts"],
+      "limitations": ["Explanation only"]
+    },
+    {
+      "id": "local-model",
+      "status": "PARTIAL",
+      "evidence": ["packages/ai-sdk/src/index.ts", "tests/ai.test.ts"],
+      "limitations": ["No live local model request"]
+    },
+    {
+      "id": "external-provider",
+      "status": "PARTIAL",
+      "evidence": ["packages/ai-sdk/src/index.ts", "tests/ai.test.ts"],
+      "limitations": ["OpenAI-compatible only; mocked fetch"]
+    },
+    {
+      "id": "postgresql",
+      "status": "NOT STARTED",
+      "evidence": ["compose.yaml", "docs/ROADMAP.md"],
+      "limitations": ["No database or migration"]
+    },
+    {
+      "id": "authentication",
+      "status": "NOT STARTED",
+      "evidence": [
+        "apps/web/src/app/layout.tsx",
+        "apps/web/src/app/api/health/route.ts"
+      ],
+      "limitations": ["No user/session/role"]
+    },
+    {
+      "id": "problem-library",
+      "status": "PARTIAL",
+      "evidence": [
+        "packages/problems/src/index.ts",
+        "apps/web/src/app/page.tsx"
+      ],
+      "limitations": ["Five static entries"]
+    },
+    {
+      "id": "learning-pages",
+      "status": "PARTIAL",
+      "evidence": ["apps/web/src/components/ProblemWorkspace.tsx"],
+      "limitations": ["Learn tab only; no progression"]
+    },
+    {
+      "id": "simulator-page",
+      "status": "COMPLETE",
+      "evidence": [
+        "apps/web/src/components/ProblemWorkspace.tsx",
+        "tests/e2e/player.spec.ts"
+      ],
+      "limitations": ["Bounded five-problem scope"]
+    },
+    {
+      "id": "dashboard",
+      "status": "NOT STARTED",
+      "evidence": ["apps/web/src/app/page.tsx"],
+      "limitations": ["No dashboard route or saved data"]
+    },
+    {
+      "id": "ci-cd",
+      "status": "PARTIAL",
+      "evidence": [".github/workflows/ci.yml"],
+      "limitations": ["No commit/remote CI run; no deployment pipeline"]
+    },
+    {
+      "id": "security",
+      "status": "PARTIAL",
+      "evidence": ["SECURITY.md", "docs/audit/KNOWN_ISSUES.md"],
+      "limitations": ["Five dependency advisories; no full sandbox"]
+    },
+    {
+      "id": "performance-testing",
+      "status": "PARTIAL",
+      "evidence": ["docs/audit/TEST_REPORT.md"],
+      "limitations": ["One-off synthetic probe only"]
+    },
+    {
+      "id": "accessibility",
+      "status": "PARTIAL",
+      "evidence": [
+        "apps/web/src/app/animation.css",
+        "tests/e2e/player.spec.ts"
+      ],
+      "limitations": ["No formal accessibility audit; mobile overflow"]
+    },
+    {
+      "id": "documentation",
+      "status": "PARTIAL",
+      "evidence": ["README.md", "ARCHITECTURE.md", "docs/adr"],
+      "limitations": ["Some claims exceed observed behavior"]
+    }
+  ]
+}

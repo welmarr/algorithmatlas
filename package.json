@@ -1,0 +1,31 @@
+{
+  "name": "algorithm-simulator",
+  "private": true,
+  "packageManager": "pnpm@11.25.0",
+  "scripts": {
+    "dev": "pnpm --filter @sim/web dev",
+    "build": "pnpm --filter @sim/web build",
+    "typecheck": "tsc --noEmit && pnpm --filter @sim/web typecheck",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "lint": "eslint .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@sim/code-runtime": "workspace:*",
+    "@next/eslint-plugin-next": "15.5.26",
+    "@playwright/test": "1.52.0",
+    "@sim/ai-sdk": "workspace:*",
+    "@sim/domain": "workspace:*",
+    "@sim/problems": "workspace:*",
+    "@sim/semantic-events": "workspace:*",
+    "@sim/simulation-core": "workspace:*",
+    "@types/node": "^22.15.0",
+    "@typescript-eslint/eslint-plugin": "^8.31.0",
+    "@typescript-eslint/parser": "^8.31.0",
+    "eslint": "^9.25.1",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.2"
+  }
+}

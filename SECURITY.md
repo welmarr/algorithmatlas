@@ -1,0 +1,9 @@
+# Security
+
+There is no arbitrary code execution endpoint. Increasing Array has a browser-side interpreter for a limited JavaScript subset. It parses code with Acorn and interprets only numeric/boolean expressions, variable assignments, `if`, `for`, `return`, `values[i]`, and `values.length`. It never calls `eval`, `new Function`, user functions, browser APIs, or host functions. Imports, calls, object creation, and other unsupported syntax fail. Source is capped at 4,096 characters, execution at 20,000 operations, trace at 5,000 events, and input at 64 values. This is an educational interpreter, not a secure arbitrary JavaScript sandbox. It runs synchronously in the browser; a future worker would improve responsiveness for worst-case inputs.
+
+Other problems still use curated TypeScript trace generators with bounded custom inputs. Input validation limits array, grid, graph, tree, and DP sizes. Event validation checks schema versions, known types, entity IDs, finite primitive payload values, and reserved keys. The AI parser accepts only `schemaVersion`, matching `eventId`, and bounded explanation text; extra model fields cannot enter simulation state.
+
+Model credentials stay in component memory and are sent directly from the user's browser to the configured provider. The app does not store or log them. Browser CORS rules and the provider's privacy policy apply. External endpoints require HTTPS; local hosted models can use loopback HTTP. Users should enter keys only for trusted providers.
+
+Before full JavaScript, Python, C++, or server-side submissions are enabled, implement and review a Rust/WASI or equivalent isolated runtime with no host filesystem or network, CPU/memory/time/output/process limits, safe cleanup, rate limits, abuse controls, and explicit security tests. Parsing alone does not provide isolation. No arbitrary-code endpoint should be deployed before this work.

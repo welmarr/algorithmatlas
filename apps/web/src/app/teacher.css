@@ -1,0 +1,34 @@
+.teacher-panel select,
+.teacher-panel input {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 9px;
+  margin: 8px 0 13px;
+  background: #fff;
+  color: var(--ink);
+  font:
+    12px "DM Mono",
+    monospace;
+}
+.teacher-panel label {
+  display: block;
+  color: var(--muted);
+  font:
+    11px "DM Mono",
+    monospace;
+}
+.teacher-panel button {
+  border: 1px solid var(--green);
+  background: #eef6ed;
+  color: var(--green);
+  font-weight: 700;
+  border-radius: 7px;
+  padding: 10px 13px;
+}
+.teacher-panel p {
+  line-height: 1.55;
+  font-size: 13px;
+  color: #52645b;
+}

@@ -1,0 +1,13 @@
+{
+  "name": "@sim/problems",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "@sim/code-runtime": "workspace:*",
+    "@sim/domain": "workspace:*",
+    "@sim/problem-sdk": "workspace:*",
+    "@sim/semantic-events": "workspace:*"
+  }
+}
