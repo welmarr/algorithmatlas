@@ -1,10 +1,15 @@
-import type { ProblemMetadata, SimulationState } from "@sim/domain";
+import type {
+  ProblemMetadata,
+  RawTraceEvent,
+  SimulationState,
+  TeachingStep,
+} from "@sim/domain";
 import {
   createEvents,
   type AlgorithmEvent,
   type EventDraft,
 } from "@sim/semantic-events";
-import { SimulationTimeline } from "@sim/simulation-core";
+import { createTeachingSteps, SimulationTimeline } from "@sim/simulation-core";
 
 export class InputError extends Error {
   readonly code = "INVALID_INPUT";
@@ -16,6 +21,7 @@ export class InputError extends Error {
 
 export interface TraceResult {
   initialState: SimulationState;
+  rawTrace?: RawTraceEvent[];
   events: EventDraft[];
   output: string;
 }
@@ -35,7 +41,9 @@ export function defineProblem<T>(
 
 export interface ProblemRun {
   timeline: SimulationTimeline;
+  rawTrace: RawTraceEvent[];
   events: AlgorithmEvent[];
+  teachingSteps: TeachingStep[];
   output: string;
   input: unknown;
 }
@@ -46,11 +54,18 @@ export function runProblem<T>(
   const input = problem.parseInput(raw);
   const trace = problem.trace(input);
   const events = createEvents(trace.events, `${problem.metadata.id}:v0.1`);
+  const timeline = new SimulationTimeline(trace.initialState, events, {
+    metadata: { problemId: problem.metadata.id, algorithmVersion: "0.1" },
+  });
   return {
-    timeline: new SimulationTimeline(trace.initialState, events, {
-      metadata: { problemId: problem.metadata.id, algorithmVersion: "0.1" },
-    }),
+    timeline,
+    rawTrace: trace.rawTrace ?? [],
     events,
+    teachingSteps: createTeachingSteps(
+      timeline,
+      problem.metadata.renderer,
+      trace.output,
+    ),
     output: trace.output,
     input,
   };

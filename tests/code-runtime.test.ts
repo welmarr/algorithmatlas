@@ -59,4 +59,53 @@ return total;`;
       "20,000 operations",
     );
   });
+
+  it("honors lexical block and loop scope", () => {
+    const block = runArrayScript([4], "let x = 1; { let x = 2; } return x;");
+    expect(block.output).toBe("1");
+    expect(
+      block.rawTrace
+        .filter((item) => item.data.variable === "x")
+        .map((item) => item.data.value),
+    ).toEqual([1, 2, 1]);
+    expect(() =>
+      runArrayScript(
+        [4],
+        "for (let cursor = 0; cursor < 1; cursor++) {} return cursor;",
+      ),
+    ).toThrow("Unknown or uninitialized variable");
+    expect(() =>
+      runArrayScript([4], "let x = 1; { let x = x + 1; } return x;"),
+    ).toThrow("Unknown or uninitialized variable");
+  });
+
+  it("marks a variable as a pointer only when used to index values", () => {
+    const plain = runArrayScript([4], "let i = 2; return i;");
+    expect(plain.events.some((event) => event.type === "MOVE_POINTER")).toBe(
+      false,
+    );
+    const indexed = runArrayScript(
+      [4],
+      "let sum = 0; for (let cursor = 0; cursor < values.length; cursor++) { sum = sum + values[cursor]; } return sum;",
+    );
+    expect(
+      indexed.events.some(
+        (event) =>
+          event.type === "MOVE_POINTER" && event.payload.variable === "cursor",
+      ),
+    ).toBe(true);
+    const shadowed = runArrayScript(
+      [4],
+      "let i = 7; for (let i = 0; i < values.length; i++) { values[i] = values[i] + 1; } return i;",
+    );
+    expect(shadowed.output).toBe("7");
+    expect(
+      shadowed.events.some(
+        (event) =>
+          event.type === "UPDATE_VALUE" &&
+          event.payload.variable === "i" &&
+          event.payload.value === 7,
+      ),
+    ).toBe(true);
+  });
 });

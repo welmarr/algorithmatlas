@@ -13,6 +13,37 @@ const cueLabels: Record<StepFocusKind, string> = {
   result: "RESULT",
 };
 
+export const rendererLegends: Record<
+  RendererKind,
+  { label: string; cue: string }[]
+> = {
+  array: [
+    { label: "Current value", cue: "active" },
+    { label: "Value changed", cue: "update" },
+  ],
+  grid: [
+    { label: "Current cell", cue: "active" },
+    { label: "Explored", cue: "discovered" },
+    { label: "Final path", cue: "path" },
+    { label: "Wall", cue: "blocked" },
+  ],
+  graph: [
+    { label: "Current node", cue: "active" },
+    { label: "Discovered", cue: "discovered" },
+    { label: "Visited", cue: "visited" },
+    { label: "Shortest path", cue: "path" },
+  ],
+  tree: [
+    { label: "Current node", cue: "active" },
+    { label: "Visited", cue: "visited" },
+    { label: "Diameter path", cue: "path" },
+  ],
+  dp: [
+    { label: "Current cell", cue: "active" },
+    { label: "Updated value", cue: "update" },
+  ],
+};
+
 function isCurrent(entity: VisualEntity, state: SimulationState): boolean {
   return state.activeEntities.includes(entity.id);
 }

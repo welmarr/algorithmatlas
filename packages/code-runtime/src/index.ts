@@ -8,7 +8,7 @@ type Node = {
   loc?: { start: { line: number; column: number } };
   [key: string]: unknown;
 };
-type Binding = { value: Value; mutable: boolean };
+type Binding = { value?: Value; mutable: boolean; pointer: boolean };
 
 export class CodeRuntimeError extends Error {
   constructor(
@@ -105,7 +105,50 @@ export function runArrayScript(
   }
 
   const values = [...inputValues];
-  const bindings = new Map<string, Binding>();
+  const scopes: Map<string, Binding>[] = [new Map()];
+  const currentScope = () => scopes[scopes.length - 1];
+  const resolve = (variable: string): Binding | undefined => {
+    for (let index = scopes.length - 1; index >= 0; index--) {
+      const binding = scopes[index].get(variable);
+      if (binding) return binding;
+    }
+    return undefined;
+  };
+  const read = (variable: string): Value => {
+    const binding = resolve(variable);
+    if (!binding || binding.value === undefined)
+      throw new CodeRuntimeError(
+        "RUNTIME",
+        `Unknown or uninitialized variable: ${variable}`,
+      );
+    return binding.value;
+  };
+  const usesAsArrayIndex = (syntax: Node, variable: string): boolean => {
+    if (
+      syntax.type === "MemberExpression" &&
+      (syntax.object as Node)?.type === "Identifier" &&
+      (syntax.object as Node).name === "values" &&
+      syntax.computed === true &&
+      (syntax.property as Node)?.type === "Identifier" &&
+      (syntax.property as Node).name === variable
+    )
+      return true;
+    return Object.values(syntax).some((child) => {
+      if (Array.isArray(child))
+        return child.some(
+          (item) =>
+            item &&
+            typeof item === "object" &&
+            usesAsArrayIndex(item as Node, variable),
+        );
+      return (
+        child &&
+        typeof child === "object" &&
+        "type" in child &&
+        usesAsArrayIndex(child as Node, variable)
+      );
+    });
+  };
   const rawTrace: RawTraceEvent[] = [];
   let operations = 0;
   let returned: Value | undefined;
@@ -134,6 +177,51 @@ export function runArrayScript(
       },
     });
   };
+  const withScope = (body: () => void, at: Node) => {
+    scopes.push(new Map());
+    try {
+      body();
+    } finally {
+      const leaving = scopes.pop()!;
+      for (const variable of leaving.keys()) {
+        const restored = resolve(variable);
+        if (restored?.value !== undefined)
+          record(
+            "variable",
+            { variable, value: restored.value, pointer: restored.pointer },
+            at,
+          );
+      }
+    }
+  };
+  const declare = (statement: Node, pointerBody?: Node) => {
+    if (statement.kind !== "let" && statement.kind !== "const")
+      throw new CodeRuntimeError(
+        "UNSUPPORTED",
+        "Only let and const declarations are supported",
+      );
+    for (const declaration of children(statement.declarations)) {
+      const variable = name(declaration.id);
+      if (currentScope().has(variable))
+        throw new CodeRuntimeError(
+          "SYNTAX",
+          `Duplicate declaration: ${variable}`,
+        );
+      currentScope().set(variable, {
+        value: undefined,
+        mutable: statement.kind === "let",
+        pointer: pointerBody ? usesAsArrayIndex(pointerBody, variable) : false,
+      });
+    }
+  };
+  const executeBody = (statements: Node[]) => {
+    for (const statement of statements)
+      if (statement.type === "VariableDeclaration") declare(statement);
+    for (const statement of statements) {
+      execute(statement);
+      if (returned !== undefined) break;
+    }
+  };
   const indexOf = (member: Node): number => {
     if (
       member.type !== "MemberExpression" ||
@@ -146,7 +234,12 @@ export function runArrayScript(
         "UNSUPPORTED",
         "Only values[i] and values.length are supported",
       );
-    const index = number(evaluate(node(member.property)));
+    const property = node(member.property);
+    if (property.type === "Identifier") {
+      const binding = resolve(name(property));
+      if (binding) binding.pointer = true;
+    }
+    const index = number(evaluate(property));
     if (!Number.isSafeInteger(index) || index < 0 || index >= values.length)
       throw new CodeRuntimeError(
         "RUNTIME",
@@ -163,13 +256,7 @@ export function runArrayScript(
         if (typeof expression.value === "boolean") return expression.value;
         break;
       case "Identifier": {
-        const binding = bindings.get(name(expression));
-        if (!binding)
-          throw new CodeRuntimeError(
-            "RUNTIME",
-            `Unknown variable: ${expression.name}`,
-          );
-        return binding.value;
+        return read(name(expression));
       }
       case "MemberExpression": {
         if (
@@ -245,8 +332,8 @@ export function runArrayScript(
           record("write", { index, before: previous, value: next }, expression);
         } else {
           const variable = name(left);
-          const binding = bindings.get(variable);
-          if (!binding)
+          const binding = resolve(variable);
+          if (!binding || binding.value === undefined)
             throw new CodeRuntimeError(
               "RUNTIME",
               `Unknown variable: ${variable}`,
@@ -257,14 +344,18 @@ export function runArrayScript(
               `Cannot assign to const ${variable}`,
             );
           binding.value = value;
-          record("variable", { variable, value }, expression);
+          record(
+            "variable",
+            { variable, value, pointer: binding.pointer },
+            expression,
+          );
         }
         return value;
       }
       case "UpdateExpression": {
         const variable = name(expression.argument);
-        const binding = bindings.get(variable);
-        if (!binding || !binding.mutable)
+        const binding = resolve(variable);
+        if (!binding || binding.value === undefined || !binding.mutable)
           throw new CodeRuntimeError("RUNTIME", `Cannot update ${variable}`);
         const old = number(binding.value);
         const value = finite(
@@ -276,7 +367,11 @@ export function runArrayScript(
                 : NaN),
         );
         binding.value = value;
-        record("variable", { variable, value }, expression);
+        record(
+          "variable",
+          { variable, value, pointer: binding.pointer },
+          expression,
+        );
         return expression.prefix ? value : old;
       }
     }
@@ -290,11 +385,10 @@ export function runArrayScript(
     if (returned !== undefined) return;
     switch (statement.type) {
       case "Program":
+        executeBody(children(statement.body));
+        return;
       case "BlockStatement":
-        for (const child of children(statement.body)) {
-          execute(child);
-          if (returned !== undefined) break;
-        }
+        withScope(() => executeBody(children(statement.body)), statement);
         return;
       case "VariableDeclaration":
         if (statement.kind !== "let" && statement.kind !== "const") break;
@@ -306,8 +400,18 @@ export function runArrayScript(
               "Initialize variables when declaring them",
             );
           const value = evaluate(node(declaration.init));
-          bindings.set(variable, { value, mutable: statement.kind === "let" });
-          record("variable", { variable, value }, declaration);
+          const binding = currentScope().get(variable);
+          if (!binding)
+            throw new CodeRuntimeError(
+              "RUNTIME",
+              `Undeclared variable: ${variable}`,
+            );
+          binding.value = value;
+          record(
+            "variable",
+            { variable, value, pointer: binding.pointer },
+            declaration,
+          );
         }
         return;
       case "ExpressionStatement":
@@ -321,18 +425,23 @@ export function runArrayScript(
         return;
       }
       case "ForStatement":
-        if (statement.init) {
-          const init = node(statement.init);
-          if (init.type === "VariableDeclaration") execute(init);
-          else evaluate(init);
-        }
-        for (;;) {
-          tick();
-          if (statement.test && !Boolean(evaluate(node(statement.test)))) break;
-          execute(node(statement.body));
-          if (returned !== undefined) break;
-          if (statement.update) evaluate(node(statement.update));
-        }
+        withScope(() => {
+          if (statement.init) {
+            const init = node(statement.init);
+            if (init.type === "VariableDeclaration") {
+              declare(init, statement);
+              execute(init);
+            } else evaluate(init);
+          }
+          for (;;) {
+            tick();
+            if (statement.test && !Boolean(evaluate(node(statement.test))))
+              break;
+            execute(node(statement.body));
+            if (returned !== undefined) break;
+            if (statement.update) evaluate(node(statement.update));
+          }
+        }, statement);
         return;
       case "ReturnStatement":
         if (!statement.argument)
@@ -385,7 +494,7 @@ export function runArrayScript(
           sourceRef: raw.sourceRef,
         };
       case "variable":
-        if (variable === "i") {
+        if (raw.data.pointer === true) {
           const pointer = Number(raw.data.value);
           return {
             type: "MOVE_POINTER",

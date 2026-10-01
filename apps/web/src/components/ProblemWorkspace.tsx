@@ -3,16 +3,21 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getProblem } from "@sim/problems";
 import type { ProblemRun } from "@sim/problem-sdk";
+import { seekTeachingStep, teachingStepAtPosition } from "@sim/simulation-core";
 import {
   localTeacher,
   localModelTeacher,
   openAICompatibleTeacher,
 } from "@sim/ai-sdk";
-import { Visuals } from "./Visuals";
+import { rendererLegends, Visuals } from "./Visuals";
 
 export function ProblemWorkspace({ problemId }: { problemId: string }) {
   const problem = getProblem(problemId)!;
   const [mode, setMode] = useState<"learn" | "simulate">("simulate");
+  const [playbackMode, setPlaybackMode] = useState<"learning" | "technical">(
+    "learning",
+  );
+  const [learningPlaying, setLearningPlaying] = useState(false);
   const [rawInput, setRawInput] = useState(() =>
     JSON.stringify(problem.defaultInput, null, 2),
   );
@@ -45,9 +50,53 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
       run.timeline.dispose();
     };
   }, [run]);
-  const timeline = run.timeline,
-    state = timeline.state,
-    event = timeline.currentEvent;
+  const timeline = run.timeline;
+  const learningPosition = teachingStepAtPosition(
+    run.teachingSteps,
+    timeline.position,
+  );
+  const teachingStep = run.teachingSteps[learningPosition];
+  const state = timeline.state;
+  const event =
+    playbackMode === "learning"
+      ? run.events.find(
+          (item) => item.eventId === teachingStep.primaryEventIds[0],
+        )
+      : timeline.currentEvent;
+  if (playbackMode === "learning") {
+    state.annotation = teachingStep.summary;
+    const cue = teachingStep.cue;
+    state.activeEntities = cue?.entityId ? [cue.entityId] : [];
+    state.focus = cue
+      ? {
+          eventId: teachingStep.primaryEventIds[0] ?? teachingStep.id,
+          kind: cue.kind,
+          before: cue.before,
+          after: cue.after,
+        }
+      : null;
+  }
+  const playing =
+    playbackMode === "learning" ? learningPlaying : timeline.playing;
+  useEffect(() => {
+    if (!learningPlaying) return;
+    if (learningPosition >= run.teachingSteps.length - 1) {
+      setLearningPlaying(false);
+      return;
+    }
+    const timer = setInterval(() => {
+      const next =
+        teachingStepAtPosition(run.teachingSteps, timeline.position) + 1;
+      if (next >= run.teachingSteps.length) setLearningPlaying(false);
+      else seekTeachingStep(timeline, run.teachingSteps, next);
+    }, 1100 / timeline.speed);
+    return () => clearInterval(timer);
+  }, [learningPlaying, learningPosition, run, timeline, timeline.speed]);
+  const seekPosition = (position: number) => {
+    if (playbackMode === "learning")
+      seekTeachingStep(timeline, run.teachingSteps, position);
+    else timeline.seek(position);
+  };
   const focus = state.focus;
   const primaryEntity = state.activeEntities[0]
     ? state.entities[state.activeEntities[0]]
@@ -62,19 +111,21 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
           : (primaryEntity?.label ??
             (focus?.variable ? `Variable ${focus.variable}` : "Current step"));
   const focusDetail =
-    event?.type === "FUNCTION_RETURN"
-      ? `Returned ${run.output}`
-      : event?.type === "COMPARE"
-        ? `Condition: ${String(event.payload.taken)}`
-        : focus?.kind === "update" && focus.after !== undefined
-          ? focus.before !== undefined && focus.before !== focus.after
-            ? `${focusTarget}: ${String(focus.before)} → ${String(focus.after)}`
-            : `${focusTarget} = ${String(focus.after)}`
-          : event?.type === "READ_INDEX" && primaryEntity
-            ? `${focusTarget} = ${String(primaryEntity.value)}`
-            : focus
-              ? focusTarget
-              : "Press Play or Next to begin";
+    playbackMode === "learning"
+      ? teachingStep.summary
+      : event?.type === "FUNCTION_RETURN"
+        ? `Returned ${run.output}`
+        : event?.type === "COMPARE"
+          ? `Condition: ${String(event.payload.taken)}`
+          : focus?.kind === "update" && focus.after !== undefined
+            ? focus.before !== undefined && focus.before !== focus.after
+              ? `${focusTarget}: ${String(focus.before)} → ${String(focus.after)}`
+              : `${focusTarget} = ${String(focus.after)}`
+            : event?.type === "READ_INDEX" && primaryEntity
+              ? `${focusTarget} = ${String(primaryEntity.value)}`
+              : focus
+                ? focusTarget
+                : "Press Play or Next to begin";
   const lines = executedCode.split("\n");
   function regenerate(source = draftCode) {
     try {
@@ -83,6 +134,8 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
         ? problem.runCode(input, source)
         : problem.run(input);
       setRun(next);
+      setLearningPlaying(false);
+      setPlaybackMode("learning");
       setExecutedCode(source);
       setError("");
       setTeacherAnswer(null);
@@ -111,7 +164,7 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
             ? localModelTeacher({ endpoint, model, apiKey })
             : openAICompatibleTeacher({ endpoint, model, apiKey });
       const response = await teacher.explain(event);
-      if (timeline.currentEvent?.eventId === response.eventId)
+      if (event?.eventId === response.eventId)
         setTeacherAnswer({
           eventId: response.eventId,
           text: response.explanation,
@@ -162,7 +215,8 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
           className={mode === "simulate" ? "selected" : ""}
           onClick={() => setMode("simulate")}
         >
-          Simulation <span className="tab-count">{timeline.length}</span>
+          Simulation{" "}
+          <span className="tab-count">{run.teachingSteps.length} lessons</span>
         </button>
       </div>
       {mode === "learn" ? (
@@ -221,7 +275,9 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
                   <h2>{problem.metadata.renderer.toUpperCase()} STATE</h2>
                 </div>
                 <span className="step-pill">
-                  STEP {timeline.position} / {timeline.length}
+                  {playbackMode === "learning"
+                    ? `LEARNING STEP ${learningPosition} / ${run.teachingSteps.length - 1}`
+                    : `TECHNICAL EVENT ${timeline.position} / ${timeline.length}`}
                 </span>
               </div>
               <div
@@ -243,36 +299,74 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
               </div>
               <Visuals kind={problem.metadata.renderer} state={state} />
               <div className="visual-legend">
-                <span>
-                  <i className="legend-dot inspect" /> Read
-                </span>
-                <span>
-                  <i className="legend-dot update" /> Changed
-                </span>
-                <span>
-                  <i className="legend-dot explore" /> Explored
-                </span>
-                <span>
-                  <i className="legend-dot final" /> Final path
-                </span>
+                {rendererLegends[problem.metadata.renderer].map(
+                  ({ label, cue }) => (
+                    <span key={label}>
+                      <i className={`legend-dot ${cue}`} /> {label}
+                    </span>
+                  ),
+                )}
               </div>
             </section>
             <section
               className="panel controls-panel"
               aria-label="Playback controls"
             >
+              <div
+                className="playback-mode"
+                role="group"
+                aria-label="Playback mode"
+              >
+                <button
+                  aria-pressed={playbackMode === "learning"}
+                  onClick={() => {
+                    timeline.pause();
+                    setPlaybackMode("learning");
+                    seekTeachingStep(
+                      timeline,
+                      run.teachingSteps,
+                      learningPosition,
+                    );
+                  }}
+                >
+                  Learning steps
+                </button>
+                <button
+                  aria-pressed={playbackMode === "technical"}
+                  onClick={() => {
+                    setLearningPlaying(false);
+                    setPlaybackMode("technical");
+                  }}
+                >
+                  Technical events
+                </button>
+              </div>
               <div className="controls-row">
                 <button
                   className="control-icon"
-                  onClick={() => timeline.rewind()}
+                  onClick={() => {
+                    setLearningPlaying(false);
+                    timeline.rewind();
+                  }}
                   aria-label="Rewind to start"
                 >
                   ⟲
                 </button>
                 <button
                   className="control-icon"
-                  onClick={() => timeline.previous()}
-                  disabled={timeline.position === 0}
+                  onClick={() => {
+                    setLearningPlaying(false);
+                    seekPosition(
+                      playbackMode === "learning"
+                        ? learningPosition - 1
+                        : timeline.position - 1,
+                    );
+                  }}
+                  disabled={
+                    (playbackMode === "learning"
+                      ? learningPosition
+                      : timeline.position) === 0
+                  }
                   aria-label="Previous step"
                 >
                   ←
@@ -280,17 +374,36 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
                 <button
                   className="play-button"
                   onClick={() =>
-                    timeline.playing ? timeline.pause() : timeline.play()
+                    playbackMode === "learning"
+                      ? setLearningPlaying(!learningPlaying)
+                      : timeline.playing
+                        ? timeline.pause()
+                        : timeline.play()
                   }
-                  disabled={timeline.position === timeline.length}
-                  aria-label={timeline.playing ? "Pause" : "Play"}
+                  disabled={
+                    playbackMode === "learning"
+                      ? learningPosition === run.teachingSteps.length - 1
+                      : timeline.position === timeline.length
+                  }
+                  aria-label={playing ? "Pause" : "Play"}
                 >
-                  {timeline.playing ? "Ⅱ Pause" : "▶ Play"}
+                  {playing ? "Ⅱ Pause" : "▶ Play"}
                 </button>
                 <button
                   className="control-icon"
-                  onClick={() => timeline.next()}
-                  disabled={timeline.position === timeline.length}
+                  onClick={() => {
+                    setLearningPlaying(false);
+                    seekPosition(
+                      playbackMode === "learning"
+                        ? learningPosition + 1
+                        : timeline.position + 1,
+                    );
+                  }}
+                  disabled={
+                    playbackMode === "learning"
+                      ? learningPosition === run.teachingSteps.length - 1
+                      : timeline.position === timeline.length
+                  }
                   aria-label="Next step"
                 >
                   →
@@ -310,15 +423,32 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
                 className="seek"
                 type="range"
                 min="0"
-                max={timeline.length}
-                value={timeline.position}
-                onChange={(e) => timeline.seek(Number(e.target.value))}
-                aria-label="Simulation position"
+                max={
+                  playbackMode === "learning"
+                    ? run.teachingSteps.length - 1
+                    : timeline.length
+                }
+                value={
+                  playbackMode === "learning"
+                    ? learningPosition
+                    : timeline.position
+                }
+                onChange={(e) => {
+                  setLearningPlaying(false);
+                  seekPosition(Number(e.target.value));
+                }}
+                aria-label={
+                  playbackMode === "learning"
+                    ? "Learning position"
+                    : "Technical event position"
+                }
               />
               <div className="timeline-labels">
                 <span>START</span>
                 <span>
-                  {timeline.position} / {timeline.length} EVENTS
+                  {playbackMode === "learning"
+                    ? `${learningPosition} / ${run.teachingSteps.length - 1} LEARNING STEPS`
+                    : `${timeline.position} / ${timeline.length} TECHNICAL EVENTS`}
                 </span>
                 <span>END</span>
               </div>
@@ -327,11 +457,15 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
               <section className="panel explanation-panel" aria-live="polite">
                 <div className="eyebrow">WHAT'S HAPPENING</div>
                 <h2>
-                  {event ? event.type.replaceAll("_", " ") : "Ready to begin"}
+                  {playbackMode === "learning"
+                    ? teachingStep.title
+                    : event
+                      ? event.type.replaceAll("_", " ")
+                      : "Ready to begin"}
                 </h2>
                 <p>
                   {state.annotation ||
-                    "Press Play or Next to follow the algorithm one step at a time."}
+                    "Press Play or Next to follow the algorithm."}
                 </p>
                 {timeline.position === timeline.length && (
                   <div className="result">
@@ -532,23 +666,46 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
                 </p>
               )}
             </section>
-            <section className="panel event-panel">
-              <div className="eyebrow">EVENT LOG</div>
-              <h2>Trace</h2>
-              <ol>
-                {run.events.map((item, i) => (
-                  <li key={item.eventId}>
-                    <button
-                      className={i + 1 === timeline.position ? "current" : ""}
-                      onClick={() => timeline.seek(i + 1)}
-                    >
-                      <span>{String(i + 1).padStart(2, "0")}</span>
-                      {item.type.replaceAll("_", " ")}
-                    </button>
-                  </li>
-                ))}
-              </ol>
-            </section>
+            {playbackMode === "learning" ? (
+              <section className="panel event-panel teaching-panel">
+                <div className="eyebrow">LEARNING STEPS</div>
+                <h2>Meaningful changes</h2>
+                <ol>
+                  {run.teachingSteps.map((item, i) => (
+                    <li key={item.id}>
+                      <button
+                        className={i === learningPosition ? "current" : ""}
+                        onClick={() => {
+                          setLearningPlaying(false);
+                          seekTeachingStep(timeline, run.teachingSteps, i);
+                        }}
+                      >
+                        <span>{String(i).padStart(2, "0")}</span>
+                        {item.title}
+                      </button>
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            ) : (
+              <section className="panel event-panel">
+                <div className="eyebrow">TECHNICAL EVENT LOG</div>
+                <h2>Trace</h2>
+                <ol>
+                  {run.events.map((item, i) => (
+                    <li key={item.eventId}>
+                      <button
+                        className={i + 1 === timeline.position ? "current" : ""}
+                        onClick={() => timeline.seek(i + 1)}
+                      >
+                        <span>{String(i + 1).padStart(2, "0")}</span>
+                        {item.type.replaceAll("_", " ")}
+                      </button>
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            )}
           </aside>
         </div>
       )}

@@ -4,6 +4,8 @@ import {
   type SimulationSnapshot,
   type SimulationState,
   type StepFocusKind,
+  type RendererKind,
+  type TeachingStep,
   type VisualEntity,
 } from "@sim/domain";
 import {
@@ -397,4 +399,159 @@ export class SimulationTimeline {
         event.sourceRef?.file === file && event.sourceRef.line === line,
     );
   }
+}
+
+/** Build a small pedagogical sequence without discarding any technical event. */
+export function createTeachingSteps(
+  timeline: SimulationTimeline,
+  renderer: RendererKind,
+  output: string,
+): TeachingStep[] {
+  const events = timeline.events;
+  const positions: number[] = [];
+  if (renderer === "array") {
+    const pointers = events
+      .map((event, index) => ({ event, position: index + 1 }))
+      .filter(({ event }) => event.type === "MOVE_POINTER");
+    for (let index = 0; index < pointers.length; index++) {
+      const current = pointers[index];
+      if (!current.event.entities.some((id) => id.startsWith("array:")))
+        continue;
+      const next = pointers[index + 1]?.position ?? events.length;
+      if (next > 1) positions.push(Math.min(next - 1, events.length - 1));
+    }
+    if (!positions.length)
+      for (const event of events)
+        if (event.type === "WRITE_INDEX" && event.step < events.length)
+          positions.push(event.step);
+  } else {
+    const salient = new Set([
+      "VISIT_NODE",
+      "VISIT_CELL",
+      "VISIT_TREE_NODE",
+      "DP_UPDATE",
+      "DP_BASE_CASE",
+      "MARK",
+      "SET_DISTANCE",
+      "SET_CELL_DISTANCE",
+    ]);
+    for (const event of events)
+      if (salient.has(event.type) && event.step < events.length)
+        positions.push(event.step);
+  }
+  const endpoints = [...new Set(positions.filter((value) => value > 0))].sort(
+    (a, b) => a - b,
+  );
+  if (events.length) endpoints.push(events.length);
+  const saved = timeline.position;
+  const initial: TeachingStep = {
+    schemaVersion: "0.1",
+    id: `${timeline.metadata.problemId ?? "run"}:teaching:0`,
+    index: 0,
+    title: "Initial state",
+    summary: "Start with the supplied input and follow each meaningful change.",
+    eventRange: { start: 0, end: 0 },
+    primaryEventIds: [],
+    visualRefs: [],
+  };
+  const steps = [initial];
+  try {
+    let previousEnd = 0;
+    for (const end of endpoints) {
+      if (end <= previousEnd) continue;
+      const segment = events.slice(previousEnd, end);
+      const write = [...segment]
+        .reverse()
+        .find((event) => event.type === "WRITE_INDEX");
+      const primary =
+        write ??
+        [...segment].reverse().find((event) => event.entities.length) ??
+        segment.at(-1)!;
+      const beforeState = timeline.seek(previousEnd);
+      const afterState = timeline.seek(end);
+      const entityId = primary.entities[0];
+      const before = entityId
+        ? beforeState.entities[entityId]?.value
+        : undefined;
+      const after = entityId ? afterState.entities[entityId]?.value : undefined;
+      const isFinal = end === events.length;
+      let title = isFinal ? "Final result" : primary.explanation;
+      let summary = isFinal
+        ? `The algorithm returns ${output}.`
+        : primary.explanation;
+      if (renderer === "array" && write && !isFinal) {
+        const index = write.entities[0]?.split(":")[1] ?? "?";
+        const change =
+          typeof before === "number" && typeof after === "number"
+            ? after - before
+            : undefined;
+        title =
+          change !== undefined && change > 0
+            ? `Increase ${before} → ${after} (+${change})`
+            : `Update index ${index}: ${before} → ${after}`;
+        summary = `At index ${index}, change ${before} to ${after}${change !== undefined && change > 0 ? ` using ${change} increments` : ""}.`;
+      } else if (renderer === "array" && !isFinal) {
+        const pointer = segment.find((event) => event.type === "MOVE_POINTER");
+        const index = pointer?.entities[0]?.split(":")[1];
+        title = index ? `Keep index ${index}` : primary.explanation;
+        summary = index
+          ? `Index ${index} already satisfies the current requirement.`
+          : primary.explanation;
+      }
+      const codeRefs = segment.flatMap((event) =>
+        event.sourceRef ? [event.sourceRef] : [],
+      );
+      steps.push({
+        schemaVersion: "0.1",
+        id: `${timeline.metadata.problemId ?? "run"}:teaching:${steps.length}`,
+        index: steps.length,
+        title,
+        summary,
+        eventRange: { start: previousEnd + 1, end },
+        primaryEventIds: [primary.eventId],
+        visualRefs: [...new Set(segment.flatMap((event) => event.entities))],
+        codeRefs: codeRefs.length ? codeRefs : undefined,
+        cue: isFinal
+          ? { kind: "result" }
+          : {
+              kind: focusKind(primary.type),
+              entityId,
+              before,
+              after,
+            },
+      });
+      previousEnd = end;
+    }
+  } finally {
+    timeline.seek(saved);
+  }
+  return steps;
+}
+
+export function teachingStepAtPosition(
+  steps: readonly TeachingStep[],
+  eventPosition: number,
+): number {
+  if (!Number.isSafeInteger(eventPosition) || eventPosition < 0)
+    throw new SimulationError("INVALID_POSITION", "Invalid event position");
+  const index = steps.findIndex((step) => step.eventRange.end >= eventPosition);
+  if (index < 0)
+    throw new SimulationError(
+      "INVALID_POSITION",
+      "Event position is outside teaching steps",
+    );
+  return index;
+}
+
+export function seekTeachingStep(
+  timeline: SimulationTimeline,
+  steps: readonly TeachingStep[],
+  index: number,
+): SimulationState {
+  if (!Number.isSafeInteger(index) || index < 0 || index >= steps.length)
+    throw new SimulationError(
+      "INVALID_POSITION",
+      "Teaching step is outside run",
+    );
+  return timeline.seek(steps[index].eventRange.end);
 }

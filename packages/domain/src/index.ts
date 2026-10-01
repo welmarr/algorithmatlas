@@ -92,6 +92,25 @@ export interface RawTraceEvent {
   data: Record<string, Primitive>;
   sourceRef?: SourceRef;
 }
+/** A pedagogical frame over an inclusive, one-based semantic event range. */
+export interface TeachingStep {
+  schemaVersion: "0.1";
+  id: string;
+  index: number;
+  title: string;
+  summary: string;
+  eventRange: { start: number; end: number };
+  primaryEventIds: string[];
+  visualRefs: string[];
+  codeRefs?: SourceRef[];
+  conceptIds?: string[];
+  cue?: {
+    kind: StepFocusKind;
+    entityId?: string;
+    before?: Primitive;
+    after?: Primitive;
+  };
+}
 export interface Explanation {
   text: string;
   eventIds?: string[];

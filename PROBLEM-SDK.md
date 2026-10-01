@@ -1,6 +1,6 @@
 # Problem SDK v0.1
 
-`defineProblem<T>` accepts metadata, default input, displayed reference source, a `parseInput(raw): T` validator, and a `trace(input): {initialState, events, output}` generator. `runProblem` validates input, assigns deterministic event IDs, validates the protocol, and creates a timeline. It throws `InputError` for user input failures and protocol/simulation errors for invalid traces.
+`defineProblem<T>` accepts metadata, default input, displayed reference source, a `parseInput(raw): T` validator, and a `trace(input): {initialState, rawTrace?, events, output}` generator. `runProblem` validates input, assigns deterministic event IDs, validates the protocol, creates a timeline, and derives versioned `TeachingStep` groups. `ProblemRun` exposes `rawTrace`, `events`, `teachingSteps`, and `timeline` separately. It throws `InputError` for user input failures and protocol/simulation errors for invalid traces.
 
 Increasing Array uses `@sim/code-runtime`: the displayed JavaScript subset is parsed and interpreted for both the reference run and edited runs. Array reads, writes, variable changes, branches, and return values become raw trace records, then semantic events with source lines from the parsed code. `ProblemEntry.runCode(raw, source)` exposes this vertical slice to the editor. The other four displayed algorithms are illustrative references for their curated trace generators; they are labeled accordingly in the UI.
 

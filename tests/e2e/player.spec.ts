@@ -15,13 +15,17 @@ test("browse, learn, and replay an array problem", async ({ page }) => {
   ).toBeVisible();
   await page.getByRole("tab", { name: /Simulation/ }).click();
   await page.getByRole("button", { name: "Next step" }).click();
-  await expect(page.getByText("STEP 1 /", { exact: false })).toBeVisible();
+  await expect(
+    page.getByText("LEARNING STEP 1 /", { exact: false }),
+  ).toBeVisible();
   await expect(page.locator(".code-line.active")).toContainText(
-    "let required = values[0]",
+    "values[i] = required",
   );
   await page.getByRole("button", { name: "Previous step" }).click();
-  await expect(page.getByText("STEP 0 /", { exact: false })).toBeVisible();
-  const seek = page.getByRole("slider", { name: "Simulation position" });
+  await expect(
+    page.getByText("LEARNING STEP 0 /", { exact: false }),
+  ).toBeVisible();
+  const seek = page.getByRole("slider", { name: "Learning position" });
   await seek.focus();
   await seek.press("End");
   await expect(page.locator(".result")).toContainText("5");
@@ -31,17 +35,21 @@ test("custom input regenerates a deterministic trace and built-in teacher explai
   page,
 }) => {
   await page.goto("/problems/increasing-array");
+  await page.waitForLoadState("networkidle");
   await page.getByLabel("JSON input").fill('{"values":[1,2,3]}');
   await page.getByRole("button", { name: /Run simulation/ }).click();
+  await page.getByRole("button", { name: "Technical events" }).click();
   await page.getByRole("button", { name: "Next step" }).click();
   await page.getByRole("button", { name: "Explain current event" }).click();
   await expect(page.locator(".teacher-panel p")).toContainText("Read index 0");
-  const seek = page.getByRole("slider", { name: "Simulation position" });
+  const seek = page.getByRole("slider", { name: "Technical event position" });
   await seek.focus();
   await seek.press("End");
   await expect(page.locator(".result")).toContainText("0");
   await page.getByRole("button", { name: "Rewind to start" }).click();
-  await expect(page.getByText("STEP 0 /", { exact: false })).toBeVisible();
+  await expect(
+    page.getByText("TECHNICAL EVENT 0 /", { exact: false }),
+  ).toBeVisible();
   await seek.focus();
   await seek.press("End");
   await expect(page.locator(".result")).toContainText("0");
@@ -64,6 +72,7 @@ test("all five renderer routes load and invalid input is explained", async ({
     await expect(page.getByRole("button", { name: "Next step" })).toBeEnabled();
   }
   await page.goto("/problems/labyrinth");
+  await page.waitForLoadState("networkidle");
   await page.getByLabel("JSON input").fill('{"rows":["A.","##"]}');
   await page.getByRole("button", { name: /Run simulation/ }).click();
   await expect(page.locator(".input-panel [role=alert]")).toContainText(
@@ -76,6 +85,7 @@ test("color and text distinguish reads from writes during replay", async ({
 }) => {
   await page.goto("/problems/increasing-array");
   await expect(page.locator(".step-action")).toContainText("READY");
+  await page.getByRole("button", { name: "Technical events" }).click();
   await page.getByRole("button", { name: "Next step" }).click();
   await expect(page.locator(".step-action.action-inspect")).toContainText(
     "READING",
@@ -102,8 +112,10 @@ test("color and text distinguish reads from writes during replay", async ({
 
 test("edited code and input change the executed trace", async ({ page }) => {
   await page.goto("/problems/increasing-array");
+  await page.waitForLoadState("networkidle");
   await page.getByLabel("JSON input").fill('{"values":[8,2,5,1,7]}');
   await page.getByRole("button", { name: "Run simulation" }).click();
+  await page.getByRole("button", { name: "Technical events" }).click();
   const expectedWrites = [
     { values: [8, 8, 5, 1, 7], moves: "6", detail: "Index 1: 2 → 8" },
     { values: [8, 8, 8, 1, 7], moves: "9", detail: "Index 2: 5 → 8" },
@@ -128,7 +140,7 @@ test("edited code and input change the executed trace", async ({ page }) => {
         .filter({ hasText: "moves" }),
     ).toContainText(expected.moves);
   }
-  let seek = page.getByRole("slider", { name: "Simulation position" });
+  let seek = page.getByRole("slider", { name: "Technical event position" });
   await seek.focus();
   await seek.press("End");
   await expect(page.locator(".result")).toContainText("17");
@@ -146,7 +158,7 @@ test("edited code and input change the executed trace", async ({ page }) => {
       "let total = 0;\nfor (let i = 0; i < values.length; i++) {\n  values[i] = values[i] + 1;\n  total = total + values[i];\n}\nreturn total;",
     );
   await page.getByRole("button", { name: "Run code & input" }).click();
-  seek = page.getByRole("slider", { name: "Simulation position" });
+  seek = page.getByRole("slider", { name: "Learning position" });
   await seek.focus();
   await seek.press("End");
   await expect(page.locator(".result")).toContainText("28");
@@ -161,7 +173,7 @@ test("edited code and input change the executed trace", async ({ page }) => {
 
   await page.getByLabel("JSON input").fill('{"values":[1,1]}');
   await page.getByRole("button", { name: "Run simulation" }).click();
-  seek = page.getByRole("slider", { name: "Simulation position" });
+  seek = page.getByRole("slider", { name: "Learning position" });
   await seek.focus();
   await seek.press("End");
   await expect(page.locator(".result")).toContainText("4");
@@ -182,6 +194,7 @@ test("edited code and input change the executed trace", async ({ page }) => {
 test("reduced motion keeps action cues without animation", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/problems/increasing-array");
+  await page.getByRole("button", { name: "Technical events" }).click();
   await page.getByRole("button", { name: "Next step" }).click();
   await expect(page.locator(".step-action.action-inspect")).toBeVisible();
   const animation = await page
@@ -192,4 +205,71 @@ test("reduced motion keeps action cues without animation", async ({ page }) => {
     .locator(".array-visual .is-active")
     .evaluate((element) => getComputedStyle(element).transitionDuration);
   expect(transition).toBe("0s");
+});
+
+test("Increasing Array presents six input-dependent learning steps and retains raw events", async ({
+  page,
+}) => {
+  await page.goto("/problems/increasing-array");
+  await page.waitForLoadState("networkidle");
+  await page.getByLabel("JSON input").fill('{"values":[8,2,5,1,7]}');
+  await page.getByRole("button", { name: "Run simulation" }).click();
+  await expect(page.locator(".teaching-panel li")).toHaveCount(6);
+  await expect(page.locator(".teaching-panel")).toContainText(
+    "Increase 2 → 8 (+6)",
+  );
+  await expect(page.locator(".teaching-panel")).toContainText(
+    "Increase 7 → 8 (+1)",
+  );
+  await expect(page.locator(".visual-legend")).not.toContainText("Final path");
+  await page.getByRole("button", { name: "Next step" }).click();
+  await expect(page.locator(".step-action.action-update")).toContainText(
+    "change 2 to 8",
+  );
+  await expect(page.locator(".array-visual .visual-entity strong")).toHaveText([
+    "8",
+    "8",
+    "5",
+    "1",
+    "7",
+  ]);
+  await page.getByRole("slider", { name: "Learning position" }).focus();
+  await page.getByRole("slider", { name: "Learning position" }).press("End");
+  await expect(page.locator(".result")).toContainText("17");
+  await page.getByRole("button", { name: "Technical events" }).click();
+  await expect(page.getByText("TECHNICAL EVENT 29 / 29")).toBeVisible();
+  await expect(page.locator(".event-panel li")).toHaveCount(29);
+  await page.getByRole("slider", { name: "Technical event position" }).focus();
+  await page
+    .getByRole("slider", { name: "Technical event position" })
+    .press("Home");
+  await page.getByRole("button", { name: "Next step" }).click();
+  await expect(page.getByText("TECHNICAL EVENT 1 / 29")).toBeVisible();
+  await page.getByRole("button", { name: "Learning steps" }).click();
+  await page.getByRole("button", { name: "Rewind to start" }).click();
+  await page
+    .getByRole("combobox", { name: "Playback speed" })
+    .selectOption("4");
+  await page.getByRole("button", { name: "Play" }).click();
+  await expect(page.locator(".result")).toContainText("17");
+});
+
+test("tree and DP visualizations stay within a 390px viewport", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const id of ["tree-diameter", "dice-combinations"]) {
+    await page.goto(`/problems/${id}`);
+    await expect(
+      page.getByRole("region", { name: "Simulation visualization" }),
+    ).toBeVisible();
+    const dimensions = await page.evaluate(() => ({
+      viewport: window.innerWidth,
+      document: document.documentElement.scrollWidth,
+      panel: document.querySelector(".visual-panel")!.getBoundingClientRect()
+        .right,
+    }));
+    expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport);
+    expect(dimensions.panel).toBeLessThanOrEqual(dimensions.viewport);
+  }
 });
