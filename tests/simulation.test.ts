@@ -111,7 +111,7 @@ describe("simulation timeline", () => {
           {
             type: "READ_INDEX",
             entities: ["array:0"],
-            payload: {},
+            payload: { value: 1 },
             explanation: "Read",
           },
           {

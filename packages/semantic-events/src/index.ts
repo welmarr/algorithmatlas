@@ -1,4 +1,4 @@
-import type { Primitive, SourceRef } from "@sim/domain";
+import type { Primitive, RawTraceEvent, SourceRef } from "@sim/domain";
 
 export const EVENT_TYPES = [
   "SELECT",
@@ -49,6 +49,52 @@ export const EVENT_TYPES = [
 ] as const;
 export type EventType = (typeof EVENT_TYPES)[number];
 
+export type EventMaturity =
+  "ACTIVE" | "EXPERIMENTAL" | "RESERVED" | "DEPRECATED" | "REMOVE";
+const activeEvents = new Set<EventType>([
+  "ANNOTATE",
+  "COMPARE",
+  "DISCOVER_CELL",
+  "DISCOVER_NODE",
+  "DP_BASE_CASE",
+  "DP_READ",
+  "DP_UPDATE",
+  "FUNCTION_RETURN",
+  "MARK",
+  "MOVE_POINTER",
+  "QUEUE_POP",
+  "QUEUE_PUSH",
+  "READ_INDEX",
+  "SET_CELL_DISTANCE",
+  "SET_DEPTH",
+  "SET_DISTANCE",
+  "SET_PARENT",
+  "UPDATE_VALUE",
+  "VISIT_CELL",
+  "VISIT_NODE",
+  "VISIT_TREE_NODE",
+  "WRITE_INDEX",
+]);
+const experimentalEvents = new Set<EventType>([
+  "RELAX_EDGE",
+  "SET_CELL_STATE",
+  "SWAP",
+  "UNMARK",
+]);
+export const EVENT_GOVERNANCE: Readonly<Record<EventType, EventMaturity>> =
+  Object.freeze(
+    Object.fromEntries(
+      EVENT_TYPES.map((type) => [
+        type,
+        activeEvents.has(type)
+          ? "ACTIVE"
+          : experimentalEvents.has(type)
+            ? "EXPERIMENTAL"
+            : "RESERVED",
+      ]),
+    ) as Record<EventType, EventMaturity>,
+  );
+
 export interface AlgorithmEvent {
   schemaVersion: "0.1";
   eventId: string;
@@ -71,7 +117,10 @@ const entityPattern =
 export class ProtocolError extends Error {
   constructor(
     public readonly code:
-      "UNKNOWN_EVENT_TYPE" | "INVALID_EVENT" | "INVALID_ENTITY",
+      | "UNKNOWN_EVENT_TYPE"
+      | "INVALID_EVENT"
+      | "INVALID_ENTITY"
+      | "RESERVED_EVENT",
     message: string,
   ) {
     super(message);
@@ -81,6 +130,177 @@ export class ProtocolError extends Error {
 
 export function isEntityId(id: string): boolean {
   return entityPattern.test(id);
+}
+
+type PayloadRule = (value: Primitive) => boolean;
+interface EventSchema {
+  entities: number;
+  prefix?: string;
+  required?: Record<string, PayloadRule>;
+  optional?: Record<string, PayloadRule>;
+}
+const numeric: PayloadRule = (value) =>
+  typeof value === "number" && Number.isFinite(value);
+const integer: PayloadRule = (value) =>
+  numeric(value) && Number.isSafeInteger(value);
+const nonnegative: PayloadRule = (value) =>
+  integer(value) && (value as number) >= 0;
+const identifier: PayloadRule = (value) =>
+  typeof value === "string" &&
+  /^[$_\p{ID_Start}][$_\u200C\u200D\p{ID_Continue}]*$/u.test(value);
+const nodeLabel: PayloadRule = (value) =>
+  typeof value === "string" && /^[A-Za-z0-9_-]{1,12}$/.test(value);
+const status: PayloadRule = (value) =>
+  typeof value === "string" &&
+  ["idle", "active", "discovered", "visited", "path", "blocked"].includes(
+    value,
+  );
+const scalar: PayloadRule = (value) =>
+  typeof value === "number" || typeof value === "boolean";
+const one = (prefix?: string): EventSchema => ({ entities: 1, prefix });
+const eventSchemas: Partial<Record<EventType, EventSchema>> = {
+  ANNOTATE: { entities: 0, optional: { variable: identifier, value: scalar } },
+  COMPARE: {
+    entities: 0,
+    required: { taken: (value) => typeof value === "boolean" },
+  },
+  DISCOVER_CELL: one("grid:"),
+  DISCOVER_NODE: one("graph:node:"),
+  DP_BASE_CASE: { ...one("dp:"), required: { value: numeric } },
+  DP_READ: {
+    ...one("dp:"),
+    required: { variable: identifier, value: numeric },
+  },
+  DP_UPDATE: {
+    ...one("dp:"),
+    required: { value: numeric },
+    optional: { variable: identifier },
+  },
+  FUNCTION_RETURN: { entities: 0, required: { value: scalar } },
+  MARK: { ...one(), required: { status } },
+  MOVE_POINTER: {
+    entities: -1,
+    prefix: "array:",
+    required: { variable: identifier, value: integer },
+  },
+  QUEUE_POP: { ...one(), optional: { collection: identifier } },
+  QUEUE_PUSH: { ...one(), optional: { collection: identifier } },
+  READ_INDEX: { ...one("array:"), required: { value: numeric } },
+  RELAX_EDGE: { ...one("graph:edge:"), required: { value: nonnegative } },
+  SET_CELL_DISTANCE: { ...one("grid:"), required: { value: nonnegative } },
+  SET_CELL_STATE: { ...one("grid:"), required: { status } },
+  SET_DEPTH: { ...one("tree:node:"), required: { value: nonnegative } },
+  SET_DISTANCE: { ...one("graph:node:"), required: { value: nonnegative } },
+  SET_PARENT: { ...one("graph:node:"), required: { value: nodeLabel } },
+  SWAP: { entities: 2, prefix: "array:" },
+  UNMARK: one(),
+  UPDATE_VALUE: {
+    entities: 0,
+    required: { variable: identifier, value: scalar },
+  },
+  VISIT_CELL: one("grid:"),
+  VISIT_NODE: one("graph:node:"),
+  VISIT_TREE_NODE: one("tree:node:"),
+  WRITE_INDEX: { ...one("array:"), required: { value: integer } },
+};
+
+function validatePayload(event: AlgorithmEvent): void {
+  const schema = eventSchemas[event.type];
+  if (
+    !schema ||
+    !["ACTIVE", "EXPERIMENTAL"].includes(EVENT_GOVERNANCE[event.type])
+  )
+    throw new ProtocolError(
+      "RESERVED_EVENT",
+      `Event ${event.type} is reserved and has no supported producer`,
+    );
+  if (
+    schema.entities === -1
+      ? event.entities.length > 1
+      : event.entities.length !== schema.entities
+  )
+    throw new ProtocolError(
+      "INVALID_EVENT",
+      `Event ${event.type} has invalid entity count`,
+    );
+  if (
+    schema.prefix &&
+    event.entities.some((id) => !id.startsWith(schema.prefix!))
+  )
+    throw new ProtocolError(
+      "INVALID_ENTITY",
+      `Event ${event.type} has invalid entity kind`,
+    );
+  if (new Set(event.entities).size !== event.entities.length)
+    throw new ProtocolError("INVALID_ENTITY", "Duplicate entity identifiers");
+  for (const [key, rule] of Object.entries(schema.required ?? {}))
+    if (!Object.hasOwn(event.payload, key) || !rule(event.payload[key]))
+      throw new ProtocolError(
+        "INVALID_EVENT",
+        `${event.type} requires valid ${key}`,
+      );
+  for (const [key, value] of Object.entries(event.payload)) {
+    const rule = schema.required?.[key] ?? schema.optional?.[key];
+    if (!rule || !rule(value))
+      throw new ProtocolError(
+        "INVALID_EVENT",
+        `${event.type} has invalid ${key}`,
+      );
+  }
+}
+
+export interface SemanticMapper<Context = undefined> {
+  id: string;
+  map(raw: RawTraceEvent, context: Context): EventDraft | readonly EventDraft[];
+}
+
+export function validateRawTraceEvent(raw: unknown): RawTraceEvent {
+  if (!raw || typeof raw !== "object")
+    throw new ProtocolError(
+      "INVALID_EVENT",
+      "Raw trace operation must be an object",
+    );
+  const event = raw as Partial<RawTraceEvent>;
+  if (
+    event.schemaVersion !== "0.1" ||
+    typeof event.operation !== "string" ||
+    !/^[a-z][a-z-]*$/.test(event.operation) ||
+    !event.data ||
+    typeof event.data !== "object" ||
+    Array.isArray(event.data) ||
+    Object.entries(event.data).some(
+      ([key, value]) =>
+        ["__proto__", "constructor", "prototype"].includes(key) ||
+        !(
+          value === null ||
+          typeof value === "string" ||
+          typeof value === "boolean" ||
+          (typeof value === "number" && Number.isFinite(value))
+        ),
+    )
+  )
+    throw new ProtocolError("INVALID_EVENT", "Invalid raw trace operation");
+  if (
+    event.sourceRef &&
+    (typeof event.sourceRef.file !== "string" ||
+      !Number.isSafeInteger(event.sourceRef.line) ||
+      event.sourceRef.line < 1)
+  )
+    throw new ProtocolError("INVALID_EVENT", "Invalid raw source reference");
+  return event as RawTraceEvent;
+}
+
+export function mapRawTrace<Context>(
+  rawTrace: readonly RawTraceEvent[],
+  mapper: SemanticMapper<Context>,
+  context: Context,
+): EventDraft[] {
+  if (!mapper.id || typeof mapper.map !== "function")
+    throw new ProtocolError("INVALID_EVENT", "Invalid semantic mapper");
+  return rawTrace.flatMap((raw) => {
+    const mapped = mapper.map(validateRawTraceEvent(raw), context);
+    return Array.isArray(mapped) ? [...mapped] : [mapped as EventDraft];
+  });
 }
 
 export function validateEvent(input: unknown): AlgorithmEvent {
@@ -146,6 +366,7 @@ export function validateEvent(input: unknown): AlgorithmEvent {
       event.sourceRef.line < 1)
   )
     throw new ProtocolError("INVALID_EVENT", "Invalid source reference");
+  validatePayload(event as AlgorithmEvent);
   return event as AlgorithmEvent;
 }
 

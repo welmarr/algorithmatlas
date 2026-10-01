@@ -1,6 +1,6 @@
 import { parse } from "acorn";
 import { emptyState, type Primitive, type RawTraceEvent } from "@sim/domain";
-import type { EventDraft } from "@sim/semantic-events";
+import { mapRawTrace, type EventDraft } from "@sim/semantic-events";
 
 type Value = number | boolean;
 type Node = {
@@ -168,6 +168,7 @@ export function runArrayScript(
     if (rawTrace.length >= 5000)
       throw new CodeRuntimeError("LIMIT", "Trace exceeded 5,000 events");
     rawTrace.push({
+      schemaVersion: "0.1",
       operation,
       data,
       sourceRef: {
@@ -471,67 +472,74 @@ export function runArrayScript(
       status: "idle",
     };
   });
-  const events: EventDraft[] = rawTrace.map((raw): EventDraft => {
-    const index =
-      typeof raw.data.index === "number" ? raw.data.index : undefined;
-    const entities = index === undefined ? [] : [`array:${index}`];
-    const variable = String(raw.data.variable ?? "");
-    switch (raw.operation) {
-      case "read":
-        return {
-          type: "READ_INDEX",
-          entities,
-          payload: { value: raw.data.value },
-          explanation: `Read index ${index}: ${raw.data.value}.`,
-          sourceRef: raw.sourceRef,
-        };
-      case "write":
-        return {
-          type: "WRITE_INDEX",
-          entities,
-          payload: { value: raw.data.value },
-          explanation: `Set index ${index}: ${raw.data.before} → ${raw.data.value}.`,
-          sourceRef: raw.sourceRef,
-        };
-      case "variable":
-        if (raw.data.pointer === true) {
-          const pointer = Number(raw.data.value);
-          return {
-            type: "MOVE_POINTER",
-            entities:
-              pointer >= 0 && pointer < values.length
-                ? [`array:${pointer}`]
-                : [],
-            payload: { variable, value: raw.data.value },
-            explanation: `Move index to ${pointer}.`,
-            sourceRef: raw.sourceRef,
-          };
+  const events: EventDraft[] = mapRawTrace(
+    rawTrace,
+    {
+      id: "array-js-v0.1",
+      map(raw): EventDraft {
+        const index =
+          typeof raw.data.index === "number" ? raw.data.index : undefined;
+        const entities = index === undefined ? [] : [`array:${index}`];
+        const variable = String(raw.data.variable ?? "");
+        switch (raw.operation) {
+          case "read":
+            return {
+              type: "READ_INDEX",
+              entities,
+              payload: { value: raw.data.value },
+              explanation: `Read index ${index}: ${raw.data.value}.`,
+              sourceRef: raw.sourceRef,
+            };
+          case "write":
+            return {
+              type: "WRITE_INDEX",
+              entities,
+              payload: { value: raw.data.value },
+              explanation: `Set index ${index}: ${raw.data.before} → ${raw.data.value}.`,
+              sourceRef: raw.sourceRef,
+            };
+          case "variable":
+            if (raw.data.pointer === true) {
+              const pointer = Number(raw.data.value);
+              return {
+                type: "MOVE_POINTER",
+                entities:
+                  pointer >= 0 && pointer < values.length
+                    ? [`array:${pointer}`]
+                    : [],
+                payload: { variable, value: raw.data.value },
+                explanation: `Move index to ${pointer}.`,
+                sourceRef: raw.sourceRef,
+              };
+            }
+            return {
+              type: "UPDATE_VALUE",
+              entities: [],
+              payload: { variable, value: raw.data.value },
+              explanation: `Set ${variable} = ${raw.data.value}.`,
+              sourceRef: raw.sourceRef,
+            };
+          case "branch":
+            return {
+              type: "COMPARE",
+              entities: [],
+              payload: { taken: raw.data.taken },
+              explanation: `Condition is ${raw.data.taken ? "true" : "false"}; follow that branch.`,
+              sourceRef: raw.sourceRef,
+            };
+          default:
+            return {
+              type: "FUNCTION_RETURN",
+              entities: [],
+              payload: { value: raw.data.value },
+              explanation: `Return ${raw.data.value}.`,
+              sourceRef: raw.sourceRef,
+            };
         }
-        return {
-          type: "UPDATE_VALUE",
-          entities: [],
-          payload: { variable, value: raw.data.value },
-          explanation: `Set ${variable} = ${raw.data.value}.`,
-          sourceRef: raw.sourceRef,
-        };
-      case "branch":
-        return {
-          type: "COMPARE",
-          entities: [],
-          payload: { taken: raw.data.taken },
-          explanation: `Condition is ${raw.data.taken ? "true" : "false"}; follow that branch.`,
-          sourceRef: raw.sourceRef,
-        };
-      default:
-        return {
-          type: "FUNCTION_RETURN",
-          entities: [],
-          payload: { value: raw.data.value },
-          explanation: `Return ${raw.data.value}.`,
-          sourceRef: raw.sourceRef,
-        };
-    }
-  });
+      },
+    },
+    undefined,
+  );
   return {
     initialState,
     rawTrace,

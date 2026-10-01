@@ -9,6 +9,10 @@ The repository was empty at the start of Lot 0 (2026-10-01). There was no Git hi
 ```text
 Curated problem or bounded browser interpreter
                  ↓
+        versioned raw operations
+                 ↓
+      deterministic semantic mapper
+                 ↓
         versioned semantic events
                  ↓
      framework-independent reducer
@@ -25,6 +29,8 @@ Optional teacher connector → validated explanation only
 ```
 
 `packages/problems` depends on the problem SDK, code runtime, and event contracts. `packages/code-runtime` parses a small JavaScript subset into raw execution records, then semantic events for Increasing Array. `packages/simulation-core` depends on domain and event contracts. `apps/web` is the composition root; no lower package imports React or Next.js. `packages/ai-sdk` receives events and returns explanation text but cannot write simulation state. See `docs/DEPENDENCIES.md` for the full dependency map.
+
+The raw-to-semantic path is implemented for Increasing Array, Labyrinth, and Message Route. Tree Diameter and Dice Combinations continue to emit semantic drafts directly because their curated generators already know the meaningful action. The same event validator gates both paths. `EVENT_GOVERNANCE` rejects reserved vocabulary and documents experimental types; see [docs/protocol/EVENT_GOVERNANCE.md](docs/protocol/EVENT_GOVERNANCE.md).
 
 The audited prototype is preserved at local commit `0107c9138cdfb28d5b97345866fae38e780c462e` on `baseline/audited-prototype-2026-10-01` and tag `prototype-audit-2026-10-01`. Construction takes place on `build/full-platform`. Lot 01 adds a teaching-step projection over the immutable semantic trace. The player defaults to learning steps and exposes exact event seeking in technical mode. The restricted interpreter uses lexical block scopes; array pointer events depend on index use rather than a variable name.
 

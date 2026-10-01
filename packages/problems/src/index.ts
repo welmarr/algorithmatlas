@@ -1,4 +1,8 @@
-import { emptyState, type ProblemMetadata } from "@sim/domain";
+import {
+  emptyState,
+  type ProblemMetadata,
+  type RawTraceEvent,
+} from "@sim/domain";
 import { runArrayScript } from "@sim/code-runtime";
 import {
   defineProblem,
@@ -10,6 +14,7 @@ import {
   type ProblemRun,
 } from "@sim/problem-sdk";
 import type { EventDraft, EventType } from "@sim/semantic-events";
+import { mapBfsTrace, recordBfs } from "./bfs-mapper";
 
 function meta(
   input: Omit<
@@ -160,7 +165,7 @@ const labyrinth = defineProblem({
   parseInput: gridInput,
   trace(input) {
     const state = emptyState();
-    const events: EventDraft[] = [];
+    const rawTrace: RawTraceEvent[] = [];
     const rows = input.rows;
     const h = rows.length,
       w = rows[0].length;
@@ -184,12 +189,12 @@ const labyrinth = defineProblem({
       seen = new Set([start]),
       parent = new Map<string, string>(),
       distance = new Map([[start, 0]]);
-    events.push(draft("DISCOVER_CELL", [start], "Start at A.", {}, 2));
-    events.push(draft("QUEUE_PUSH", [start], "Put A in the queue.", {}, 1));
+    recordBfs(rawTrace, "discover", start, "Start at A.", {}, 2);
+    recordBfs(rawTrace, "queue-push", start, "Put A in the queue.", {}, 1);
     while (q.length) {
       const id = q.shift()!;
-      events.push(draft("QUEUE_POP", [id], `Process ${id}.`, {}, 4));
-      events.push(draft("VISIT_CELL", [id], `Visit ${id}.`, {}, 4));
+      recordBfs(rawTrace, "queue-pop", id, `Process ${id}.`, {}, 4);
+      recordBfs(rawTrace, "visit", id, `Visit ${id}.`, {}, 4);
       if (id === target) break;
       const [, rs, cs] = id.split(":");
       const r = Number(rs),
@@ -216,39 +221,48 @@ const labyrinth = defineProblem({
         parent.set(next, id);
         distance.set(next, distance.get(id)! + 1);
         q.push(next);
-        events.push(
-          draft("DISCOVER_CELL", [next], `Discover ${next} from ${id}.`, {}, 8),
+        recordBfs(
+          rawTrace,
+          "discover",
+          next,
+          `Discover ${next} from ${id}.`,
+          {},
+          8,
         );
-        events.push(
-          draft(
-            "SET_CELL_DISTANCE",
-            [next],
-            `Distance to ${next} is ${distance.get(next)}.`,
-            { value: distance.get(next)! },
-            8,
-          ),
+        recordBfs(
+          rawTrace,
+          "set-distance",
+          next,
+          `Distance to ${next} is ${distance.get(next)}.`,
+          { value: distance.get(next)! },
+          8,
         );
-        events.push(draft("QUEUE_PUSH", [next], `Enqueue ${next}.`, {}, 9));
+        recordBfs(rawTrace, "queue-push", next, `Enqueue ${next}.`, {}, 9);
       }
     }
     if (seen.has(target)) {
       for (let at = target; at !== start; at = parent.get(at)!)
-        events.push(
-          draft(
-            "MARK",
-            [at],
-            `${at} belongs to the shortest path.`,
-            { status: "path" },
-            13,
-          ),
+        recordBfs(
+          rawTrace,
+          "mark-path",
+          at,
+          `${at} belongs to the shortest path.`,
+          { status: "path" },
+          13,
         );
-      events.push(
-        draft("MARK", [start], "The path begins at A.", { status: "path" }, 13),
+      recordBfs(
+        rawTrace,
+        "mark-path",
+        start,
+        "The path begins at A.",
+        { status: "path" },
+        13,
       );
     }
     return {
       initialState: state,
-      events,
+      rawTrace,
+      events: mapBfsTrace(rawTrace, "grid"),
       output: seen.has(target) ? `${distance.get(target)} steps` : "No path",
     };
   },
@@ -345,7 +359,7 @@ const messageRoute = defineProblem({
   parseInput: graphInput,
   trace(input) {
     const state = emptyState(),
-      events: EventDraft[] = [],
+      rawTrace: RawTraceEvent[] = [],
       adjacency = new Map(input.nodes.map((node) => [node, [] as string[]]));
     input.nodes.forEach((node) => {
       const id = `graph:node:${node}`;
@@ -372,37 +386,39 @@ const messageRoute = defineProblem({
       parent = new Map<string, string>(),
       distance = new Map([[input.source, 0]]),
       q = [input.source];
-    events.push(
-      draft(
-        "DISCOVER_NODE",
-        [`graph:node:${input.source}`],
-        `Start at ${input.source}.`,
-        {},
-        1,
-      ),
+    recordBfs(
+      rawTrace,
+      "discover",
+      `graph:node:${input.source}`,
+      `Start at ${input.source}.`,
+      {},
+      1,
     );
-    events.push(
-      draft(
-        "QUEUE_PUSH",
-        [`graph:node:${input.source}`],
-        `Enqueue ${input.source}.`,
-        {},
-        1,
-      ),
+    recordBfs(
+      rawTrace,
+      "queue-push",
+      `graph:node:${input.source}`,
+      `Enqueue ${input.source}.`,
+      {},
+      1,
     );
     while (q.length) {
       const node = q.shift()!;
-      events.push(
-        draft(
-          "QUEUE_POP",
-          [`graph:node:${node}`],
-          `Take ${node} from the queue.`,
-          {},
-          4,
-        ),
+      recordBfs(
+        rawTrace,
+        "queue-pop",
+        `graph:node:${node}`,
+        `Take ${node} from the queue.`,
+        {},
+        4,
       );
-      events.push(
-        draft("VISIT_NODE", [`graph:node:${node}`], `Visit ${node}.`, {}, 4),
+      recordBfs(
+        rawTrace,
+        "visit",
+        `graph:node:${node}`,
+        `Visit ${node}.`,
+        {},
+        4,
       );
       if (node === input.target) break;
       for (const next of adjacency.get(node)!) {
@@ -411,41 +427,37 @@ const messageRoute = defineProblem({
         parent.set(next, node);
         distance.set(next, distance.get(node)! + 1);
         q.push(next);
-        events.push(
-          draft(
-            "DISCOVER_NODE",
-            [`graph:node:${next}`],
-            `Discover ${next} from ${node}.`,
-            {},
-            8,
-          ),
+        recordBfs(
+          rawTrace,
+          "discover",
+          `graph:node:${next}`,
+          `Discover ${next} from ${node}.`,
+          {},
+          8,
         );
-        events.push(
-          draft(
-            "SET_PARENT",
-            [`graph:node:${next}`],
-            `Set parent of ${next} to ${node}.`,
-            { value: node },
-            8,
-          ),
+        recordBfs(
+          rawTrace,
+          "set-parent",
+          `graph:node:${next}`,
+          `Set parent of ${next} to ${node}.`,
+          { value: node },
+          8,
         );
-        events.push(
-          draft(
-            "SET_DISTANCE",
-            [`graph:node:${next}`],
-            `Distance to ${next} is ${distance.get(next)}.`,
-            { value: distance.get(next)! },
-            8,
-          ),
+        recordBfs(
+          rawTrace,
+          "set-distance",
+          `graph:node:${next}`,
+          `Distance to ${next} is ${distance.get(next)}.`,
+          { value: distance.get(next)! },
+          8,
         );
-        events.push(
-          draft(
-            "QUEUE_PUSH",
-            [`graph:node:${next}`],
-            `Enqueue ${next}.`,
-            {},
-            9,
-          ),
+        recordBfs(
+          rawTrace,
+          "queue-push",
+          `graph:node:${next}`,
+          `Enqueue ${next}.`,
+          {},
+          9,
         );
       }
     }
@@ -456,20 +468,20 @@ const messageRoute = defineProblem({
       path.push(input.source);
       path.reverse();
       path.forEach((node) =>
-        events.push(
-          draft(
-            "MARK",
-            [`graph:node:${node}`],
-            `${node} is on the route.`,
-            { status: "path" },
-            13,
-          ),
+        recordBfs(
+          rawTrace,
+          "mark-path",
+          `graph:node:${node}`,
+          `${node} is on the route.`,
+          { status: "path" },
+          13,
         ),
       );
     }
     return {
       initialState: state,
-      events,
+      rawTrace,
+      events: mapBfsTrace(rawTrace, "graph"),
       output: path.length ? path.join(" → ") : "No route",
     };
   },

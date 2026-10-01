@@ -88,6 +88,7 @@ export interface ProblemMetadata {
 }
 
 export interface RawTraceEvent {
+  schemaVersion: "0.1";
   operation: string;
   data: Record<string, Primitive>;
   sourceRef?: SourceRef;
