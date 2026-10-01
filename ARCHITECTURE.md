@@ -32,6 +32,8 @@ Optional teacher connector → validated explanation only
 
 The raw-to-semantic path is implemented for Increasing Array, Labyrinth, and Message Route. Tree Diameter and Dice Combinations continue to emit semantic drafts directly because their curated generators already know the meaningful action. The same event validator gates both paths. `EVENT_GOVERNANCE` rejects reserved vocabulary and documents experimental types; see [docs/protocol/EVENT_GOVERNANCE.md](docs/protocol/EVENT_GOVERNANCE.md).
 
+The renderer boundary supports ten families through a generic state interface. Tree positions are computed hierarchically, graph edges read direction/weight/status metadata, DP cells can form 1D or 2D tables with explicit dependencies, and collection views read ordered IDs from canonical state. The gallery route exercises these views without problem-specific branches.
+
 The audited prototype is preserved at local commit `0107c9138cdfb28d5b97345866fae38e780c462e` on `baseline/audited-prototype-2026-10-01` and tag `prototype-audit-2026-10-01`. Construction takes place on `build/full-platform`. Lot 01 adds a teaching-step projection over the immutable semantic trace. The player defaults to learning steps and exposes exact event seeking in technical mode. The restricted interpreter uses lexical block scopes; array pointer events depend on index use rather than a variable name.
 
 ## Current structure and deviations

@@ -23,8 +23,9 @@ describe("governed event protocol", () => {
     expect(Object.keys(EVENT_GOVERNANCE)).toHaveLength(EVENT_TYPES.length);
     expect(EVENT_GOVERNANCE.WRITE_INDEX).toBe("ACTIVE");
     expect(EVENT_GOVERNANCE.RELAX_EDGE).toBe("EXPERIMENTAL");
-    expect(EVENT_GOVERNANCE.HEAP_INSERT).toBe("RESERVED");
-    expect(() => event("HEAP_INSERT", ["heap:item:1"], {})).toThrow("reserved");
+    expect(EVENT_GOVERNANCE.HEAP_INSERT).toBe("EXPERIMENTAL");
+    expect(EVENT_GOVERNANCE.VISIT_EDGE).toBe("RESERVED");
+    expect(() => event("VISIT_EDGE", ["graph:edge:1"], {})).toThrow("reserved");
   });
 
   it("validates required payloads, entity kinds, and semantic ranges", () => {

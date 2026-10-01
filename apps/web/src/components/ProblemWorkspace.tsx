@@ -10,6 +10,12 @@ import {
   openAICompatibleTeacher,
 } from "@sim/ai-sdk";
 import { rendererLegends, Visuals } from "./Visuals";
+import {
+  CodeVisual,
+  CollectionVisual,
+  VariablesVisual,
+  type CollectionKind,
+} from "./StructureVisuals";
 
 export function ProblemWorkspace({ problemId }: { problemId: string }) {
   const problem = getProblem(problemId)!;
@@ -126,7 +132,6 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
               : focus
                 ? focusTarget
                 : "Press Play or Next to begin";
-  const lines = executedCode.split("\n");
   function regenerate(source = draftCode) {
     try {
       const input = JSON.parse(rawInput);
@@ -297,7 +302,12 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
                 </span>
                 <strong>{focusDetail}</strong>
               </div>
-              <Visuals kind={problem.metadata.renderer} state={state} />
+              <Visuals
+                kind={problem.metadata.renderer}
+                state={state}
+                source={executedCode}
+                activeLine={event?.sourceRef?.line}
+              />
               <div className="visual-legend">
                 {rendererLegends[problem.metadata.renderer].map(
                   ({ label, cue }) => (
@@ -476,39 +486,25 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
               <section className="panel structures-panel">
                 <div className="eyebrow">STATE INSPECTOR</div>
                 <h2>Variables & structures</h2>
-                <dl>
-                  {Object.entries(state.variables).map(([key, value]) => (
-                    <div
+                <VariablesVisual state={state} />
+                {Object.entries(state.collections).map(([key, ids]) =>
+                  ["queue", "stack", "heap"].includes(key) ? (
+                    <CollectionVisual
                       key={key}
-                      className={
-                        focus?.variable === key && focus.before !== focus.after
-                          ? "variable-row is-changing"
-                          : "variable-row"
-                      }
-                    >
-                      <dt>{key}</dt>
-                      <dd>{String(value)}</dd>
+                      state={state}
+                      kind={key as CollectionKind}
+                    />
+                  ) : (
+                    <div className="collection" key={key}>
+                      <strong>{key}</strong>
+                      <span>
+                        {ids
+                          .map((id) => state.entities[id]?.label ?? id)
+                          .join(" → ") || "empty"}
+                      </span>
                     </div>
-                  ))}
-                </dl>
-                {Object.entries(state.collections).map(([key, ids]) => (
-                  <div className="collection" key={key}>
-                    <strong>{key}</strong>
-                    <span>
-                      {ids.length
-                        ? ids
-                            .map((id) => state.entities[id]?.label ?? id)
-                            .join(" → ")
-                        : "empty"}
-                    </span>
-                  </div>
-                ))}
-                {!Object.keys(state.variables).length &&
-                  !Object.keys(state.collections).length && (
-                    <p className="muted">
-                      State will appear as the trace advances.
-                    </p>
-                  )}
+                  ),
+                )}
               </section>
             </div>
           </div>
@@ -587,28 +583,12 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
                   ? "CODE THAT PRODUCED THIS TRACE"
                   : "CODE TRACE"}
               </div>
-              <div
-                className="code-lines"
-                role="list"
-                aria-label={
-                  problem.runCode ? "Executed code" : "Reference code"
-                }
-              >
-                {lines.map((line, i) => (
-                  <div
-                    role="listitem"
-                    key={i}
-                    className={
-                      event?.sourceRef?.line === i + 1
-                        ? `code-line active cue-${focus?.kind ?? "inspect"}`
-                        : "code-line"
-                    }
-                  >
-                    <span>{i + 1}</span>
-                    <code>{line || " "}</code>
-                  </div>
-                ))}
-              </div>
+              <CodeVisual
+                source={executedCode}
+                activeLine={event?.sourceRef?.line}
+                focusKind={focus?.kind}
+                label={problem.runCode ? "Executed code" : "Reference code"}
+              />
             </section>
             <section className="panel teacher-panel">
               <div className="eyebrow">OPTIONAL TEACHER</div>

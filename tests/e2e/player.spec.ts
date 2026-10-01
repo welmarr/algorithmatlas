@@ -273,3 +273,49 @@ test("tree and DP visualizations stay within a 390px viewport", async ({
     expect(dimensions.panel).toBeLessThanOrEqual(dimensions.viewport);
   }
 });
+
+test("all ten renderer families have labeled responsive views", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/lab/renderers");
+  await expect(
+    page.getByRole("heading", { name: "Structure gallery" }),
+  ).toBeVisible();
+  const kinds = [
+    "array",
+    "grid",
+    "graph",
+    "tree",
+    "dp",
+    "queue",
+    "stack",
+    "heap",
+    "variables",
+    "code",
+  ];
+  for (const kind of kinds)
+    await expect(page.locator(`[data-renderer-kind="${kind}"]`)).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: "Queue", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: "Stack", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: "Priority queue" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("table", { name: "Dynamic programming values" }),
+  ).toBeVisible();
+  const widths = await page.evaluate(() => ({
+    viewport: window.innerWidth,
+    page: document.documentElement.scrollWidth,
+    cards: Array.from(document.querySelectorAll(".renderer-gallery-card")).map(
+      (card) => card.getBoundingClientRect().right,
+    ),
+  }));
+  expect(widths.page).toBeLessThanOrEqual(widths.viewport);
+  for (const right of widths.cards)
+    expect(right).toBeLessThanOrEqual(widths.viewport);
+});

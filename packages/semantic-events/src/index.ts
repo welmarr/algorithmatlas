@@ -76,8 +76,16 @@ const activeEvents = new Set<EventType>([
   "WRITE_INDEX",
 ]);
 const experimentalEvents = new Set<EventType>([
+  "DP_TRANSITION",
+  "HEAP_EXTRACT",
+  "HEAP_INSERT",
+  "HEAP_UPDATE",
+  "QUEUE_PEEK",
   "RELAX_EDGE",
   "SET_CELL_STATE",
+  "STACK_PEEK",
+  "STACK_POP",
+  "STACK_PUSH",
   "SWAP",
   "UNMARK",
 ]);
@@ -134,7 +142,7 @@ export function isEntityId(id: string): boolean {
 
 type PayloadRule = (value: Primitive) => boolean;
 interface EventSchema {
-  entities: number;
+  entities: number | { min: number; max: number };
   prefix?: string;
   required?: Record<string, PayloadRule>;
   optional?: Record<string, PayloadRule>;
@@ -172,19 +180,36 @@ const eventSchemas: Partial<Record<EventType, EventSchema>> = {
     required: { variable: identifier, value: numeric },
   },
   DP_UPDATE: {
-    ...one("dp:"),
+    entities: { min: 1, max: 8 },
+    prefix: "dp:",
     required: { value: numeric },
     optional: { variable: identifier },
+  },
+  DP_TRANSITION: {
+    entities: { min: 2, max: 8 },
+    prefix: "dp:",
+    required: { value: numeric },
   },
   FUNCTION_RETURN: { entities: 0, required: { value: scalar } },
   MARK: { ...one(), required: { status } },
   MOVE_POINTER: {
-    entities: -1,
+    entities: { min: 0, max: 1 },
     prefix: "array:",
     required: { variable: identifier, value: integer },
   },
   QUEUE_POP: { ...one(), optional: { collection: identifier } },
   QUEUE_PUSH: { ...one(), optional: { collection: identifier } },
+  QUEUE_PEEK: { ...one("queue:item:"), optional: { collection: identifier } },
+  STACK_PUSH: { ...one("stack:item:"), optional: { collection: identifier } },
+  STACK_POP: { ...one("stack:item:"), optional: { collection: identifier } },
+  STACK_PEEK: { ...one("stack:item:"), optional: { collection: identifier } },
+  HEAP_INSERT: { ...one("heap:item:"), optional: { collection: identifier } },
+  HEAP_EXTRACT: { ...one("heap:item:"), optional: { collection: identifier } },
+  HEAP_UPDATE: {
+    ...one("heap:item:"),
+    required: { value: numeric },
+    optional: { collection: identifier },
+  },
   READ_INDEX: { ...one("array:"), required: { value: numeric } },
   RELAX_EDGE: { ...one("graph:edge:"), required: { value: nonnegative } },
   SET_CELL_DISTANCE: { ...one("grid:"), required: { value: nonnegative } },
@@ -214,11 +239,12 @@ function validatePayload(event: AlgorithmEvent): void {
       "RESERVED_EVENT",
       `Event ${event.type} is reserved and has no supported producer`,
     );
-  if (
-    schema.entities === -1
-      ? event.entities.length > 1
-      : event.entities.length !== schema.entities
-  )
+  const countValid =
+    typeof schema.entities === "number"
+      ? event.entities.length === schema.entities
+      : event.entities.length >= schema.entities.min &&
+        event.entities.length <= schema.entities.max;
+  if (!countValid)
     throw new ProtocolError(
       "INVALID_EVENT",
       `Event ${event.type} has invalid entity count`,

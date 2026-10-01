@@ -1,6 +1,6 @@
 # Event vocabulary governance (v0.1)
 
-`EVENT_TYPES` lists names under consideration, while `EVENT_GOVERNANCE` controls what can enter a trace. **ACTIVE** events have a current producer, reducer or presentation behavior, and regression coverage. **EXPERIMENTAL** events have a payload schema and reducer behavior but no curated producer yet. **RESERVED** names are rejected by validation until a producer, state meaning, renderer cue, and tests are added. No event is currently deprecated or scheduled for removal.
+`EVENT_TYPES` lists names under consideration, while `EVENT_GOVERNANCE` controls what can enter a trace. **ACTIVE** events have a current producer, reducer or presentation behavior, and regression coverage. **EXPERIMENTAL** events have a payload schema and reducer or presentation semantics but no curated producer yet. **RESERVED** names are rejected by validation until a producer, state meaning, renderer cue, and tests are added. No event is currently deprecated or scheduled for removal.
 
 | Event               | Maturity     | Current source or reason                   |
 | ------------------- | ------------ | ------------------------------------------ |
@@ -24,20 +24,20 @@
 | `SET_PARENT`        | ACTIVE       | Graph BFS mapper                           |
 | `QUEUE_PUSH`        | ACTIVE       | Grid and graph BFS mappers                 |
 | `QUEUE_POP`         | ACTIVE       | Grid and graph BFS mappers                 |
-| `QUEUE_PEEK`        | RESERVED     | No producer or reducer behavior            |
-| `STACK_PUSH`        | RESERVED     | No producer or stack renderer              |
-| `STACK_POP`         | RESERVED     | No producer or stack renderer              |
-| `STACK_PEEK`        | RESERVED     | No producer or stack renderer              |
-| `HEAP_INSERT`       | RESERVED     | No producer or heap renderer               |
-| `HEAP_EXTRACT`      | RESERVED     | No producer or heap renderer               |
-| `HEAP_UPDATE`       | RESERVED     | No producer or heap renderer               |
+| `QUEUE_PEEK`        | EXPERIMENTAL | Queue inspection cue; no curated producer  |
+| `STACK_PUSH`        | EXPERIMENTAL | Stack reducer and renderer; no producer    |
+| `STACK_POP`         | EXPERIMENTAL | Stack reducer and renderer; no producer    |
+| `STACK_PEEK`        | EXPERIMENTAL | Stack inspection cue; no producer          |
+| `HEAP_INSERT`       | EXPERIMENTAL | Priority queue reducer/view; no producer   |
+| `HEAP_EXTRACT`      | EXPERIMENTAL | Minimum extraction; no producer            |
+| `HEAP_UPDATE`       | EXPERIMENTAL | Priority update; no producer               |
 | `VISIT_CELL`        | ACTIVE       | Grid BFS mapper                            |
 | `DISCOVER_CELL`     | ACTIVE       | Grid BFS mapper                            |
 | `SET_CELL_STATE`    | EXPERIMENTAL | Grid reducer supports it; no producer      |
 | `SET_CELL_DISTANCE` | ACTIVE       | Grid BFS mapper                            |
 | `DP_READ`           | ACTIVE       | Dice combinations                          |
 | `DP_UPDATE`         | ACTIVE       | Dice combinations                          |
-| `DP_TRANSITION`     | RESERVED     | No producer or distinct reducer behavior   |
+| `DP_TRANSITION`     | EXPERIMENTAL | Dependency cue without state mutation      |
 | `DP_BASE_CASE`      | ACTIVE       | Dice combinations                          |
 | `SET_SEARCH_RANGE`  | RESERVED     | No binary-search producer or renderer      |
 | `SET_MIDPOINT`      | RESERVED     | No binary-search producer or renderer      |

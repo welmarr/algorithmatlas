@@ -70,7 +70,17 @@ export interface LearningContent {
   naive?: string;
   explanation: string;
 }
-export type RendererKind = "array" | "grid" | "graph" | "tree" | "dp";
+export type RendererKind =
+  | "array"
+  | "grid"
+  | "graph"
+  | "tree"
+  | "dp"
+  | "queue"
+  | "stack"
+  | "heap"
+  | "variables"
+  | "code";
 
 export interface ProblemMetadata {
   schemaVersion: "0.1";

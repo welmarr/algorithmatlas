@@ -5,6 +5,12 @@ import type {
   StepFocusKind,
   VisualEntity,
 } from "@sim/domain";
+import { layoutDp, layoutTree } from "./renderer-layout";
+import {
+  CodeVisual,
+  CollectionVisual,
+  VariablesVisual,
+} from "./StructureVisuals";
 
 const cueLabels: Record<StepFocusKind, string> = {
   inspect: "READ",
@@ -31,6 +37,8 @@ export const rendererLegends: Record<
     { label: "Current node", cue: "active" },
     { label: "Discovered", cue: "discovered" },
     { label: "Visited", cue: "visited" },
+    { label: "Relaxing edge", cue: "update" },
+    { label: "Predecessor link", cue: "inspect" },
     { label: "Shortest path", cue: "path" },
   ],
   tree: [
@@ -40,8 +48,14 @@ export const rendererLegends: Record<
   ],
   dp: [
     { label: "Current cell", cue: "active" },
+    { label: "Dependency", cue: "inspect" },
     { label: "Updated value", cue: "update" },
   ],
+  queue: [{ label: "Current item", cue: "active" }],
+  stack: [{ label: "Current item", cue: "active" }],
+  heap: [{ label: "Minimum priority", cue: "active" }],
+  variables: [{ label: "Changed variable", cue: "update" }],
+  code: [{ label: "Current line", cue: "inspect" }],
 };
 
 function isCurrent(entity: VisualEntity, state: SimulationState): boolean {
@@ -99,13 +113,14 @@ function GridVisual({ state }: { state: SimulationState }) {
     (entity) => entity.kind === "grid",
   );
   const width = Math.max(
+    1,
     ...cells.map((cell) => Number(cell.metadata?.col) + 1),
   );
   return (
     <div
       className="grid-visual"
       role="grid"
-      aria-label="Labyrinth grid"
+      aria-label="Grid cells"
       style={{ gridTemplateColumns: `repeat(${width}, minmax(30px, 1fr))` }}
     >
       {cells.map((cell) => (
@@ -129,7 +144,7 @@ function GridVisual({ state }: { state: SimulationState }) {
     </div>
   );
 }
-function GraphVisual({
+export function GraphVisual({
   state,
   tree,
 }: {
@@ -142,37 +157,30 @@ function GraphVisual({
   const edges = Object.values(state.entities).filter(
     (entity) => entity.kind === "graph-edge",
   );
+  const treeLayout = tree ? layoutTree(nodes) : undefined;
   const count = nodes.length;
-  const positions = new Map(
-    nodes.map((node, index) => [
-      node.label,
-      tree
-        ? { x: 85 + (index % 4) * 130, y: 65 + Math.floor(index / 4) * 110 }
-        : {
-            x:
-              300 + Math.cos((index / count) * Math.PI * 2 - Math.PI / 2) * 215,
-            y:
-              180 + Math.sin((index / count) * Math.PI * 2 - Math.PI / 2) * 125,
-          },
-    ]),
-  );
-  const treeEdges = tree
-    ? Object.values(state.entities)
-        .filter(
-          (entity) =>
-            entity.kind === "tree-node" &&
-            typeof entity.metadata?.parent === "string",
-        )
-        .map((entity) => ({
-          id: entity.id,
-          from: entity.metadata!.parent as string,
-          to: entity.label,
-        }))
-    : [];
+  const positions =
+    treeLayout?.positions ??
+    new Map(
+      nodes.map((node, index) => [
+        node.label,
+        {
+          x:
+            300 +
+            Math.cos((index / Math.max(count, 1)) * Math.PI * 2 - Math.PI / 2) *
+              215,
+          y:
+            180 +
+            Math.sin((index / Math.max(count, 1)) * Math.PI * 2 - Math.PI / 2) *
+              125,
+        },
+      ]),
+    );
+  const treeEdges = treeLayout?.edges ?? [];
   return (
     <div className="graph-wrap">
       <svg
-        viewBox="0 0 600 360"
+        viewBox={`0 0 ${treeLayout?.width ?? 600} ${treeLayout?.height ?? 360}`}
         role="img"
         aria-label={
           tree
@@ -180,13 +188,26 @@ function GraphVisual({
             : "Graph nodes, edges and traversal state"
         }
       >
+        <defs>
+          <marker
+            id="graph-arrow"
+            viewBox="0 0 10 10"
+            refX="9"
+            refY="5"
+            markerWidth="7"
+            markerHeight="7"
+            orient="auto-start-reverse"
+          >
+            <path d="M 0 0 L 10 5 L 0 10 z" className="graph-arrow" />
+          </marker>
+        </defs>
         {tree
           ? treeEdges.map((edge) => {
               const a = positions.get(edge.from),
                 b = positions.get(edge.to);
               return a && b ? (
                 <line
-                  key={edge.id}
+                  key={`${edge.from}:${edge.to}`}
                   className="graph-edge"
                   x1={a.x}
                   y1={a.y}
@@ -198,19 +219,66 @@ function GraphVisual({
           : edges.map((edge) => {
               const a = positions.get(String(edge.metadata?.from)),
                 b = positions.get(String(edge.metadata?.to));
+              const directed = edge.metadata?.directed === true;
+              const weight = edge.metadata?.weight;
+              const dx = a && b ? b.x - a.x : 0;
+              const dy = a && b ? b.y - a.y : 0;
+              const distance = Math.hypot(dx, dy) || 1;
               return a && b ? (
-                <line
-                  key={edge.id}
-                  className="graph-edge"
-                  x1={a.x}
-                  y1={a.y}
-                  x2={b.x}
-                  y2={b.y}
-                />
+                <g key={edge.id}>
+                  <line
+                    className={`graph-edge status-${edge.status}${isCurrent(edge, state) ? " is-active" : ""}`}
+                    x1={a.x}
+                    y1={a.y}
+                    x2={directed ? b.x - (dx / distance) * 29 : b.x}
+                    y2={directed ? b.y - (dy / distance) * 29 : b.y}
+                    markerEnd={directed ? "url(#graph-arrow)" : undefined}
+                  />
+                  {typeof weight === "number" && (
+                    <text
+                      className="graph-weight"
+                      x={(a.x + b.x) / 2}
+                      y={(a.y + b.y) / 2 - 8}
+                      textAnchor="middle"
+                    >
+                      {weight}
+                    </text>
+                  )}
+                </g>
               ) : null;
             })}
+        {!tree &&
+          nodes.map((node) => {
+            const parent = node.metadata?.parent;
+            const a =
+              typeof parent === "string" ? positions.get(parent) : undefined;
+            const b = positions.get(node.label);
+            return a && b ? (
+              <line
+                key={`parent:${node.id}`}
+                className="parent-link"
+                x1={a.x}
+                y1={a.y}
+                x2={b.x}
+                y2={b.y}
+              />
+            ) : null;
+          })}
         {nodes.map((node) => {
           const point = positions.get(node.label)!;
+          const details = [
+            node.metadata?.distance !== undefined
+              ? `d=${node.metadata.distance}`
+              : undefined,
+            node.metadata?.depth !== undefined
+              ? `depth=${node.metadata.depth}`
+              : undefined,
+            node.metadata?.parent !== undefined
+              ? `p=${node.metadata.parent}`
+              : undefined,
+          ]
+            .filter(Boolean)
+            .join(" · ");
           return (
             <g key={focusKey(node, state)} className={className(node, state)}>
               <circle cx={point.x} cy={point.y} r="25" />
@@ -227,17 +295,14 @@ function GraphVisual({
               <text x={point.x} y={point.y + 5} textAnchor="middle">
                 {node.label}
               </text>
-              {node.metadata?.distance !== undefined ||
-              node.metadata?.depth !== undefined ? (
+              {details ? (
                 <text
                   className="node-meta"
                   x={point.x}
                   y={point.y + 43}
                   textAnchor="middle"
                 >
-                  {node.metadata.distance !== undefined
-                    ? `d=${node.metadata.distance}`
-                    : `depth=${node.metadata.depth}`}
+                  {details}
                 </text>
               ) : null}
             </g>
@@ -251,16 +316,66 @@ function GraphVisual({
             {node.metadata?.distance !== undefined
               ? `, distance ${node.metadata.distance}`
               : ""}
+            {node.metadata?.parent !== undefined
+              ? `, parent ${node.metadata.parent}`
+              : ""}
           </li>
         ))}
+        {!tree &&
+          edges.map((edge) => (
+            <li key={edge.id}>
+              {edge.metadata?.from} {edge.metadata?.directed ? "to" : "and"}{" "}
+              {edge.metadata?.to}
+              {edge.metadata?.weight !== undefined
+                ? `, weight ${edge.metadata.weight}`
+                : ""}
+              {`, ${edge.status}`}
+            </li>
+          ))}
       </ul>
     </div>
   );
 }
-function DPVisual({ state }: { state: SimulationState }) {
+function DpCell({
+  cell,
+  state,
+  row,
+  col,
+}: {
+  cell?: VisualEntity;
+  state: SimulationState;
+  row: number;
+  col: number;
+}) {
+  if (!cell)
+    return (
+      <div role="cell" aria-label={`dp row ${row}, column ${col}: empty`}>
+        —
+      </div>
+    );
+  const focusIndex = state.activeEntities.indexOf(cell.id);
+  const dependency = focusIndex > 0;
+  return (
+    <div
+      key={focusKey(cell, state)}
+      role="cell"
+      className={`${className(cell, state)}${dependency ? " is-dependency" : ""}`}
+      aria-label={`dp row ${row}, column ${col} equals ${cell.value}${dependency ? ", dependency" : focusIndex === 0 ? ", current target" : ""}`}
+    >
+      {cell.value}
+      {dependency && <small aria-hidden="true">USED</small>}
+      {focusIndex === 0 && state.focus?.kind === "update" && (
+        <small aria-hidden="true">UPDATE</small>
+      )}
+    </div>
+  );
+}
+
+export function DPVisual({ state }: { state: SimulationState }) {
   const cells = Object.values(state.entities).filter(
     (entity) => entity.kind === "dp",
   );
+  const layout = layoutDp(cells);
   return (
     <div
       className="dp-visual"
@@ -268,33 +383,42 @@ function DPVisual({ state }: { state: SimulationState }) {
       aria-label="Dynamic programming values"
     >
       <div className="dp-row" role="row">
-        {cells.map((cell) => (
-          <div key={cell.id} role="columnheader">
-            {cell.label}
+        {layout.twoDimensional && (
+          <div role="columnheader" aria-label="Row and column labels" />
+        )}
+        {Array.from({ length: layout.columnCount }, (_, col) => (
+          <div key={col} role="columnheader">
+            {layout.twoDimensional ? col : (layout.rows[0][col]?.label ?? col)}
           </div>
         ))}
       </div>
-      <div className="dp-row" role="row">
-        {cells.map((cell) => (
-          <div
-            key={focusKey(cell, state)}
-            role="cell"
-            className={className(cell, state)}
-            aria-label={`dp ${cell.label} equals ${cell.value}${isCurrent(cell, state) ? `, current ${state.focus?.kind}` : ""}`}
-          >
-            {cell.value}
-          </div>
-        ))}
-      </div>
+      {layout.rows.map((row, rowIndex) => (
+        <div className="dp-row" role="row" key={rowIndex}>
+          {layout.twoDimensional && <div role="rowheader">{rowIndex}</div>}
+          {row.map((cell, col) => (
+            <DpCell
+              key={cell?.id ?? `empty:${rowIndex}:${col}`}
+              cell={cell}
+              state={state}
+              row={rowIndex}
+              col={col}
+            />
+          ))}
+        </div>
+      ))}
     </div>
   );
 }
 export function Visuals({
   kind,
   state,
+  source = "",
+  activeLine,
 }: {
   kind: RendererKind;
   state: SimulationState;
+  source?: string;
+  activeLine?: number;
 }) {
   switch (kind) {
     case "array":
@@ -307,5 +431,19 @@ export function Visuals({
       return <GraphVisual state={state} tree />;
     case "dp":
       return <DPVisual state={state} />;
+    case "queue":
+    case "stack":
+    case "heap":
+      return <CollectionVisual state={state} kind={kind} />;
+    case "variables":
+      return <VariablesVisual state={state} />;
+    case "code":
+      return (
+        <CodeVisual
+          source={source}
+          activeLine={activeLine}
+          focusKind={state.focus?.kind}
+        />
+      );
   }
 }

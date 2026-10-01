@@ -8,4 +8,6 @@ The player E2E suite also checks that reads and writes have distinct text and co
 
 Lot 01 adds tests for teaching-step grouping and deterministic seeking, exact event seeking after changing playback modes, lexical block and loop scope, pointer inference from array access, and 390px Tree Diameter / Dice Combinations page widths. To run browser tests without replacing an app on port 3000, set `E2E_PORT=3001` in the environment before `pnpm test:e2e`.
 
+Lot 03 adds isolated server-rendered component checks, deterministic tree and DP layout tests, queue/stack/heap semantic-state tests, and 390px browser coverage for all ten renderer families via `/lab/renderers`.
+
 Simulation correctness invariant: replaying all events must produce the same final state after any sequence of seeks. Algorithm correctness is independently checked against examples and oracles; trace equality alone does not prove the answer is correct.

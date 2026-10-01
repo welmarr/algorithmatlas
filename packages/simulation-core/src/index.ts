@@ -60,6 +60,7 @@ function focusKind(type: EventType): StepFocusKind {
     case "SET_PARENT":
     case "SET_DEPTH":
     case "DP_UPDATE":
+    case "DP_TRANSITION":
     case "DP_BASE_CASE":
     case "HEAP_UPDATE":
       return "update";
@@ -92,6 +93,19 @@ function requiredEntity(state: SimulationState, id: string): VisualEntity {
 function stringPayload(event: AlgorithmEvent, key: string): string | undefined {
   const value = event.payload[key];
   return typeof value === "string" ? value : undefined;
+}
+
+function sortHeap(state: SimulationState, name: string): void {
+  state.collections[name]?.sort((left, right) => {
+    const leftValue = state.entities[left]?.value;
+    const rightValue = state.entities[right]?.value;
+    const leftPriority = typeof leftValue === "number" ? leftValue : Infinity;
+    const rightPriority =
+      typeof rightValue === "number" ? rightValue : Infinity;
+    return (
+      leftPriority - rightPriority || (left < right ? -1 : left > right ? 1 : 0)
+    );
+  });
 }
 
 export function reduceEvent(
@@ -155,7 +169,10 @@ export function reduceEvent(
     case "WRITE_INDEX":
     case "DP_UPDATE":
     case "DP_BASE_CASE":
+    case "HEAP_UPDATE":
       if (id) requiredEntity(state, id).value = value;
+      if (event.type === "HEAP_UPDATE")
+        sortHeap(state, stringPayload(event, "collection") ?? "heap");
       break;
     case "SET_DISTANCE":
     case "SET_CELL_DISTANCE":
@@ -204,7 +221,16 @@ export function reduceEvent(
         stringPayload(event, "collection") ??
         event.type.split("_")[0].toLowerCase();
       state.collections[collection] ??= [];
+      if (
+        event.type === "HEAP_INSERT" &&
+        typeof requiredEntity(state, id).value !== "number"
+      )
+        throw new SimulationError(
+          "INVALID_TRACE",
+          "Heap items need a numeric priority",
+        );
       if (id) state.collections[collection].push(id);
+      if (event.type === "HEAP_INSERT") sortHeap(state, collection);
       break;
     }
     case "QUEUE_POP":
@@ -213,8 +239,15 @@ export function reduceEvent(
       const collection =
         stringPayload(event, "collection") ??
         event.type.split("_")[0].toLowerCase();
-      if (event.type === "QUEUE_POP") state.collections[collection]?.shift();
-      else state.collections[collection]?.pop();
+      const items = state.collections[collection];
+      const expected = event.type === "STACK_POP" ? items?.at(-1) : items?.[0];
+      if (!items || expected !== id)
+        throw new SimulationError(
+          "INVALID_TRACE",
+          `${event.type} must remove the current ${collection} item`,
+        );
+      if (event.type === "STACK_POP") items.pop();
+      else items.shift();
       break;
     }
     case "SWAP": {

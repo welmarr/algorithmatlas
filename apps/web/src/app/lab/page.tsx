@@ -9,6 +9,9 @@ export default function LabPage() {
         Start with a representative algorithm, edit its input, and inspect the
         resulting trace.
       </p>
+      <Link className="back-link" href="/lab/renderers">
+        View the structure gallery →
+      </Link>
       <div className="problem-grid">
         {problems.map((problem) => (
           <Link
