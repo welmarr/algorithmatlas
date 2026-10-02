@@ -27,6 +27,7 @@
     "@types/react-dom": "^19.1.2",
     "@sim/problems": "workspace:*",
     "@sim/semantic-events": "workspace:*",
+    "@sim/semantic-interpreter": "workspace:*",
     "@sim/simulation-core": "workspace:*",
     "@types/node": "^22.15.0",
     "@typescript-eslint/eslint-plugin": "^8.31.0",

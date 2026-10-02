@@ -1,6 +1,6 @@
 export interface RawTraceEvent {
   schemaVersion: "0.1";
-  operation: "LINE" | "RETURN";
+  operation: "line" | "return";
   data: { line: number; changes: string };
   sourceRef: { file: "submission.py"; line: number };
 }

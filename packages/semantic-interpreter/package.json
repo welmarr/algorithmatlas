@@ -1,0 +1,12 @@
+{
+  "name": "@sim/semantic-interpreter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "@sim/domain": "workspace:*",
+    "@sim/semantic-events": "workspace:*",
+    "@sim/simulation-core": "workspace:*"
+  }
+}

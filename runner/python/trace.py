@@ -102,7 +102,7 @@ def run(request):
             serialized = '{"_truncated":"Local state exceeded trace budget"}'
         trace.append({
             "schemaVersion": "0.1",
-            "operation": "RETURN" if event == "return" else "LINE",
+            "operation": "return" if event == "return" else "line",
             "data": {"line": frame.f_lineno, "changes": serialized},
             "sourceRef": {"file": "submission.py", "line": frame.f_lineno},
         })

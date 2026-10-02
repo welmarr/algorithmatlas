@@ -1,0 +1,9 @@
+# Python semantic interpretation
+
+The local Python path now follows `source → Python AST validation → bounded Docker runner → raw trace → semantic interpreter → canonical events → teaching steps → deterministic timeline`. The interpreter is an importable package, not a public API. Existing curated instrumentation remains the highest-fidelity source of algorithm actions.
+
+For JSON input with an integer `values` array, a changed recorded element becomes `WRITE_INDEX` with its observed value and source reference. For a validated numeric-node graph with weighted edges and a `dist` list, a changed distance becomes `SET_DISTANCE`. It becomes `RELAX_EDGE` only if the preceding source assignment uses `dist[v] = dist[u] + …`, the recorded `u` and `v` match the changed entry, a supplied edge connects them, and its weight explains the exact new distance. An inconsistent edge or source expression keeps the lower-level distance change without claiming relaxation.
+
+Each event has separate inference metadata: provenance, raw index, confidence, and reason. Direct observations have confidence 1; the constrained relaxation pattern has 0.98. Unrecognized operations retain their raw trace and, when meaningful state changed without a supported mapping, get a source-linked annotation with confidence 0. Routine line events are available in the raw trace without becoming one visible teaching step each. AI classification is not used for correctness or required for this path.
+
+The first Python parser uses its built-in AST for syntax checks and line references. The semantic mapper currently uses a narrow source-line pattern and runtime snapshots; it does not prove the user's algorithm is correct, infer arbitrary graph operations, or support C++/Java. The local Docker integration test runs edited Increasing Array Python code on `[8,2,5,1,7]`, checks the four actual writes, and checks the six-step learning projection. See `tests/isolated-runner-docker.test.ts`.

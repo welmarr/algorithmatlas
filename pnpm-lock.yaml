@@ -38,6 +38,9 @@ importers:
       '@sim/semantic-events':
         specifier: workspace:*
         version: link:packages/semantic-events
+      '@sim/semantic-interpreter':
+        specifier: workspace:*
+        version: link:packages/semantic-interpreter
       '@sim/simulation-core':
         specifier: workspace:*
         version: link:packages/simulation-core
@@ -178,6 +181,18 @@ importers:
       '@sim/domain':
         specifier: workspace:*
         version: link:../domain
+
+  packages/semantic-interpreter:
+    dependencies:
+      '@sim/domain':
+        specifier: workspace:*
+        version: link:../domain
+      '@sim/semantic-events':
+        specifier: workspace:*
+        version: link:../semantic-events
+      '@sim/simulation-core':
+        specifier: workspace:*
+        version: link:../simulation-core
 
   packages/simulation-core:
     dependencies:
