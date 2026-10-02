@@ -33,7 +33,7 @@ The [Python Own Code page](docs/PYTHON-WEB-EXECUTION.md) executes edited Python 
 
 ## Visual reasoning and local Python
 
-Teaching steps now drive [declarative choreography](docs/VISUAL-CHOREOGRAPHY.md): meaningful focus, comparisons, equations, value changes and identity-preserving swaps, with restrained semantic color and reduced motion. Run `pnpm runner:build`, then `pnpm dev:python` to open the local Python path with a temporary internal service key. See [Python setup and limits](docs/PYTHON-WEB-EXECUTION.md).
+Teaching steps now drive [declarative choreography](docs/VISUAL-CHOREOGRAPHY.md): meaningful focus, comparisons, equations, value changes and identity-preserving swaps, with restrained semantic color and reduced motion. Run `pnpm runner:build`, then `pnpm dev:python` to open the local Python path with locally generated stable internal keys in ignored .env. See [Python setup and limits](docs/PYTHON-WEB-EXECUTION.md).
 
 ## Project documents
 
@@ -42,3 +42,11 @@ Read [ARCHITECTURE.md](ARCHITECTURE.md), [DEVELOPMENT.md](DEVELOPMENT.md), [TEST
 ## Verified VNext release
 
 The visual/account/local Python milestone passes the full production browser gate and a fresh GitHub clone: 138 unit/integration/security tests and 27 browser tests, with separate optional performance runs. See [the current audit](docs/audit/vnext-visual-auth-python/README.md) for exact scope, revisions, skips and production gates. The preserved MVP archive remains available.
+
+## Public runner and production operations candidate
+
+Public Python remains off by default. The new [runner architecture](docs/PUBLIC-RUNNER.md) uses a durable PostgreSQL queue, capability/ownership checks, quotas, a private orchestrator and fail-closed runtime preflight. [Production operations](docs/PRODUCTION-OPERATIONS.md) covers proxy/TLS policy, incident switches and deployment responsibilities. Independent security review and actual production Linux validation remain exposure gates.
+
+Accounts use a [durable encrypted email outbox](docs/EMAIL.md), and [account data retention/deletion](docs/RETENTION.md) is explicit. [Native backup/restore](docs/BACKUP-RESTORE.md) includes a fresh-database drill. Run pnpm verify:public-runner and pnpm verify:prod-ops for isolated release checks.
+
+Run pnpm capture:visual to create the [real UI review package](docs/VISUAL-CAPTURE.md): route inventory, meaningful algorithm phases, responsive/auth/Python/error screenshots, contact sheets, offline gallery and ZIP. Final artifacts stay outside Git.

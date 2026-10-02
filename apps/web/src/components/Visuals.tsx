@@ -245,29 +245,43 @@ function GridVisual({ state }: { state: SimulationState }) {
       aria-label="Grid cells"
       style={{ gridTemplateColumns: `repeat(${width}, minmax(30px, 1fr))` }}
     >
-      {cells.map((cell) => (
-        <div
-          role="gridcell"
-          key={focusKey(cell, state)}
-          className={className(cell, state)}
-          aria-label={`Row ${cell.metadata?.row}, column ${cell.metadata?.col}: ${cell.metadata?.queen && cell.status === "path" ? "queen" : cell.label === "#" ? "wall" : cell.label === "." ? "open" : cell.label}, ${cell.status}${isCurrent(cell, state) ? `, ${presentation.labels.find((label) => label.entityId === cell.id)?.label ?? `current ${state.focus?.kind}`}` : ""}`}
-        >
-          <span>
-            {cell.label === "."
-              ? cell.status === "path"
-                ? cell.metadata?.queen
-                  ? "♛"
-                  : "•"
-                : ""
-              : cell.label === "#"
-                ? ""
-                : cell.label}
-          </span>
-          {cell.metadata?.distance !== undefined && cell.status !== "path" && (
-            <small className="cell-distance">{cell.metadata.distance}</small>
-          )}
-        </div>
-      ))}
+      {cells.map((cell) => {
+        const label = presentation.labels.find(
+          (item) => item.entityId === cell.id,
+        );
+        return (
+          <div
+            role="gridcell"
+            key={focusKey(cell, state)}
+            className={`${className(cell, state)}${label ? ` role-${label.role}` : ""}`}
+            aria-label={`Row ${cell.metadata?.row}, column ${cell.metadata?.col}: ${cell.metadata?.queen && cell.status === "path" ? "queen" : cell.label === "#" ? "wall" : cell.label === "." ? "open" : cell.label}, ${cell.status}${isCurrent(cell, state) ? `, ${presentation.labels.find((label) => label.entityId === cell.id)?.label ?? `current ${state.focus?.kind}`}` : ""}`}
+          >
+            <span>
+              {label?.role === "rejected"
+                ? "×"
+                : label?.role === "current" &&
+                    cell.metadata?.queen &&
+                    cell.status !== "path"
+                  ? "?"
+                  : cell.label === "."
+                    ? cell.status === "path"
+                      ? cell.metadata?.queen
+                        ? "♛"
+                        : "•"
+                      : ""
+                    : cell.label === "#"
+                      ? ""
+                      : cell.label}
+            </span>
+            {cell.metadata?.distance !== undefined &&
+              cell.status !== "path" && (
+                <small className="cell-distance">
+                  {cell.metadata.distance}
+                </small>
+              )}
+          </div>
+        );
+      })}
     </div>
   );
 }

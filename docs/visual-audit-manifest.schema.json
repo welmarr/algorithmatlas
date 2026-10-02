@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Algorithm Atlas real UI visual audit",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "commit",
+    "complete",
+    "darkModeSupported",
+    "screenshots",
+    "routesNotCaptured"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0"
+    },
+    "commit": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "complete": {
+      "type": "boolean"
+    },
+    "darkModeSupported": {
+      "type": "boolean"
+    },
+    "routesNotCaptured": {
+      "type": "array"
+    },
+    "omissions": {
+      "type": "array"
+    },
+    "screenshots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "filename",
+          "category",
+          "route",
+          "viewport",
+          "authState",
+          "fixture",
+          "teachingStep",
+          "technicalEventPosition",
+          "choreographyPhase",
+          "reducedMotion",
+          "fullPage",
+          "description",
+          "expectedPurpose",
+          "overflow"
+        ],
+        "properties": {
+          "filename": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9/_.-]+\\.png$"
+          },
+          "category": {
+            "type": "string"
+          },
+          "route": {
+            "type": "string"
+          },
+          "viewport": {
+            "type": "object",
+            "required": ["width", "height"],
+            "properties": {
+              "width": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "height": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          },
+          "authState": {
+            "enum": ["anonymous", "unverified", "verified"]
+          },
+          "teachingStep": {
+            "type": ["string", "null"]
+          },
+          "technicalEventPosition": {
+            "type": ["integer", "null"]
+          },
+          "choreographyPhase": {
+            "type": ["string", "null"]
+          },
+          "reducedMotion": {
+            "type": "boolean"
+          },
+          "fullPage": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string"
+          },
+          "expectedPurpose": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

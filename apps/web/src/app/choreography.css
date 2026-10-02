@@ -145,9 +145,12 @@
   border: 3px double var(--semantic-accepted) !important;
   background: var(--semantic-accepted-bg) !important;
 }
-.array-visual .visual-entity.role-rejected {
+.array-visual .visual-entity.role-rejected,
+.choreography-stage .grid-visual .visual-entity.role-rejected {
   border: 2px dashed var(--semantic-rejected) !important;
   background: #f3f0f1 !important;
+  color: var(--semantic-rejected);
+  box-shadow: none;
 }
 .array-visual .visual-entity.role-dependency {
   border-style: dashed;

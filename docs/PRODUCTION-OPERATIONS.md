@@ -44,7 +44,7 @@ pnpm ops:control signup_disabled on
 pnpm ops:status
 ```
 
-Use off to resume after investigation. Environment switches PUBLIC_PYTHON_EXECUTION_ENABLED=false, PYTHON_GUEST_EXECUTION_ENABLED=false, PYTHON_VERIFIED_EXECUTION_ENABLED=false and OUTGOING_EMAIL_ENABLED=false also gate services at startup. DB switches persist across restarts. Runner controls stop admissions/claims and request cancellation of matching active work. Public learning stays available; saved work stays accessible.
+Use off to resume after investigation. Environment switches PUBLIC_PYTHON_EXECUTION_ENABLED=false, PYTHON_GUEST_EXECUTION_ENABLED=false, PYTHON_VERIFIED_EXECUTION_ENABLED=false and OUTGOING_EMAIL_ENABLED=false also gate services at startup. DB switches persist across restarts. Global/role Python controls stop matching admissions and claims and request cancellation of active work. runner_paused stops worker claims and cancels active work while the bounded queue may still accept submissions; use python_disabled to close admission too. Public learning stays available; saved work stays accessible.
 
 For suspected runner escape: close admission, isolate the runner host at the firewall, preserve bounded evidence, revoke service credentials, investigate offline and rebuild the host/image from reviewed inputs. Never clear a cleanup pause without confirming named containers are gone. Never globally prune a shared Docker host. Inspect only project labels and recorded IDs. Restore data using BACKUP-RESTORE.md and revalidate before exposure.
 

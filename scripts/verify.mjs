@@ -1,4 +1,5 @@
 import { spawnSync, execFileSync } from "node:child_process";
+import { resolve } from "node:path";
 import { randomBytes } from "node:crypto";
 
 const mode = process.argv[2] ?? "fast";
@@ -46,7 +47,20 @@ if (serviceGate) {
   process.env.PYTHON_ORCHESTRATOR_PORT ??= "3041";
   process.env.PYTHON_ORCHESTRATOR_URL = `http://127.0.0.1:${process.env.PYTHON_ORCHESTRATOR_PORT}`;
   run("PostgreSQL migrations", ["db:migrate"]);
-  run("Python runner image", ["runner:build"]);
+  if (process.env.DOCKER_NO_CACHE === "1")
+    run(
+      "Python runner image (no cache)",
+      [
+        "build",
+        "--no-cache",
+        "-t",
+        "simulator-python-runner:0.1",
+        "runner/python",
+      ],
+      {},
+      "docker",
+    );
+  else run("Python runner image", ["runner:build"]);
   process.env.PYTHON_RUNNER_IMAGE = execFileSync(
     "docker",
     ["image", "inspect", "simulator-python-runner:0.1", "--format", "{{.Id}}"],
@@ -98,6 +112,42 @@ if (mode === "prod-ops") {
     { E2E_DATABASE_URL: process.env.DATABASE_URL },
   );
   console.info("Production operations verification passed.");
+  process.exit(0);
+}
+if (mode === "capture") {
+  if (process.env.DISPOSABLE_VERIFICATION !== "1")
+    throw new Error("Capture requires verify-isolated provisioned services");
+  const output = resolve(
+    "artifacts",
+    "visual-audit",
+    new Date()
+      .toISOString()
+      .replaceAll(":", "-")
+      .replace(/\.\d{3}Z$/, "Z"),
+  );
+  run("capture domain verification", [
+    "exec",
+    "vitest",
+    "run",
+    "tests/representative-problems.test.ts",
+    "tests/choreography.test.ts",
+  ]);
+  run("tested production capture build", ["build"]);
+  run(
+    "real application visual capture",
+    ["exec", "playwright", "test", "--config=playwright.capture.config.ts"],
+    {
+      E2E_DATABASE_URL: process.env.DATABASE_URL,
+      VISUAL_CAPTURE_DISPOSABLE: "1",
+      VISUAL_AUDIT_DIR: output,
+    },
+  );
+  run(
+    "contact sheets, gallery and ZIP",
+    ["scripts/package-visual-audit.mjs", output],
+    {},
+    process.execPath,
+  );
   process.exit(0);
 }
 for (const command of ["format:check", "lint", "typecheck", "test", "build"]) {

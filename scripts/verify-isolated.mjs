@@ -90,6 +90,7 @@ try {
     PG_TOOLS_CONTAINER: names[0],
     PYTHON_ORCHESTRATOR_PORT: String(runnerPort),
     E2E_PRODUCTION: "1",
+    DISPOSABLE_VERIFICATION: "1",
     PERF_BROWSER: "1",
   };
   for (const name of [

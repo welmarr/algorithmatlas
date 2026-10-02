@@ -355,14 +355,40 @@ const queens = defineProblem({
         return;
       }
       for (let col = 0; col < n; col++) {
-        if (
-          rows[row][col] === "*" ||
-          columns.has(col) ||
-          down.has(row - col) ||
-          up.has(row + col)
-        )
-          continue;
         const id = `grid:${row}:${col}`;
+        const conflict =
+          rows[row][col] === "*"
+            ? "This square is blocked."
+            : columns.has(col)
+              ? "A queen already occupies this column."
+              : down.has(row - col) || up.has(row + col)
+                ? "A queen attacks this square along a diagonal."
+                : null;
+        events.push(
+          event(
+            "ANNOTATE",
+            [],
+            conflict
+              ? `Reject row ${row + 1}, column ${col + 1}: ${conflict}`
+              : `Consider row ${row + 1}, column ${col + 1}.`,
+            { variable: "depth", value: row },
+            4,
+            {
+              schemaVersion: "0.1",
+              reason:
+                conflict ??
+                "This column and both diagonals are free; the candidate can be placed.",
+              labels: [
+                {
+                  entityId: id,
+                  label: conflict ? "Rejected ×" : "Candidate",
+                  role: conflict ? "rejected" : "current",
+                },
+              ],
+            },
+          ),
+        );
+        if (conflict) continue;
         columns.add(col);
         down.add(row - col);
         up.add(row + col);
