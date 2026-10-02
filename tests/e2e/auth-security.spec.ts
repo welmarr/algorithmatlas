@@ -12,7 +12,7 @@ test("verified auth, reset, private ownership, abuse limits and anonymous draft 
 }) => {
   test.setTimeout(120000);
   process.env.DATABASE_URL = process.env.E2E_DATABASE_URL;
-  const origin = `http://127.0.0.1:${process.env.E2E_PORT ?? "3000"}`;
+  const origin = `http://localhost:${process.env.E2E_PORT ?? "3000"}`;
   const email = `auth-e2e-${randomUUID()}@example.test`;
   const otherEmail = `other-${randomUUID()}@example.test`;
   const password = "original test password";
@@ -101,6 +101,16 @@ test("verified auth, reset, private ownership, abuse limits and anonymous draft 
     const saved = await save();
     expect(saved.status()).toBe(201);
     const id = (await saved.json()).id;
+    const workspace = await page.request.post("/api/progress/workspaces", {
+      headers: { origin },
+      data: {
+        name: "Private Python",
+        source: "def solve(data): return data",
+        input: { value: 7 },
+      },
+    });
+    expect(workspace.status()).toBe(201);
+    const workspaceId = (await workspace.json()).id;
     expect(
       (await second.request.get(`/api/progress/inputs/${id}`)).status(),
     ).toBe(401);
@@ -135,6 +145,18 @@ test("verified auth, reset, private ownership, abuse limits and anonymous draft 
       ).status(),
     ).toBe(404);
     // A second session must also be revoked by the reset.
+    expect(
+      (
+        await second.request.get(`/api/progress/workspaces/${workspaceId}`)
+      ).status(),
+    ).toBe(404);
+    expect(
+      (
+        await second.request.delete(`/api/progress/workspaces/${workspaceId}`, {
+          headers: { origin },
+        })
+      ).status(),
+    ).toBe(404);
     expect(
       (
         await second.request.post("/api/auth/login", {

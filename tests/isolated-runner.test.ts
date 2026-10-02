@@ -9,7 +9,7 @@ describe("local Python runner boundary", () => {
     const args = dockerRunArguments(
       "simulator-python-runner-12345678-1234-1234-1234-123456789abc",
     );
-    expect(args).toContain("--rm");
+    expect(args[0]).toBe("create"); // Explicit cleanup completes before the run resolves.
     expect(args).toContain("--read-only");
     expect(args).toContain("none");
     expect(args).toContain("--memory");

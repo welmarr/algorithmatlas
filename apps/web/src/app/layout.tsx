@@ -24,6 +24,7 @@ export default function RootLayout({
             <Link href="/">Problems</Link>
             <Link href="/lab">Algorithm Lab</Link>
             <Link href="/lab/compare">Compare</Link>
+            <Link href="/own-code">Own Code</Link>
             <Link href="/dashboard">Progress</Link>
           </nav>
           <span className="offline-badge">Deterministic core</span>

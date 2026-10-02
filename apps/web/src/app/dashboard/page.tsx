@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { dashboardData, databaseReady } from "@sim/persistence";
+import {
+  dashboardData,
+  databaseReady,
+  listPythonWorkspaces,
+} from "@sim/persistence";
 import { getProblem } from "@sim/problems";
 import { currentUser } from "../../lib/auth";
 import "../account.css";
@@ -13,6 +17,7 @@ export default async function DashboardPage() {
   if (!user) redirect("/account");
   if (!user.emailVerified) redirect("/account?error=AUTH_EMAIL_UNVERIFIED");
   const data = await dashboardData(user.id);
+  const workspaces = await listPythonWorkspaces(user.id);
   return (
     <main className="account-page dashboard-page">
       <div className="dashboard-heading">
@@ -95,6 +100,21 @@ export default async function DashboardPage() {
           </ul>
         </section>
       )}
+      <section className="panel account-card">
+        <h2>Python workspaces</h2>
+        {workspaces.length ? (
+          <ul>
+            {workspaces.map((item) => (
+              <li key={item.id}>
+                <Link href={`/own-code?saved=${item.id}`}>{item.name}</Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>Save source and input from Own Code to continue later.</p>
+        )}
+        <Link href="/own-code">Open Own Code</Link>
+      </section>
       <Link className="primary-link" href="/">
         Explore problems
       </Link>

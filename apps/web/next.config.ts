@@ -36,6 +36,7 @@ const nextConfig: NextConfig = {
     "@sim/persistence",
     "@sim/problem-sdk",
     "@sim/semantic-events",
+    "@sim/semantic-interpreter",
     "@sim/simulation-core",
     "@sim/visual-choreography",
   ],

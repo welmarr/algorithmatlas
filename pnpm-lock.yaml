@@ -95,6 +95,9 @@ importers:
       '@sim/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@sim/isolated-runner':
+        specifier: workspace:*
+        version: link:../../packages/isolated-runner
       '@sim/persistence':
         specifier: workspace:*
         version: link:../../packages/persistence
@@ -110,6 +113,9 @@ importers:
       '@sim/semantic-events':
         specifier: workspace:*
         version: link:../../packages/semantic-events
+      '@sim/semantic-interpreter':
+        specifier: workspace:*
+        version: link:../../packages/semantic-interpreter
       '@sim/simulation-core':
         specifier: workspace:*
         version: link:../../packages/simulation-core

@@ -26,7 +26,7 @@ export async function databaseReady(): Promise<boolean> {
   try {
     const result = await databasePool().query(
       "SELECT 1 FROM schema_migrations WHERE name = $1",
-      ["003_verified_accounts.sql"],
+      ["004_python_workspaces.sql"],
     );
     return Boolean(result.rowCount);
   } catch {
@@ -236,6 +236,77 @@ export async function deleteSession(tokenHash: string): Promise<void> {
   await databasePool().query("DELETE FROM sessions WHERE token_hash = $1", [
     tokenHash,
   ]);
+}
+
+export async function savePythonWorkspace(
+  userId: string,
+  name: string,
+  source: string,
+  input: unknown,
+): Promise<string> {
+  const client = await databasePool().connect();
+  try {
+    await client.query("BEGIN");
+    await client.query("SELECT id FROM users WHERE id=$1 FOR UPDATE", [userId]);
+    const count = await client.query(
+      "SELECT count(*)::int AS count FROM python_workspaces WHERE user_id=$1",
+      [userId],
+    );
+    if (count.rows[0].count >= 100) throw new Error("WORKSPACE_LIMIT");
+    const id = randomUUID();
+    await client.query(
+      "INSERT INTO python_workspaces(id,user_id,name,source,input) VALUES($1,$2,$3,$4,$5::jsonb)",
+      [id, userId, name, source, JSON.stringify(input)],
+    );
+    await client.query("COMMIT");
+    return id;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+export async function listPythonWorkspaces(
+  userId: string,
+): Promise<{ id: string; name: string }[]> {
+  return (
+    await databasePool().query(
+      "SELECT id,name FROM python_workspaces WHERE user_id=$1 ORDER BY created_at DESC LIMIT 100",
+      [userId],
+    )
+  ).rows;
+}
+export async function findPythonWorkspace(
+  userId: string,
+  id: string,
+): Promise<{
+  id: string;
+  name: string;
+  source: string;
+  input: unknown;
+} | null> {
+  return (
+    (
+      await databasePool().query(
+        "SELECT id,name,source,input FROM python_workspaces WHERE user_id=$1 AND id=$2",
+        [userId, id],
+      )
+    ).rows[0] ?? null
+  );
+}
+export async function deletePythonWorkspace(
+  userId: string,
+  id: string,
+): Promise<boolean> {
+  return Boolean(
+    (
+      await databasePool().query(
+        "DELETE FROM python_workspaces WHERE user_id=$1 AND id=$2",
+        [userId, id],
+      )
+    ).rowCount,
+  );
 }
 
 export async function recordCuratedRun(

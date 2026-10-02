@@ -1,12 +1,12 @@
 # Reconstructing Algorithm Atlas
 
-This book describes the code that exists on `build/full-platform`, not a proposed distributed system. Start with the frozen prototype audit in `docs/audit`, then read `docs/progress/LOT-01.md` through `LOT-12.md` in order. Each lot records an implementation checkpoint. The separate case studies in `docs/problem-case-studies` follow complete problem paths.
+This book describes the implemented platform. The original build lots are followed by the [visual/account/Python milestone chapter](vnext-visual-auth-python.md). Start with the frozen prototype audit in `docs/audit`, then read `docs/progress/LOT-01.md` through `LOT-12.md` in order. Each lot records an implementation checkpoint. The separate case studies in `docs/problem-case-studies` follow complete problem paths.
 
 ## 1. Domain and dependency direction
 
 Create a pnpm workspace with `apps/web` and framework-independent packages. Define `SimulationState`, visual entities, `RawTraceEvent`, and `TeachingStep` in `packages/domain`. Define event vocabulary, event-specific payload validation, `createEvents`, and raw mapping interfaces in `packages/semantic-events`. Implement a pure reducer and `SimulationTimeline` in `packages/simulation-core`. These packages must have no imports from React, Next.js, or AI. Keep algorithms in `packages/problems`, definitions and input validation in `packages/problem-sdk`, UI renderer contracts in `packages/renderer-sdk`, and the composition root in `apps/web`.
 
-The flow is input → validated problem → trace or bounded execution → raw operation (where available) → semantic event → reducer state → teaching-step projection → renderer. Direct curated semantic instrumentation is allowed when the algorithm already knows the action; the raw layer is not a demand to produce useless CPU-level noise. Each semantic event has a deterministic ID, contiguous technical position, stable entity IDs, bounded payload, and source reference where available. Reducer changes are the only authority for replay state.
+The flow is input → validated problem → trace or bounded execution → raw operation (where available) → semantic event → reducer state → teaching-step projection → choreography → renderer. Direct curated semantic instrumentation is allowed when the algorithm already knows the action; the raw layer is not a demand to produce useless CPU-level noise. Each semantic event has a deterministic ID, contiguous technical position, stable entity IDs, bounded payload, and source reference where available. Reducer changes are the only authority for replay state.
 
 ## 2. Replay and teaching
 
@@ -18,11 +18,11 @@ The web player receives only canonical state plus teaching focus. `Visuals.tsx` 
 
 ## 4. Optional systems
 
-AI is a validated advisory adapter. It never controls correctness, events, or reducer state. PostgreSQL is optional for accounts, saved inputs, submissions, and progress. Migrations are versioned and checksummed; user-scoped queries and session hashing protect ownership. The separate Python CLI executes inside a bounded Docker container, emits raw trace records, and applies a narrow semantic interpreter. It is not an HTTP runner. The bounded browser JavaScript subset is a separate educational interpreter, not arbitrary JavaScript execution.
+AI is a validated advisory adapter. It never controls correctness, events, or reducer state. PostgreSQL is optional for accounts, saved inputs, submissions, and progress. Migrations are versioned and checksummed; user-scoped queries and session hashing protect ownership. The separate Python CLI executes inside a bounded Docker container, emits raw trace records, and applies a narrow semantic interpreter. The same runner now powers a gated local browser flow via a separate authenticated loopback scheduler. The bounded browser JavaScript subset is a separate educational interpreter, not arbitrary JavaScript execution.
 
 ## 5. Reproduction and verification
 
-Install Node 22+, pnpm 11, and Docker for the full gate. `pnpm install --frozen-lockfile`, then `pnpm verify` runs formatting, lint, types, unit/integration, and production build. For `pnpm verify:full`, set `DATABASE_URL` to a disposable PostgreSQL instance; the command migrates it, builds and probes the Python runner, audits production dependencies, runs browser tests with the database, and builds the web image. Optional benchmarks and live model tests are separate because they measure host-dependent behavior or require configured external endpoints. See `TESTING.md`, `docs/PERFORMANCE.md`, `docs/ACCESSIBILITY.md`, and `SECURITY.md`.
+Install Node 22+, pnpm 11, and Docker for the full gate. `pnpm install --frozen-lockfile`, then `pnpm verify` runs formatting, lint, types, unit/integration, and production build. For automatic fresh service setup use `pnpm verify:isolated`. For `pnpm verify:full`, configure disposable PostgreSQL plus Mailpit; the command migrates it, builds and probes the Python runner, audits production dependencies, runs browser tests with the database, and builds the web image. Optional benchmarks and live model tests are separate because they measure host-dependent behavior or require configured external endpoints. See `TESTING.md`, `docs/PERFORMANCE.md`, `docs/ACCESSIBILITY.md`, and `SECURITY.md`.
 
 ## 6. Boundaries to preserve when extending
 

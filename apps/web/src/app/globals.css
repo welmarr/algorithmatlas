@@ -68,6 +68,7 @@ select:focus-visible {
 }
 .site-header nav {
   display: flex;
+  flex-wrap: wrap;
   gap: 30px;
   font-size: 14px;
   font-weight: 700;
@@ -1034,6 +1035,17 @@ select:focus-visible {
   border: 0;
 }
 @media (max-width: 1050px) {
+  .site-header {
+    height: auto;
+    padding: 16px 5vw;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+  .site-header nav {
+    order: 3;
+    width: 100%;
+    gap: 18px;
+  }
   .sim-layout {
     grid-template-columns: minmax(0, 1fr);
   }

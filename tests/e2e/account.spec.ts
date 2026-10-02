@@ -57,7 +57,7 @@ test("account saves a curated run and restores a private input", async ({
     expect(rejected.status()).toBe(403);
 
     const verified = await page.request.post("/api/progress/runs", {
-      headers: { origin: `http://127.0.0.1:${process.env.E2E_PORT ?? "3000"}` },
+      headers: { origin: `http://localhost:${process.env.E2E_PORT ?? "3000"}` },
       data: {
         problemId: "increasing-array",
         input: { values: [8, 2, 5, 1, 7] },

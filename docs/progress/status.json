@@ -89,7 +89,7 @@
     "lots": {
       "visual": "locally-verified",
       "auth": "locally-verified",
-      "python": "pending"
+      "python": "locally-verified"
     },
     "finalGate": "pending",
     "freshClone": "pending"

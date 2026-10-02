@@ -5,6 +5,7 @@ import builtins
 import contextlib
 import io
 import json
+import resource
 import sys
 
 MAX_SOURCE = 4096
@@ -12,6 +13,10 @@ MAX_INPUT = 16384
 MAX_TRACE = 800
 MAX_STDOUT = 8192
 ALLOWED_MODULES = {"math", "collections", "heapq", "bisect", "itertools", "functools"}
+resource.setrlimit(resource.RLIMIT_AS, (96 * 1024 * 1024, 96 * 1024 * 1024))
+
+class PolicyRejected(Exception):
+    pass
 
 
 class TraceLimit(Exception):
@@ -63,7 +68,11 @@ def validate_source(source):
                  ast.Yield, ast.YieldFrom)
     for node in ast.walk(tree):
         if isinstance(node, forbidden):
-            raise ValueError(f"Unsupported syntax: {type(node).__name__}")
+            raise PolicyRejected(f"Unsupported syntax: {type(node).__name__}")
+        if isinstance(node, ast.Attribute) and node.attr.startswith("_"):
+            raise PolicyRejected("Private attributes are not supported")
+        if isinstance(node, ast.Name) and (node.id.startswith("__") or node.id in {"open", "eval", "exec", "compile", "input", "breakpoint", "getattr", "setattr", "delattr", "globals", "locals", "vars"}):
+            raise PolicyRejected("NameError: this builtin is not available")
     if not any(isinstance(node, ast.FunctionDef) and node.name == "solve" for node in tree.body):
         raise ValueError("Define solve(data) as a top-level function")
     return compile(tree, "submission.py", "exec")
@@ -131,10 +140,19 @@ def main():
         if not isinstance(request, dict):
             raise ValueError("Request must be an object")
         result = run(request)
-    except (TraceLimit, OutputLimit) as cause:
-        result = {"status": "limit", "error": str(cause), "stdout": "", "rawTrace": []}
+    except (TraceLimit, OutputLimit, MemoryError) as cause:
+        code = "PYTHON_TRACE_LIMIT" if isinstance(cause, TraceLimit) else "PYTHON_OUTPUT_LIMIT" if isinstance(cause, OutputLimit) else "PYTHON_MEMORY_LIMIT"
+        result = {"status": "limit", "code": code, "error": str(cause)[:512], "stdout": "", "rawTrace": []}
+    except (PolicyRejected, ImportError) as cause:
+        result = {"status": "error", "code": "PYTHON_POLICY_REJECTED", "error": f"{type(cause).__name__}: {cause}"[:512], "stdout": "", "rawTrace": []}
     except Exception as cause:
-        result = {"status": "error", "error": f"{type(cause).__name__}: {cause}", "stdout": "", "rawTrace": []}
+        line = cause.lineno if isinstance(cause, SyntaxError) else None
+        frame = cause.__traceback__
+        while frame:
+            if frame.tb_frame.f_code.co_filename == "submission.py":
+                line = frame.tb_lineno
+            frame = frame.tb_next
+        result = {"status": "error", "code": "PYTHON_SYNTAX_ERROR" if isinstance(cause, SyntaxError) else "PYTHON_RUNTIME_ERROR", "errorLine": line, "error": f"{type(cause).__name__}: {cause}"[:512], "stdout": "", "rawTrace": []}
     print(json.dumps(result, allow_nan=False, separators=(",", ":")))
 
 

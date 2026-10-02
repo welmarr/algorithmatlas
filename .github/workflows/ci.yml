@@ -1,11 +1,17 @@
 name: CI
 on:
+  workflow_dispatch:
   push:
   pull_request:
 jobs:
   validate:
     runs-on: ubuntu-latest
     services:
+      mailpit:
+        image: axllent/mailpit:v1.27.8
+        ports:
+          - 11025:1025
+          - 18025:8025
       postgres:
         image: postgres:16-alpine
         env:
@@ -21,6 +27,11 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: postgres://simulator:ci-only-password@127.0.0.1:5432/simulator
+      SMTP_HOST: 127.0.0.1
+      SMTP_PORT: "11025"
+      MAILPIT_API: http://127.0.0.1:18025
+      E2E_PRODUCTION: "1"
+      PERF_BROWSER: "1"
       CI: "1"
     steps:
       - uses: actions/checkout@v4

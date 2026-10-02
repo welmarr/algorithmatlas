@@ -158,12 +158,30 @@ export function createChoreography(
     events.at(-1);
   const strategy = strategyFor(tags, renderer);
   const hint = [...events].reverse().find((event) => event.pedagogy)?.pedagogy;
+  const updating = [
+    "WRITE_INDEX",
+    "DP_UPDATE",
+    "DP_BASE_CASE",
+    "UPDATE_VALUE",
+    "SET_DISTANCE",
+    "SWAP",
+  ].includes(primary?.type ?? "");
   const focus: VisualAction[] = (
     hint?.labels ??
     primary?.entities.map((entityId, index) => ({
       entityId,
-      label: index ? "Dependency" : "Current",
-      role: index ? ("dependency" as const) : ("current" as const),
+      label:
+        index && primary?.type === "DP_UPDATE"
+          ? "Dependency"
+          : updating
+            ? "Changed"
+            : "Current",
+      role:
+        index && primary?.type === "DP_UPDATE"
+          ? ("dependency" as const)
+          : updating
+            ? ("changed" as const)
+            : ("current" as const),
     })) ??
     []
   )
@@ -224,11 +242,18 @@ export function createChoreography(
       });
       if (!equation)
         equation = event.entities
-          .map((id, i) =>
-            i
-              ? `${id}=${before.entities[id]?.value}`
-              : `${id}: ${before.entities[id]?.value} → ${after.entities[id]?.value}`,
-          )
+          .map((id, i) => {
+            const entity = after.entities[id];
+            const label =
+              entity?.kind === "array"
+                ? `Index ${entity.label}`
+                : entity?.kind === "dp"
+                  ? `dp[${entity.label}]`
+                  : (entity?.label ?? "Value");
+            return i
+              ? `${label}=${before.entities[id]?.value}`
+              : `${label}: ${before.entities[id]?.value} → ${entity?.value}`;
+          })
           .join(" · ");
     }
     if (event.type === "DP_UPDATE" && event.entities.length > 1)

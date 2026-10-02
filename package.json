@@ -16,7 +16,10 @@
     "verify": "node scripts/verify.mjs",
     "verify:full": "node scripts/verify.mjs full",
     "lint": "eslint .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "verify:isolated": "node scripts/verify-isolated.mjs",
+    "execution:serve": "node apps/execution/server.mjs",
+    "dev:python": "node scripts/dev-python.mjs"
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "15.5.26",

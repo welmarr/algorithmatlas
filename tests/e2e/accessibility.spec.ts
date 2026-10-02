@@ -28,12 +28,13 @@ test("mobile player fits and reduced motion disables focus animation", async ({
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/problems/increasing-array");
   await page.getByRole("button", { name: "Next step" }).click();
-  await expect(page.locator(".array-visual .is-active")).toBeVisible();
+  await expect(page.locator(".array-visual .is-active")).toHaveCount(2);
+  await expect(page.locator(".array-visual .role-changed")).toBeVisible();
   const audit = await page.evaluate(() => ({
     viewportWidth: document.documentElement.clientWidth,
     scrollWidth: document.documentElement.scrollWidth,
     animation: getComputedStyle(
-      document.querySelector(".array-visual .is-active")!,
+      document.querySelector(".array-visual .role-changed")!,
     ).animationName,
     focusKind: document.querySelector(".step-action")?.textContent,
   }));

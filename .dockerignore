@@ -4,3 +4,13 @@ node_modules
 **/.next
 .git
 coverage
+.env*
+**/.env*
+!.env.example
+test-results
+playwright-report
+**/*.tsbuildinfo
+**/__pycache__
+**/*.pyc
+**/.cache
+**/*.log

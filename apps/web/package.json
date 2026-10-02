@@ -11,11 +11,13 @@
   "dependencies": {
     "@sim/ai-sdk": "workspace:*",
     "@sim/domain": "workspace:*",
+    "@sim/isolated-runner": "workspace:*",
     "@sim/persistence": "workspace:*",
     "@sim/problem-sdk": "workspace:*",
     "@sim/problems": "workspace:*",
     "@sim/renderer-sdk": "workspace:*",
     "@sim/semantic-events": "workspace:*",
+    "@sim/semantic-interpreter": "workspace:*",
     "@sim/simulation-core": "workspace:*",
     "@sim/visual-choreography": "workspace:*",
     "next": "^15.3.1",

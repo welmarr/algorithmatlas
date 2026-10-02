@@ -1,0 +1,40 @@
+import { existsSync } from "node:fs";
+import { randomBytes } from "node:crypto";
+import { createRequire } from "node:module";
+import { spawn } from "node:child_process";
+if (existsSync(".env")) process.loadEnvFile(".env");
+process.env.PYTHON_EXECUTION_ENABLED = "local";
+process.env.PYTHON_ORCHESTRATOR_KEY ??= randomBytes(32).toString("hex");
+process.env.PYTHON_ORCHESTRATOR_PORT ??= "3040";
+process.env.PYTHON_ORCHESTRATOR_URL = `http://127.0.0.1:${process.env.PYTHON_ORCHESTRATOR_PORT}`;
+const { stop } = await import("../apps/execution/server.mjs");
+const require = createRequire(
+  new URL("../apps/web/package.json", import.meta.url),
+);
+const child = spawn(
+  process.execPath,
+  [
+    require.resolve("next/dist/bin/next"),
+    "dev",
+    "--hostname",
+    "127.0.0.1",
+    "-p",
+    process.env.PORT ?? "3000",
+  ],
+  {
+    cwd: new URL("../apps/web", import.meta.url),
+    env: process.env,
+    stdio: "inherit",
+    windowsHide: true,
+  },
+);
+child.on("error", async () => {
+  await stop();
+  process.exitCode = 1;
+});
+child.on("exit", async (code) => {
+  await stop();
+  process.exitCode = code ?? 0;
+});
+process.on("SIGINT", () => child.kill());
+process.on("SIGTERM", () => child.kill());

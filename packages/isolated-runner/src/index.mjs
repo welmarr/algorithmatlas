@@ -1,47 +1,42 @@
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
-
 export const RUNNER_IMAGE = "simulator-python-runner:0.1";
 export const MAX_REQUEST_BYTES = 24 * 1024;
 export const MAX_RESPONSE_BYTES = 256 * 1024;
-const MAX_ERROR_BYTES = 16 * 1024;
-const WALL_TIMEOUT_MS = 5000;
-
-export function validateRunnerRequest(request) {
-  if (!request || typeof request !== "object" || Array.isArray(request)) {
-    throw new TypeError("Runner request must be an object");
+export class RunnerError extends Error {
+  constructor(code, message = code) {
+    super(message);
+    this.code = code;
   }
+}
+export function validateRunnerRequest(request) {
+  if (!request || typeof request !== "object" || Array.isArray(request))
+    throw new TypeError("Runner request must be an object");
   if (
     typeof request.source !== "string" ||
     !request.source.trim() ||
     request.source.length > 4096
-  ) {
+  )
     throw new RangeError("Python source must contain 1–4096 characters");
-  }
   const input = JSON.stringify(request.input);
-  if (input === undefined || Buffer.byteLength(input, "utf8") > 16384) {
+  if (input === undefined || Buffer.byteLength(input, "utf8") > 16384)
     throw new RangeError("Runner input must be JSON and at most 16 KiB");
-  }
   const payload = JSON.stringify({
     source: request.source,
     input: request.input,
   });
-  if (Buffer.byteLength(payload, "utf8") > MAX_REQUEST_BYTES) {
+  if (Buffer.byteLength(payload, "utf8") > MAX_REQUEST_BYTES)
     throw new RangeError("Runner request exceeds 24 KiB");
-  }
   return payload;
 }
-
-export function dockerRunArguments(containerName) {
-  if (!/^simulator-python-runner-[0-9a-f-]{36}$/.test(containerName)) {
+export function dockerRunArguments(name) {
+  if (!/^simulator-python-runner-[0-9a-f-]{36}$/.test(name))
     throw new TypeError("Invalid runner container name");
-  }
   return [
-    "run",
-    "--rm",
+    "create",
     "-i",
     "--name",
-    containerName,
+    name,
     "--pull",
     "never",
     "--network",
@@ -74,106 +69,113 @@ export function dockerRunArguments(containerName) {
     RUNNER_IMAGE,
   ];
 }
-
-function removeContainer(containerName) {
-  // The generated name is validated before this point. Never invoke a shell.
-  return new Promise((resolve) => {
-    const child = spawn("docker", ["rm", "-f", containerName], {
-      shell: false,
-      stdio: "ignore",
-      windowsHide: true,
-    });
-    const timeout = setTimeout(() => child.kill(), 3000);
-    child.on("error", () => {
-      clearTimeout(timeout);
-      resolve();
-    });
-    child.on("close", () => {
-      clearTimeout(timeout);
-      resolve();
-    });
-  });
-}
-
-let activeRuns = 0;
-export function runPython(request, { timeoutMs = WALL_TIMEOUT_MS } = {}) {
-  const payload = validateRunnerRequest(request);
-  if (
-    !Number.isInteger(timeoutMs) ||
-    timeoutMs < 100 ||
-    timeoutMs > WALL_TIMEOUT_MS
-  ) {
-    throw new RangeError("Timeout must be between 100 and 5000 ms");
-  }
-  if (activeRuns >= 2)
-    throw new Error("Local runner is busy (maximum two concurrent runs)");
-  const containerName = `simulator-python-runner-${randomUUID()}`;
-  const args = dockerRunArguments(containerName);
-  activeRuns += 1;
+function docker(
+  args,
+  { input, timeoutMs = 5000, signal, limit = MAX_RESPONSE_BYTES } = {},
+) {
   return new Promise((resolve, reject) => {
-    let settled = false;
-    let stdout = "";
-    let stderr = "";
-    let stoppedForLimit = false;
-    let cleanup;
+    if (signal?.aborted) {
+      reject(new RunnerError("PYTHON_CANCELLED"));
+      return;
+    }
+    let output = "",
+      errorBytes = 0,
+      failure;
     const child = spawn("docker", args, {
       shell: false,
       stdio: ["pipe", "pipe", "pipe"],
       windowsHide: true,
     });
-    const timeout = setTimeout(() => {
-      stoppedForLimit = true;
+    const stop = (code) => {
+      failure ??= new RunnerError(code);
       child.kill();
-      cleanup = removeContainer(containerName);
-    }, timeoutMs);
-    const finish = (error, value) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timeout);
-      activeRuns -= 1;
-      if (error) reject(error);
-      else resolve(value);
     };
-    child.on("error", (error) => {
-      cleanup = removeContainer(containerName);
-      finish(error);
-    });
+    const abort = () => stop("PYTHON_CANCELLED");
+    const timer = setTimeout(() => stop("PYTHON_TIMEOUT"), timeoutMs);
+    signal?.addEventListener("abort", abort, { once: true });
     child.stdout.on("data", (chunk) => {
-      stdout += chunk;
-      if (!stoppedForLimit && Buffer.byteLength(stdout) > MAX_RESPONSE_BYTES) {
-        stoppedForLimit = true;
-        child.kill();
-        cleanup = removeContainer(containerName);
-      }
+      if (failure) return;
+      output += chunk;
+      if (Buffer.byteLength(output) > limit) stop("PYTHON_OUTPUT_LIMIT");
     });
     child.stderr.on("data", (chunk) => {
-      stderr = (stderr + chunk).slice(0, MAX_ERROR_BYTES);
+      errorBytes += chunk.length;
+      if (errorBytes > 16384) stop("PYTHON_OUTPUT_LIMIT");
     });
-    child.on("close", async (code) => {
-      if (stoppedForLimit) {
-        await cleanup;
-        finish(new Error("Runner exceeded wall time or output limit"));
-        return;
-      }
-      if (code !== 0) {
-        finish(new Error(`Docker runner exited ${code}: ${stderr.trim()}`));
-        return;
-      }
-      try {
-        const result = JSON.parse(stdout);
-        if (
-          !result ||
-          !["ok", "error", "limit"].includes(result.status) ||
-          !Array.isArray(result.rawTrace)
-        ) {
-          throw new Error("Malformed runner response");
-        }
-        finish(undefined, result);
-      } catch (error) {
-        finish(error);
-      }
+    child.on("error", () => {
+      failure ??= new RunnerError("PYTHON_INTERNAL_ERROR");
+    });
+    child.on("close", (code) => {
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", abort);
+      if (failure) reject(failure);
+      else if (code !== 0) reject(new RunnerError("PYTHON_INTERNAL_ERROR"));
+      else resolve(output);
     });
     child.stdin.on("error", () => {});
-    child.stdin.end(payload);
+    child.stdin.end(input);
   });
+}
+let activeRuns = 0;
+export async function runPython(
+  request,
+  { timeoutMs = 5000, signal, runId = randomUUID() } = {},
+) {
+  const payload = validateRunnerRequest(request);
+  if (!Number.isInteger(timeoutMs) || timeoutMs < 100 || timeoutMs > 5000)
+    throw new RangeError("Timeout must be between 100 and 5000 ms");
+  if (signal?.aborted) throw new RunnerError("PYTHON_CANCELLED");
+  if (activeRuns >= 2) throw new RunnerError("PYTHON_QUEUE_FULL");
+  activeRuns++;
+  const name = `simulator-python-runner-${runId}`;
+  let created = false;
+  try {
+    // Finish creation before honoring cancellation: never race rm against a pending create.
+    await docker(dockerRunArguments(name), { limit: 1024 });
+    created = true;
+    const stdout = await docker(["start", "--attach", "--interactive", name], {
+      input: payload,
+      timeoutMs,
+      signal,
+    });
+    let result;
+    try {
+      result = JSON.parse(stdout);
+    } catch {
+      throw new RunnerError("PYTHON_INTERNAL_ERROR");
+    }
+    if (
+      !result ||
+      !["ok", "error", "limit"].includes(result.status) ||
+      !Array.isArray(result.rawTrace) ||
+      result.rawTrace.length > 800
+    )
+      throw new RunnerError("PYTHON_INTERNAL_ERROR");
+    return result;
+  } catch (error) {
+    if (
+      created &&
+      error instanceof RunnerError &&
+      error.code === "PYTHON_INTERNAL_ERROR"
+    ) {
+      const state = await docker(
+        ["inspect", "--format", "{{json .State}}", name],
+        { limit: 16384 },
+      )
+        .then(JSON.parse)
+        .catch(() => null);
+      if (state?.OOMKilled) throw new RunnerError("PYTHON_MEMORY_LIMIT");
+      if ([137, 152].includes(state?.ExitCode))
+        throw new RunnerError("PYTHON_TIMEOUT");
+    }
+    throw error;
+  } finally {
+    try {
+      // Explicit cleanup happens before the scheduler can reuse this slot.
+      if (created) await docker(["rm", "-f", name], { limit: 1024 });
+      else await docker(["rm", "-f", name], { limit: 1024 }).catch(() => {});
+    } finally {
+      activeRuns--;
+    }
+  }
 }
