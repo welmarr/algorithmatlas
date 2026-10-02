@@ -1,34 +1,23 @@
 import Link from "next/link";
-import { problems } from "@sim/problems";
+import { AlgorithmLab } from "../../components/AlgorithmLab";
+import "./lab.css";
 export default function LabPage() {
   return (
-    <main className="lab-page">
-      <div className="eyebrow">ALGORITHM LAB</div>
-      <h1>Explore by structure</h1>
-      <p>
-        Start with a representative algorithm, edit its input, and inspect the
-        resulting trace.
-      </p>
-      <Link className="back-link" href="/lab/renderers">
-        View the structure gallery →
-      </Link>
-      <div className="problem-grid">
-        {problems.map((problem) => (
-          <Link
-            className="problem-card"
-            key={problem.metadata.id}
-            href={`/problems/${problem.metadata.id}`}
-          >
-            <span className="category">{problem.metadata.category}</span>
-            <h3>{problem.metadata.title}</h3>
-            <p>{problem.metadata.learning.intuition}</p>
-            <div className="card-bottom">
-              <span>Open lab</span>
-              <span aria-hidden="true">↗</span>
-            </div>
-          </Link>
-        ))}
+    <main className="lab-page lab-workspace">
+      <div className="lab-heading">
+        <div>
+          <div className="eyebrow">ALGORITHM LAB</div>
+          <h1>Build an input. Follow the algorithm.</h1>
+          <p>
+            Choose a structure, edit it directly, and replay how an algorithm
+            responds. Every run stays on this page.
+          </p>
+        </div>
+        <Link className="back-link" href="/lab/renderers">
+          Structure gallery →
+        </Link>
       </div>
+      <AlgorithmLab />
     </main>
   );
 }

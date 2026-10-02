@@ -490,6 +490,7 @@ export function createTeachingSteps(
       "SET_CELL_DISTANCE",
       "SET_SUBTREE_SIZE",
       "WRITE_INDEX",
+      "READ_INDEX",
       "SWAP",
       "MOVE_POINTER",
       "RELAX_EDGE",
