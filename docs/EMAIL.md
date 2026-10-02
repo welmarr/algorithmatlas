@@ -16,7 +16,7 @@ EMAIL_TRANSPORT=mailpit permits plaintext only to localhost, 127.0.0.1 or the co
 
 ## Delivery semantics
 
-Workers claim one row with FOR UPDATE SKIP LOCKED, a 60-second lease and a unique claim ID. Attempts are bounded at five; transient failures retry after 5, 10, 20 and 40 seconds. Authentication/permanent SMTP rejection dead-letters immediately. A worker restart reclaims an expired lease; each attempt uses the same Message-ID and token. Replacement requests invalidate the older token and cancel its pending message.
+Workers claim one row with FOR UPDATE SKIP LOCKED, a 60-second lease and a unique claim ID. EMAIL_MAX_ATTEMPTS selects 1–5 attempts (default five); transient failures retry after 5, 10, 20 and 40 seconds. Authentication/permanent SMTP rejection dead-letters immediately. A worker restart reclaims an expired lease; each attempt uses the same Message-ID and token. Replacement requests invalidate the older token and cancel its pending message.
 
 SMTP is at-least-once: a crash after server acceptance but before the database commit can deliver the same message again. Stable Message-ID helps receiving systems but cannot guarantee deduplication. The one-use token and five-attempt ceiling bound the consequences. A send already in progress can complete during account deletion or link replacement; its invalidated token cannot authorize an action.
 

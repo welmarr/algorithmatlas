@@ -228,6 +228,32 @@ describe.skipIf(!process.env.DB_TEST_URL)(
       const dead = (await db.pool.query("SELECT * FROM email_outbox")).rows[0];
       expect(dead.encrypted_payload).toBeNull();
       expect(dead.attempt_count).toBe(5);
+      expect(
+        () =>
+          new EmailStore({
+            pool: db.pool,
+            env: { ...config, EMAIL_MAX_ATTEMPTS: "6" },
+          }),
+      ).toThrow();
+      await clear();
+      await user();
+      const limited = new EmailStore({
+        pool: db.pool,
+        env: { ...config, EMAIL_MAX_ATTEMPTS: "1" },
+      });
+      const only = await limited.claim();
+      expect(await limited.deliver(only!, failing)).toBe("failed");
+      expect((await row(only!.id)).attempt_count).toBe(1);
+      await clear();
+      await user();
+      const prior = await store.claim();
+      expect(await store.deliver(prior!, failing)).toBe("retry");
+      expect(await limited.claim()).toBeNull();
+      expect(await row(prior!.id)).toMatchObject({
+        status: "failed",
+        encrypted_payload: null,
+        last_error_code: "EMAIL_ATTEMPTS_EXHAUSTED",
+      });
     });
     it("pause is durable, heartbeat expires and account deletion cascades saved data", async () => {
       await clear();

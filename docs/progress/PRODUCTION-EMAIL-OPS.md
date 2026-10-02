@@ -12,3 +12,5 @@ Implemented migration 006, encrypted transactional outbox, generic TLS SMTP adap
 - Production SMTP credentials/domain delivery were not tested; generic transport was exercised through Mailpit. SMTP remains at-least-once across acceptance/commit crashes.
 
 Dedicated disposable gate containers/databases/mail were removed in finally. Development data was preserved. Final full/fresh-clone/remote-CI and capture gates remain pending.
+
+Final requirement review added bounded EMAIL_MAX_ATTEMPTS configuration (1–5, default five). Lowering the budget terminalizes existing exhausted retries and expired leases, preventing stranded pending messages. The existing dead-letter test covers the default, a one-attempt policy, invalid configuration and restart with a lower budget.

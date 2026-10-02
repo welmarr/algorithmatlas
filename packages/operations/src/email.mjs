@@ -137,6 +137,7 @@ export class EmailStore {
     this.env = env;
     this.key = secret("EMAIL_OUTBOX_KEY", env);
     this.origin = appOrigin(env);
+    this.maxAttempts = integer(env, "EMAIL_MAX_ATTEMPTS", 5, 1, 5);
   }
   async enqueueOn(client, user, purpose) {
     if (!["verify", "reset"].includes(purpose))
@@ -220,11 +221,15 @@ export class EmailStore {
         (await controls(client)).email_paused
       )
         return null;
-      await client.query(
-        "UPDATE email_outbox SET status='failed',encrypted_payload=NULL,finished_at=now(),last_error_code='EMAIL_ATTEMPTS_EXHAUSTED' WHERE id IN (SELECT id FROM email_outbox WHERE status='processing' AND lease_until<now() AND attempt_count>=5 LIMIT 100 FOR UPDATE SKIP LOCKED)",
+      const exhausted = await client.query(
+        "UPDATE email_outbox SET status='failed',encrypted_payload=NULL,finished_at=now(),last_error_code='EMAIL_ATTEMPTS_EXHAUSTED' WHERE id IN (SELECT id FROM email_outbox WHERE attempt_count>=$1 AND (status IN ('pending','retry') OR (status='processing' AND lease_until<now())) LIMIT 100 FOR UPDATE SKIP LOCKED)",
+        [this.maxAttempts],
       );
+      if (exhausted.rowCount)
+        await metric("email_failed", exhausted.rowCount, client);
       const result = await client.query(
-        "SELECT * FROM email_outbox WHERE ((status IN ('pending','retry') AND available_at<=now()) OR (status='processing' AND lease_until<now())) AND attempt_count<5 ORDER BY created_at FOR UPDATE SKIP LOCKED LIMIT 1",
+        "SELECT * FROM email_outbox WHERE ((status IN ('pending','retry') AND available_at<=now()) OR (status='processing' AND lease_until<now())) AND attempt_count<$1 ORDER BY created_at FOR UPDATE SKIP LOCKED LIMIT 1",
+        [this.maxAttempts],
       );
       if (!result.rowCount) return null;
       const row = result.rows[0],
@@ -267,7 +272,7 @@ export class EmailStore {
         error?.code === "EAUTH" ||
         Number(error?.responseCode) >= 500 ||
         /EMAIL_PAYLOAD|authenticate data/.test(error?.message ?? "");
-      const terminal = permanent || row.attempt_count >= 5;
+      const terminal = permanent || row.attempt_count >= this.maxAttempts;
       const delay = Math.min(3600, 5 * 2 ** (row.attempt_count - 1));
       await transaction(this.pool, async (client) => {
         const updated = await client.query(
