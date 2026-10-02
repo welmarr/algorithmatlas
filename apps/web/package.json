@@ -11,18 +11,20 @@
   "dependencies": {
     "@sim/ai-sdk": "workspace:*",
     "@sim/domain": "workspace:*",
-    "@sim/problems": "workspace:*",
-    "@sim/problem-sdk": "workspace:*",
     "@sim/persistence": "workspace:*",
+    "@sim/problem-sdk": "workspace:*",
+    "@sim/problems": "workspace:*",
     "@sim/renderer-sdk": "workspace:*",
     "@sim/semantic-events": "workspace:*",
     "@sim/simulation-core": "workspace:*",
+    "@sim/visual-choreography": "workspace:*",
     "next": "^15.3.1",
+    "nodemailer": "10.0.13",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "@sim/visual-choreography": "workspace:*"
+    "react-dom": "^19.1.0"
   },
   "devDependencies": {
+    "@types/nodemailer": "8.0.2",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2"
   }

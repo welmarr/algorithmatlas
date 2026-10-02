@@ -1,63 +1,49 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { databaseReady, findUserByEmail } from "@sim/persistence";
 import {
-  consumeRateLimit,
-  databaseConfigured,
-  findUserByEmail,
-} from "@sim/persistence";
-import {
-  assertSameOrigin,
-  formRedirect,
   newSession,
   normalizeEmail,
-  readForm,
   SESSION_COOKIE,
   sessionCookieOptions,
   verifyPassword,
 } from "../../../../lib/auth";
+import {
+  accountFailure,
+  accountForm,
+  accountQuota,
+  accountReply,
+  AuthError,
+  safeReturn,
+} from "../../../../lib/account-service";
 import { logSecurityEvent } from "../../../../lib/observability";
-
 export const runtime = "nodejs";
-
-export async function POST(request: NextRequest) {
-  if (!databaseConfigured())
-    return new Response("Account storage is not configured", { status: 503 });
+export async function POST(request: Request) {
   try {
-    assertSameOrigin(request);
-  } catch {
-    logSecurityEvent("login", "rejected");
-    return new Response("Origin rejected", { status: 403 });
-  }
-  try {
-    const form = await readForm(request);
-    const email = normalizeEmail(form.get("email"));
-    if (
-      !(await consumeRateLimit("login-global", "all", 100, 60)) ||
-      !(await consumeRateLimit("login-email", email, 5, 900))
-    ) {
-      logSecurityEvent("login", "rate_limited");
-      return new Response("Too many sign-in attempts. Try again later.", {
-        status: 429,
-      });
+    const form = await accountForm(request);
+    if (!(await databaseReady()))
+      throw new AuthError("AUTH_STORAGE_UNAVAILABLE", 503);
+    let email: string;
+    try {
+      email = normalizeEmail(form.get("email"));
+    } catch {
+      throw new AuthError("AUTH_INVALID_CREDENTIALS", 401);
     }
+    await accountQuota("login", email, 5, 900);
     const password = form.get("password");
     if (typeof password !== "string" || password.length > 128)
-      throw new Error("Invalid credentials");
+      throw new AuthError("AUTH_INVALID_CREDENTIALS", 401);
     const user = await findUserByEmail(email);
     if (!(await verifyPassword(password, user?.passwordHash)))
-      throw new Error("Invalid credentials");
-    const token = await newSession(user!.id);
-    const response = NextResponse.redirect(
-      formRedirect(request, "/dashboard"),
-      303,
-    );
+      throw new AuthError("AUTH_INVALID_CREDENTIALS", 401);
+    const token = await newSession(user!.id, user!.passwordHash);
+    const response = accountReply(request, safeReturn(form.get("returnTo")), {
+      ok: true,
+      emailVerified: user!.emailVerified,
+    });
     response.cookies.set(SESSION_COOKIE, token, sessionCookieOptions());
     logSecurityEvent("login", "accepted");
     return response;
-  } catch {
+  } catch (error) {
     logSecurityEvent("login", "rejected");
-    return NextResponse.redirect(
-      formRedirect(request, "/account?error=credentials"),
-      303,
-    );
+    return accountFailure(request, error);
   }
 }

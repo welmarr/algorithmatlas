@@ -1,10 +1,4 @@
-import {
-  createHash,
-  randomBytes,
-  scrypt as scryptCallback,
-  timingSafeEqual,
-} from "node:crypto";
-import { promisify } from "node:util";
+import { createHash, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import {
   createSession,
@@ -12,7 +6,6 @@ import {
   type StoredUser,
 } from "@sim/persistence";
 
-const scrypt = promisify(scryptCallback);
 export const SESSION_COOKIE = "sim_session";
 const SESSION_SECONDS = 60 * 60 * 24 * 30;
 
@@ -24,45 +17,26 @@ export function normalizeEmail(value: unknown): string {
   return email;
 }
 
-export function validatePassword(value: unknown): string {
-  if (typeof value !== "string" || value.length < 12 || value.length > 128) {
-    throw new Error("Password must be 12–128 characters");
-  }
-  return value;
-}
-
-export async function hashPassword(password: string): Promise<string> {
-  const salt = randomBytes(16).toString("hex");
-  const hash = (await scrypt(password, salt, 64)) as Buffer;
-  return `scrypt$${salt}$${hash.toString("hex")}`;
-}
-
-export async function verifyPassword(
-  password: string,
-  stored: string | undefined,
-): Promise<boolean> {
-  const parts = stored?.split("$");
-  const valid =
-    parts?.length === 3 &&
-    parts[0] === "scrypt" &&
-    /^[a-f0-9]{32}$/.test(parts[1]) &&
-    /^[a-f0-9]{128}$/.test(parts[2]);
-  const salt = valid ? parts![1] : "0".repeat(32);
-  const expected = valid ? Buffer.from(parts![2], "hex") : Buffer.alloc(64);
-  const actual = (await scrypt(password, salt, 64)) as Buffer;
-  return Boolean(valid && timingSafeEqual(actual, expected));
-}
+export {
+  hashPassword,
+  verifyPassword,
+  validatePassword,
+} from "@sim/persistence";
 
 export function tokenHash(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 
-export async function newSession(userId: string): Promise<string> {
+export async function newSession(
+  userId: string,
+  expectedPasswordHash?: string,
+): Promise<string> {
   const token = randomBytes(32).toString("base64url");
   await createSession(
     userId,
     tokenHash(token),
     new Date(Date.now() + SESSION_SECONDS * 1000),
+    expectedPasswordHash,
   );
   return token;
 }

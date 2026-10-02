@@ -88,7 +88,7 @@
     "branch": "feature/vnext-visual-auth-python",
     "lots": {
       "visual": "locally-verified",
-      "auth": "pending",
+      "auth": "locally-verified",
       "python": "pending"
     },
     "finalGate": "pending",

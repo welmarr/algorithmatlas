@@ -64,7 +64,38 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
   const [saveStatus, setSaveStatus] = useState("");
   const [hydrated, setHydrated] = useState(false);
   const [, redraw] = useState(0);
-  useEffect(() => setHydrated(true), []);
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(
+        sessionStorage.getItem(`atlas:draft:${problemId}`) ?? "null",
+      );
+      if (
+        saved &&
+        typeof saved.input === "string" &&
+        saved.input.length <= 16384 &&
+        typeof saved.code === "string" &&
+        saved.code.length <= 16384
+      ) {
+        setRawInput(saved.input);
+        setDraftCode(saved.code);
+        setSaveStatus("Local draft restored. Run to update the trace.");
+      }
+    } catch {
+      /* Browser storage is optional. */
+    }
+    setHydrated(true);
+  }, [problemId]);
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      sessionStorage.setItem(
+        `atlas:draft:${problemId}`,
+        JSON.stringify({ input: rawInput, code: draftCode }),
+      );
+    } catch {
+      /* Full or disabled browser storage must not block learning. */
+    }
+  }, [hydrated, problemId, rawInput, draftCode]);
   useEffect(() => {
     const savedId = new URLSearchParams(window.location.search).get("saved");
     if (!savedId || !/^[0-9a-f-]{36}$/.test(savedId)) return;
@@ -725,7 +756,9 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
                 >
                   Save reference run
                 </button>
-                <Link href="/account">Account</Link>
+                <Link href={`/account?returnTo=/problems/${problemId}`}>
+                  Account
+                </Link>
               </div>
               {saveStatus && (
                 <p className="save-status" role="status">

@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import pg from "pg";
+export { hashPassword, verifyPassword, validatePassword } from "./password";
 
 const { Pool } = pg;
 let pool: pg.Pool | undefined;
@@ -25,7 +26,7 @@ export async function databaseReady(): Promise<boolean> {
   try {
     const result = await databasePool().query(
       "SELECT 1 FROM schema_migrations WHERE name = $1",
-      ["002_rate_limits.sql"],
+      ["003_verified_accounts.sql"],
     );
     return Boolean(result.rowCount);
   } catch {
@@ -78,6 +79,7 @@ export interface StoredUser {
   email: string;
   displayName: string;
   passwordHash: string;
+  emailVerified: boolean;
 }
 
 function userFromRow(row: Record<string, unknown>): StoredUser {
@@ -86,6 +88,7 @@ function userFromRow(row: Record<string, unknown>): StoredUser {
     email: String(row.email),
     displayName: String(row.display_name),
     passwordHash: String(row.password_hash),
+    emailVerified: Boolean(row.email_verified_at),
   };
 }
 
@@ -95,7 +98,7 @@ export async function createUser(
   passwordHash: string,
 ): Promise<StoredUser> {
   const result = await databasePool().query(
-    "INSERT INTO users (id, email, display_name, password_hash) VALUES ($1, $2, $3, $4) RETURNING id, email, display_name, password_hash",
+    "INSERT INTO users (id, email, display_name, password_hash) VALUES ($1, $2, $3, $4) RETURNING id, email, display_name, password_hash, email_verified_at",
     [randomUUID(), email, displayName, passwordHash],
   );
   return userFromRow(result.rows[0]);
@@ -105,7 +108,7 @@ export async function findUserByEmail(
   email: string,
 ): Promise<StoredUser | null> {
   const result = await databasePool().query(
-    "SELECT id, email, display_name, password_hash FROM users WHERE email = $1",
+    "SELECT id, email, display_name, password_hash, email_verified_at FROM users WHERE email = $1",
     [email],
   );
   return result.rowCount ? userFromRow(result.rows[0]) : null;
@@ -115,23 +118,118 @@ export async function createSession(
   userId: string,
   tokenHash: string,
   expiresAt: Date,
+  expectedPasswordHash?: string,
 ): Promise<void> {
-  await databasePool().query(
-    "INSERT INTO sessions (token_hash, user_id, expires_at) VALUES ($1, $2, $3)",
-    [tokenHash, userId, expiresAt],
+  const result = await databasePool().query(
+    "INSERT INTO sessions (token_hash, user_id, expires_at) SELECT $1, id, $3 FROM users WHERE id = $2 AND ($4::text IS NULL OR password_hash = $4) FOR SHARE RETURNING token_hash",
+    [tokenHash, userId, expiresAt, expectedPasswordHash ?? null],
   );
+  if (!result.rowCount) throw new Error("Credentials changed during sign-in");
 }
 
 export async function findSessionUser(
   tokenHash: string,
 ): Promise<Omit<StoredUser, "passwordHash"> | null> {
   const result = await databasePool().query(
-    "SELECT u.id, u.email, u.display_name FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = $1 AND s.expires_at > now()",
+    "SELECT u.id, u.email, u.display_name, u.email_verified_at FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = $1 AND s.expires_at > now()",
     [tokenHash],
   );
   if (!result.rowCount) return null;
   const row = result.rows[0];
-  return { id: row.id, email: row.email, displayName: row.display_name };
+  return {
+    id: row.id,
+    email: row.email,
+    displayName: row.display_name,
+    emailVerified: Boolean(row.email_verified_at),
+  };
+}
+
+export type AccountTokenPurpose = "verify" | "reset";
+
+/** Serialize issue/consume on the user row. A replacement invalidates earlier links. */
+export async function issueAccountToken(
+  userId: string,
+  purpose: AccountTokenPurpose,
+  hash: string,
+  expiresAt: Date,
+): Promise<void> {
+  const client = await databasePool().connect();
+  try {
+    await client.query("BEGIN");
+    await client.query("SELECT id FROM users WHERE id = $1 FOR UPDATE", [
+      userId,
+    ]);
+    await client.query(
+      "UPDATE account_tokens SET consumed_at = now() WHERE user_id = $1 AND purpose = $2 AND consumed_at IS NULL",
+      [userId, purpose],
+    );
+    await client.query(
+      "INSERT INTO account_tokens (token_hash,user_id,purpose,expires_at) VALUES ($1,$2,$3,$4)",
+      [hash, userId, purpose, expiresAt],
+    );
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function consumeAccountToken(
+  hash: string,
+  purpose: AccountTokenPurpose,
+  passwordHash?: string,
+): Promise<boolean> {
+  if (purpose === "reset" && !passwordHash)
+    throw new Error("New password hash is required");
+  const client = await databasePool().connect();
+  try {
+    await client.query("BEGIN");
+    const candidate = await client.query(
+      "SELECT user_id FROM account_tokens WHERE token_hash = $1 AND purpose = $2",
+      [hash, purpose],
+    );
+    if (!candidate.rowCount) {
+      await client.query("ROLLBACK");
+      return false;
+    }
+    const userId = candidate.rows[0].user_id;
+    await client.query("SELECT id FROM users WHERE id = $1 FOR UPDATE", [
+      userId,
+    ]);
+    const consumed = await client.query(
+      "UPDATE account_tokens SET consumed_at = now() WHERE token_hash = $1 AND purpose = $2 AND consumed_at IS NULL AND expires_at > now() RETURNING user_id",
+      [hash, purpose],
+    );
+    if (!consumed.rowCount) {
+      await client.query("ROLLBACK");
+      return false;
+    }
+    if (purpose === "verify")
+      await client.query(
+        "UPDATE users SET email_verified_at = coalesce(email_verified_at,now()) WHERE id = $1",
+        [userId],
+      );
+    else {
+      await client.query("UPDATE users SET password_hash = $2 WHERE id = $1", [
+        userId,
+        passwordHash,
+      ]);
+      await client.query("DELETE FROM sessions WHERE user_id = $1", [userId]);
+      await client.query(
+        "UPDATE account_tokens SET consumed_at = now() WHERE user_id = $1 AND purpose = 'reset' AND consumed_at IS NULL",
+        [userId],
+      );
+    }
+    await client.query("COMMIT");
+    return true;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export async function deleteSession(tokenHash: string): Promise<void> {

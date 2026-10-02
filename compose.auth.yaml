@@ -1,0 +1,19 @@
+# Optional local accounts + mail capture. Add to compose.yaml and compose.db.yaml.
+services:
+  mailpit:
+    image: axllent/mailpit:v1.27.8
+    ports:
+      - "127.0.0.1:18025:8025"
+      - "127.0.0.1:11025:1025"
+    tmpfs:
+      - /data
+    environment:
+      MP_DATABASE: /data/mailpit.db
+  web:
+    environment:
+      APP_URL: http://localhost:3000
+      EMAIL_TRANSPORT: mailpit
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+    depends_on:
+      - mailpit

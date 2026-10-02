@@ -26,6 +26,16 @@ export async function authorizedUser(request: Request, mutate = false) {
         { status: 401 },
       ),
     };
+  if (!user.emailVerified)
+    return {
+      response: Response.json(
+        {
+          code: "AUTH_EMAIL_UNVERIFIED",
+          error: "Verify your email before saving your work.",
+        },
+        { status: 403 },
+      ),
+    };
   if (
     mutate &&
     !(await consumeRateLimit("account-mutation", user.id, 120, 60))

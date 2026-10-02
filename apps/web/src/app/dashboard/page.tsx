@@ -11,6 +11,7 @@ export default async function DashboardPage() {
   if (!(await databaseReady())) redirect("/account");
   const user = await currentUser();
   if (!user) redirect("/account");
+  if (!user.emailVerified) redirect("/account?error=AUTH_EMAIL_UNVERIFIED");
   const data = await dashboardData(user.id);
   return (
     <main className="account-page dashboard-page">

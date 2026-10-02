@@ -1,8 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { expect, test } from "@playwright/test";
 import { databasePool } from "@sim/persistence";
+import { emailLink } from "./mail";
 
-test.skip(!process.env.E2E_DATABASE_URL, "PostgreSQL browser test is opt-in");
+test.skip(
+  !process.env.E2E_DATABASE_URL || !process.env.MAILPIT_API,
+  "PostgreSQL and Mailpit browser test is opt-in",
+);
 
 test("account saves a curated run and restores a private input", async ({
   page,
@@ -16,9 +20,22 @@ test("account saves a curated run and restores a private input", async ({
     const signup = page.locator("form[action='/api/auth/register']");
     await signup.getByLabel("Display name").fill("Learner");
     await signup.getByLabel("Email").fill(email);
-    await signup.getByLabel("Password").fill("a-long-local-test-password");
+    await signup
+      .getByLabel("Password", { exact: true })
+      .fill("a-long-local-test-password");
+    await signup
+      .getByLabel("Confirm password")
+      .fill("a-long-local-test-password");
     await signup.getByRole("button", { name: "Create account" }).click();
-    await expect(page).toHaveURL(/\/dashboard$/);
+    await expect(page).toHaveURL(/notice=verification-sent/);
+    await page.goto("/problems/increasing-array");
+    await page.getByRole("button", { name: "Save input", exact: true }).click();
+    await expect(page.getByRole("status")).toContainText("Verify your email");
+    await page.goto(await emailLink(page.request, email, "verify"));
+    await page
+      .getByRole("button", { name: "Verify email", exact: true })
+      .click();
+    await expect(page.getByRole("status")).toContainText("Email verified");
 
     await page.goto("/problems/increasing-array");
     await page.getByLabel("JSON input").fill('{"values":[8,2,5,1,7]}');
