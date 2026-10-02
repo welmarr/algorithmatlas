@@ -7,3 +7,12 @@ dist/
 *.tsbuildinfo
 test-results/
 playwright-report/
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+mailpit-data/
+postgres-data/

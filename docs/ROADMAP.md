@@ -4,7 +4,7 @@ The construction branch follows the numbered lots in the full build specificatio
 
 | Lot | Scope                                                            | Status                                                       |
 | --- | ---------------------------------------------------------------- | ------------------------------------------------------------ |
-| 00  | Preserve the audited five-problem prototype in Git              | Complete: baseline branch, commit, and tag                   |
+| 00  | Preserve the audited five-problem prototype in Git               | Complete: baseline branch, commit, and tag                   |
 | 01  | Teaching steps, mobile fixes, browser-subset semantics           | Complete for bounded v0.1                                    |
 | 02  | Event schemas, vocabulary governance, raw/semantic pipeline      | Complete for implemented curated mappers                     |
 | 03  | Renderer families and player                                     | Complete for ten renderer families                           |
