@@ -31,7 +31,7 @@ Status: **PARTIAL**. The local hardening gate passes, but the public execution a
 
 ## Cleanup
 
-Removed generated Playwright results and the local Next.js build directory after verification. Stopped the project-owned auto-remove PostgreSQL test container, which used tmpfs and no Docker volume. No project-owned Compose volumes or leftover Python runner containers were present. The verified stateless web preview continues to run. Other projects' containers and volumes were untouched.
+Removed generated Playwright results, the local Next.js build directory, TypeScript build metadata, an empty artifact directory, and the temporary Playwright transform cache after verification. Stopped the project-owned auto-remove PostgreSQL test container, which used tmpfs and no Docker volume. Removed two unused older Simulator web images and a redundant tag from the current image. No project-owned Compose volumes or leftover Python runner containers were present. The current web image and local Python runner image remain available; the stateless web preview is healthy. Other projects' containers and volumes were untouched.
 
 ## Assessment
 
