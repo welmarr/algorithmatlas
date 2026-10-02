@@ -4,11 +4,13 @@
 apps/web ────────┬── packages/problems ── packages/problem-sdk ─┐
                  ├── packages/simulation-core ───────────────────┤
                  ├── packages/ai-sdk ─────────────────────────────┤
+                 ├── packages/renderer-sdk ───────────────────────┤
                  └── packages/domain + semantic-events <─────────┘
 
 semantic-events → domain
 simulation-core → semantic-events + domain
 problem-sdk → simulation-core + semantic-events + domain
+renderer-sdk → semantic-events + domain
 code-runtime → Acorn + semantic-events + domain
 problems → code-runtime + problem-sdk + semantic-events + domain
 ai-sdk → semantic-events

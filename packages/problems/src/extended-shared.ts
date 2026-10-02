@@ -9,9 +9,9 @@ import {
   readObject,
   runProblem,
   type ProblemDefinition,
+  type ProblemEntry,
 } from "@sim/problem-sdk";
 import type { EventDraft, EventType } from "@sim/semantic-events";
-import type { ProblemEntry } from "./index";
 
 export function metadata(
   input: Omit<ProblemMetadata, "schemaVersion" | "source" | "constraints"> & {

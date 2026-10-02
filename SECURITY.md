@@ -4,6 +4,8 @@ There is no arbitrary code execution endpoint. Increasing Array has a browser-si
 
 Other problems still use curated TypeScript trace generators with bounded custom inputs. Input validation limits array, grid, graph, tree, and DP sizes. Event validation checks schema versions, known types, entity IDs, finite primitive payload values, and reserved keys. The AI parser accepts only `schemaVersion`, matching `eventId`, and bounded explanation text; extra model fields cannot enter simulation state.
 
+Community pack manifests are parsed as data. Validation checks namespaced IDs and safe module paths but does not import modules. Executable pack definitions and renderer components are registered only after an explicit build-time local review; `approvedLocalCode: true` is required. Manifest validation is not a sandbox or security audit. No remote on-demand pack installation is enabled.
+
 Model credentials stay in component memory and are sent directly from the user's browser to the configured provider. The app does not store or log them. Browser CORS rules and the provider's privacy policy apply. External endpoints require HTTPS; local hosted models can use loopback HTTP. Users should enter keys only for trusted providers.
 
 Before full JavaScript, Python, C++, or server-side submissions are enabled, implement and review a Rust/WASI or equivalent isolated runtime with no host filesystem or network, CPU/memory/time/output/process limits, safe cleanup, rate limits, abuse controls, and explicit security tests. Parsing alone does not provide isolation. No arbitrary-code endpoint should be deployed before this work.

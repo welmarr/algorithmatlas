@@ -9,7 +9,7 @@ import {
   localModelTeacher,
   openAICompatibleTeacher,
 } from "@sim/ai-sdk";
-import { rendererLegends, Visuals } from "./Visuals";
+import { getRendererLegend, Visuals } from "./Visuals";
 import {
   CodeVisual,
   CollectionVisual,
@@ -309,7 +309,7 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
                 activeLine={event?.sourceRef?.line}
               />
               <div className="visual-legend">
-                {rendererLegends[problem.metadata.renderer].map(
+                {getRendererLegend(problem.metadata.renderer).map(
                   ({ label, cue }) => (
                     <span key={label}>
                       <i className={`legend-dot ${cue}`} /> {label}

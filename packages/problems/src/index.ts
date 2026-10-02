@@ -10,8 +10,9 @@ import {
   integer,
   InputError,
   runProblem,
+  toProblemEntry,
   type ProblemDefinition,
-  type ProblemRun,
+  type ProblemEntry,
 } from "@sim/problem-sdk";
 import type { EventDraft, EventType } from "@sim/semantic-events";
 import { mapBfsTrace, recordBfs } from "./bfs-mapper";
@@ -766,20 +767,9 @@ const diceCombinations = defineProblem({
   },
 });
 
-export interface ProblemEntry {
-  metadata: ProblemMetadata;
-  defaultInput: unknown;
-  source: string;
-  run(raw: unknown): ProblemRun;
-  runCode?: (raw: unknown, source: string) => ProblemRun;
-}
+export type { ProblemEntry } from "@sim/problem-sdk";
 function entry<T>(problem: ProblemDefinition<T>): ProblemEntry {
-  return {
-    metadata: problem.metadata,
-    defaultInput: problem.defaultInput,
-    source: problem.source,
-    run: (raw) => runProblem(problem, raw),
-  };
+  return toProblemEntry(problem);
 }
 export const problems: ProblemEntry[] = [
   {

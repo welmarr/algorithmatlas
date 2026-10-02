@@ -8,6 +8,7 @@
     "typecheck": "tsc --noEmit && pnpm --filter @sim/web typecheck",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "contributor": "node scripts/contributor.mjs",
     "lint": "eslint .",
     "format:check": "prettier --check ."
   },
@@ -17,6 +18,10 @@
     "@playwright/test": "1.52.0",
     "@sim/ai-sdk": "workspace:*",
     "@sim/domain": "workspace:*",
+    "@sim/problem-sdk": "workspace:*",
+    "@sim/renderer-sdk": "workspace:*",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
     "@sim/problems": "workspace:*",
     "@sim/semantic-events": "workspace:*",
     "@sim/simulation-core": "workspace:*",
@@ -25,6 +30,8 @@
     "@typescript-eslint/parser": "^8.31.0",
     "eslint": "^9.25.1",
     "prettier": "^3.5.3",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
     "typescript": "^5.8.3",
     "vitest": "^3.1.2"
   }

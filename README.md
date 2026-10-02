@@ -21,7 +21,8 @@ Open http://localhost:3000. No database, account, API key, or AI service is requ
 | Semantic event protocol   | `packages/semantic-events`                    | v0.1 event-specific validator, mapper API, governed vocabulary                  |
 | Replay engine             | `packages/simulation-core`                    | reducer, snapshots, seek, playback                                              |
 | Teaching steps            | `packages/domain`, `packages/simulation-core` | grouped learning navigation over technical events                               |
-| Problem SDK and pack      | `packages/problem-sdk`, `packages/problems`   | twenty curated problems with validation and source links                        |
+| Problem SDK and packs     | `packages/problem-sdk`, `packages/problems`   | twenty curated problems, versioned manifests, reviewed local registration       |
+| Renderer SDK              | `packages/renderer-sdk`, `apps/web`           | capability contracts and explicit custom renderer registration                  |
 | Code runtime              | `packages/code-runtime`                       | bounded editable JavaScript subset for Increasing Array                         |
 | Web player and lab        | `apps/web`                                    | Next.js, ten renderer families, four structure editors, side-by-side comparison |
 | Optional teacher adapters | `packages/ai-sdk`                             | built-in, local OpenAI-compatible, external OpenAI-compatible                   |
@@ -30,4 +31,4 @@ Full JavaScript/Python/C++ execution, an isolated multi-language sandbox, persis
 
 ## Project documents
 
-Read [ARCHITECTURE.md](ARCHITECTURE.md), [DEVELOPMENT.md](DEVELOPMENT.md), [TESTING.md](TESTING.md), [SECURITY.md](SECURITY.md), and [docs/ROADMAP.md](docs/ROADMAP.md). Public APIs and extension guidance are in [SIMULATION-PROTOCOL.md](SIMULATION-PROTOCOL.md), [PROBLEM-SDK.md](PROBLEM-SDK.md), [RENDERER-SDK.md](RENDERER-SDK.md), and [AI-CONNECTORS.md](AI-CONNECTORS.md).
+Read [ARCHITECTURE.md](ARCHITECTURE.md), [DEVELOPMENT.md](DEVELOPMENT.md), [TESTING.md](TESTING.md), [SECURITY.md](SECURITY.md), and [docs/ROADMAP.md](docs/ROADMAP.md). Public APIs and extension guidance are in [SIMULATION-PROTOCOL.md](SIMULATION-PROTOCOL.md), [PROBLEM-SDK.md](PROBLEM-SDK.md), [RENDERER-SDK.md](RENDERER-SDK.md), [PACKS.md](PACKS.md), and [AI-CONNECTORS.md](AI-CONNECTORS.md).

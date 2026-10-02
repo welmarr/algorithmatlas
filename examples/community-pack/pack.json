@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "0.1",
+  "id": "sample-pack",
+  "version": "0.1.0",
+  "title": "Sample Array Pack",
+  "publisher": "Algorithm Atlas examples",
+  "description": "A reviewed local example showing a complete contributed problem.",
+  "license": "MIT",
+  "problems": [
+    {
+      "id": "sample-pack-reverse-array",
+      "module": "./problems/sample-pack-reverse-array.ts",
+      "renderer": "sample-pack-array-list"
+    }
+  ],
+  "renderers": [
+    {
+      "id": "sample-pack-array-list",
+      "module": "./renderers/sample-pack-array-list.tsx"
+    }
+  ]
+}

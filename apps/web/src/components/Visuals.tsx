@@ -1,10 +1,18 @@
 "use client";
+import { BUILT_IN_RENDERER_KINDS } from "@sim/domain";
 import type {
+  BuiltInRendererKind,
   RendererKind,
   SimulationState,
   StepFocusKind,
   VisualEntity,
 } from "@sim/domain";
+import {
+  RendererRegistry,
+  rendererStateIssues,
+  type RendererDescriptor,
+} from "@sim/renderer-sdk";
+import type { ComponentType } from "react";
 import { layoutDp, layoutTree } from "./renderer-layout";
 import {
   CodeVisual,
@@ -20,7 +28,7 @@ const cueLabels: Record<StepFocusKind, string> = {
 };
 
 export const rendererLegends: Record<
-  RendererKind,
+  BuiltInRendererKind,
   { label: string; cue: string }[]
 > = {
   array: [
@@ -57,6 +65,36 @@ export const rendererLegends: Record<
   variables: [{ label: "Changed variable", cue: "update" }],
   code: [{ label: "Current line", cue: "inspect" }],
 };
+
+type VisualRenderer = ComponentType<{
+  state: SimulationState;
+  source?: string;
+  activeLine?: number;
+}>;
+const contributorRenderers = new RendererRegistry<VisualRenderer>();
+
+/** Registration is for explicitly reviewed local code; no module is loaded from a pack manifest. */
+export function registerVisualRenderer(
+  descriptor: RendererDescriptor,
+  component: VisualRenderer,
+): void {
+  if (BUILT_IN_RENDERER_KINDS.includes(descriptor.id as BuiltInRendererKind))
+    throw new Error(`Cannot replace built-in renderer ${descriptor.id}`);
+  contributorRenderers.register(descriptor, component);
+}
+
+export function getRendererLegend(
+  id: RendererKind,
+): { label: string; cue: string }[] {
+  if (BUILT_IN_RENDERER_KINDS.includes(id as BuiltInRendererKind))
+    return rendererLegends[id as BuiltInRendererKind];
+  return (
+    contributorRenderers.get(id)?.descriptor.legend.map((item) => ({
+      label: `${item.label} · ${item.textCue}`,
+      cue: item.cue,
+    })) ?? []
+  );
+}
 
 function isCurrent(entity: VisualEntity, state: SimulationState): boolean {
   return state.activeEntities.includes(entity.id);
@@ -423,6 +461,25 @@ export function Visuals({
   source?: string;
   activeLine?: number;
 }) {
+  const contributor = contributorRenderers.get(kind);
+  if (contributor) {
+    const issues = rendererStateIssues(contributor.descriptor, state);
+    if (issues.length)
+      return (
+        <p role="alert">
+          Renderer {kind} cannot display this state: {issues.join("; ")}.
+        </p>
+      );
+    const Component = contributor.render;
+    return (
+      <div
+        role={contributor.descriptor.accessibility.role}
+        aria-label={contributor.descriptor.accessibility.label}
+      >
+        <Component state={state} source={source} activeLine={activeLine} />
+      </div>
+    );
+  }
   switch (kind) {
     case "array":
       return <ArrayVisual state={state} />;
@@ -437,7 +494,12 @@ export function Visuals({
     case "queue":
     case "stack":
     case "heap":
-      return <CollectionVisual state={state} kind={kind} />;
+      return (
+        <CollectionVisual
+          state={state}
+          kind={kind as "queue" | "stack" | "heap"}
+        />
+      );
     case "variables":
       return <VariablesVisual state={state} />;
     case "code":
@@ -448,5 +510,7 @@ export function Visuals({
           focusKind={state.focus?.kind}
         />
       );
+    default:
+      return <p role="alert">Renderer {kind} is not registered.</p>;
   }
 }

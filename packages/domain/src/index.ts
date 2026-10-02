@@ -70,17 +70,21 @@ export interface LearningContent {
   naive?: string;
   explanation: string;
 }
-export type RendererKind =
-  | "array"
-  | "grid"
-  | "graph"
-  | "tree"
-  | "dp"
-  | "queue"
-  | "stack"
-  | "heap"
-  | "variables"
-  | "code";
+export const BUILT_IN_RENDERER_KINDS = [
+  "array",
+  "grid",
+  "graph",
+  "tree",
+  "dp",
+  "queue",
+  "stack",
+  "heap",
+  "variables",
+  "code",
+] as const;
+export type BuiltInRendererKind = (typeof BUILT_IN_RENDERER_KINDS)[number];
+/** Local trusted extensions can register a namespaced renderer id. */
+export type RendererKind = BuiltInRendererKind | (string & {});
 
 export interface ProblemMetadata {
   schemaVersion: "0.1";
