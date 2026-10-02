@@ -13,7 +13,9 @@ function run(label, args, extraEnv = {}, command = pnpm) {
   process.stdout.write(`\n▶ ${label}\n`);
   const result = spawnSync(command, args, {
     stdio: "inherit",
-    shell: process.platform === "win32",
+    // Only the Windows pnpm command shim needs a shell. Native executables
+    // (including Node installed under Program Files) accept argument arrays.
+    shell: process.platform === "win32" && command === pnpm,
     env: { ...process.env, ...extraEnv },
   });
   if (result.error) throw result.error;

@@ -1,0 +1,117 @@
+{
+  "schemaVersion": "1.0",
+  "asOf": "2026-10-02",
+  "status": "COMPLETE",
+  "scope": "controlled-deployment-candidate",
+  "publicExposure": "DISABLED_BY_DEFAULT",
+  "baseline": {
+    "branch": "archive/pre-public-runner-prod-ops",
+    "tag": "pre-public-runner-prod-ops",
+    "commit": "113ddfc09275fc21f44f8f2e74c82dd76e64da7e",
+    "tagObject": "546bb2ed8d14789cdc0a197897c22599ebb72e58",
+    "remoteVerified": true
+  },
+  "release": {
+    "branch": "feature/public-runner-prod-ops",
+    "main": "main",
+    "ref": "refs/tags/public-runner-prod-ops-v1",
+    "identity": "Peeled release ref; final feature/main SHA and CI recorded in completion report",
+    "applicationCommit": "968f005086c66838ab638f0d796eb43d79acce9f"
+  },
+  "lots": {
+    "publicRunnerArchitecture": "COMPLETE",
+    "publicRunnerIsolation": "PARTIAL",
+    "publicRunnerAbuseControls": "COMPLETE",
+    "publicRunnerOperations": "COMPLETE",
+    "productionSMTPAdapter": "COMPLETE",
+    "emailOutbox": "COMPLETE",
+    "backupRestore": "COMPLETE",
+    "retention": "COMPLETE",
+    "productionProxy": "PARTIAL",
+    "manualSecurityReview": "NOT STARTED",
+    "visualCapture": "COMPLETE",
+    "externalVisualReview": "NOT STARTED"
+  },
+  "verification": {
+    "testedApplicationCommit": "968f005086c66838ab638f0d796eb43d79acce9f",
+    "fast": {
+      "passed": 134,
+      "skipped": 36
+    },
+    "full": {
+      "passed": 166,
+      "skipped": 4,
+      "e2ePassed": 28
+    },
+    "publicRunner": {
+      "passed": 33
+    },
+    "prodOps": {
+      "passed": 17,
+      "e2ePassed": 4
+    },
+    "audits": "no-known-advisories",
+    "freshClone": "PASS",
+    "runnerNoCacheBuild": "PASS",
+    "webNoCacheBuild": "PASS",
+    "webImageSmoke": {
+      "status": "PASS",
+      "uid": 1000,
+      "mounts": 0,
+      "dockerSocket": false,
+      "dockerCLI": false
+    },
+    "ci": {
+      "status": "PASS",
+      "commit": "968f005086c66838ab638f0d796eb43d79acce9f",
+      "url": "https://github.com/welmarr/algorithmatlas/actions/runs/37016318709"
+    },
+    "finalCandidatePolicy": "All mandatory final-candidate gates must pass before merge; exact final SHA/run is reported after verification."
+  },
+  "backup": {
+    "status": "PASS",
+    "bytes": 34495,
+    "backupMs": 1243,
+    "restoreMs": 1289,
+    "verifiedTables": 7,
+    "migrations": 6
+  },
+  "visual": {
+    "status": "PASS",
+    "screenshots": 150,
+    "desktop": 126,
+    "tablet": 10,
+    "mobile": 14,
+    "contactSheets": 78,
+    "captureTests": 6,
+    "routeGaps": 0,
+    "overflow": 0,
+    "zipEntries": 232,
+    "zipBytes": 52173063,
+    "zipSha256": "7afd8bd143b952f32f821f30621b155d90c1d00984779c407724f01b15887247",
+    "root": "D:\\Simulator\\artifacts\\visual-audit\\2026-10-02T14-11-51Z",
+    "zip": "D:\\Simulator\\artifacts\\visual-audit\\AlgorithmAtlas-visual-audit-2026-10-02T14-11-51Z.zip"
+  },
+  "productionGates": [
+    "independent-security-review",
+    "target-linux-rootless-cgroups-v2-preflight",
+    "deployed-trusted-https-ingress",
+    "real-smtp-domain-delivery",
+    "encrypted-backup-recovery-schedules-alerts",
+    "external-visual-review"
+  ],
+  "cleanup": {
+    "policy": "project-scoped",
+    "supersededImagesRemoved": 6,
+    "temporaryServices": "removed after each gate",
+    "failedCaptures": "removed",
+    "temporaryBackup": "removed",
+    "retain": [
+      "final screenshot package and ZIP",
+      "current Python and Web images",
+      "active local PostgreSQL volume and Mailpit",
+      "useful dependency cache"
+    ],
+    "finalClone": "removed after final-candidate verification"
+  }
+}

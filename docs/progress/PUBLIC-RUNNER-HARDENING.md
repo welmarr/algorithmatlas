@@ -1,6 +1,6 @@
 # Public runner hardening checkpoint
 
-Branch: feature/public-runner-prod-ops. Starting SHA: 113ddfc09275fc21f44f8f2e74c82dd76e64da7e. Ending implementation SHA: the commit containing this checkpoint (resolved in final audit).
+Branch: feature/public-runner-prod-ops. Starting SHA: 113ddfc09275fc21f44f8f2e74c82dd76e64da7e. Ending checkpoint SHA: d66c0b9.
 
 ## Architecture and controls
 
@@ -32,3 +32,9 @@ Production email outbox, account operations, backup/restore/retention, full/fres
 Candidate d4ef3db passed fast (134/35 skipped), full (165/4 optional AI skips plus 28 browser), public runner (32), production operations (17 plus 4 browser), both dependency audits and actual remote CI run 37011853792. Added a further actual-container concurrency test: two active Docker containers, queue saturation and one-above rejection, queued/running cancellation, timeout mixed with successful queued work, final metrics and container absence. This supplements deterministic worker cleanup barriers. Its five-test integration file passes.
 
 The first temporary-clone full run overlapped other heavy local gates and exceeded a 5-second queen-fixture test and a 15-second multi-container test. These were timing failures; release verification is repeated without competing local gates and without weakening execution/test deadlines. The final audit records the successful clone and exact candidate.
+
+## Final split evidence
+
+The preceding sections preserve intermediate checkpoints, including work pending at those dates. Final tested application SHA: 968f005086c66838ab638f0d796eb43d79acce9f. Ending release identity: refs/tags/public-runner-prod-ops-v1 (peeled commit); branch feature/public-runner-prod-ops. Fast: 134 passed/36 skipped; full: 166 passed/4 optional live-AI skipped and 28 browser; public runner: 33; prod-ops: 17 and 4 browser. Fresh GitHub clone, six clean migrations, both no-cache Docker builds, dependency audits and actual source CI run 37016318709 passed. Backup restore verified seven data tables. Real-UI capture: six scenarios, 150 originals, 78 contact sheets; verified ZIP/gallery complete. Final-candidate verification is required before merge. See ../audit/public-runner-prod-ops/README.md and TEST_REPORT.md for failures/fixes and final evidence.
+
+Six superseded project images, disposable DB/mail services, failed captures and temporary backup/test output were removed; current images and active development data are preserved. The temporary clone is removed after final release verification. Public exposure remains off by default; independent security review, target production host/proxy/SMTP and operator backup/alerting gates remain open.

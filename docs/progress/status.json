@@ -154,12 +154,16 @@
   },
   "historicalScope": "Top-level construction and vnext are preserved historical milestones; publicRunnerProdOps is the current split.",
   "publicRunnerProdOps": {
-    "status": "PARTIAL",
+    "status": "COMPLETE",
+    "scope": "controlled-deployment-candidate",
     "branch": "feature/public-runner-prod-ops",
     "baselineCommit": "113ddfc09275fc21f44f8f2e74c82dd76e64da7e",
     "baselineBranch": "archive/pre-public-runner-prod-ops",
     "baselineTag": "pre-public-runner-prod-ops",
     "runnerCheckpoint": "d66c0b9",
+    "opsCheckpoint": "4725b04",
+    "testedApplicationCommit": "968f005086c66838ab638f0d796eb43d79acce9f",
+    "releaseRef": "refs/tags/public-runner-prod-ops-v1",
     "lots": {
       "publicRunnerArchitecture": "COMPLETE",
       "publicRunnerIsolation": "PARTIAL",
@@ -170,21 +174,64 @@
       "backupRestore": "COMPLETE",
       "retention": "COMPLETE",
       "productionProxy": "PARTIAL",
-      "manualSecurityReview": "NOT STARTED"
+      "manualSecurityReview": "NOT STARTED",
+      "visualCapture": "COMPLETE",
+      "externalVisualReview": "NOT STARTED"
     },
     "verification": {
+      "testedApplicationCommit": "968f005086c66838ab638f0d796eb43d79acce9f",
+      "fast": {
+        "passed": 134,
+        "skipped": 36
+      },
+      "full": {
+        "passed": 166,
+        "skipped": 4,
+        "e2ePassed": 28
+      },
       "publicRunner": {
-        "passed": 31
+        "passed": 33
       },
       "prodOps": {
         "passed": 17,
-        "e2e": 4
+        "e2ePassed": 4
       },
-      "full": "PENDING",
-      "freshClone": "PENDING",
-      "remoteCI": "PENDING",
-      "visualCapture": "PENDING"
+      "audits": "no-known-advisories",
+      "freshClone": "PASS",
+      "runnerNoCacheBuild": "PASS",
+      "webNoCacheBuild": "PASS",
+      "webImageSmoke": {
+        "status": "PASS",
+        "uid": 1000,
+        "mounts": 0,
+        "dockerSocket": false,
+        "dockerCLI": false
+      },
+      "ci": {
+        "status": "PASS",
+        "commit": "968f005086c66838ab638f0d796eb43d79acce9f",
+        "url": "https://github.com/welmarr/algorithmatlas/actions/runs/37016318709"
+      },
+      "finalCandidatePolicy": "All mandatory final-candidate gates must pass before merge; exact final SHA/run is reported after verification."
     },
-    "publicExposure": "DISABLED_BY_DEFAULT"
+    "visualCapture": {
+      "status": "PASS",
+      "screenshots": 150,
+      "desktop": 126,
+      "tablet": 10,
+      "mobile": 14,
+      "contactSheets": 78,
+      "captureTests": 6,
+      "routeGaps": 0,
+      "overflow": 0,
+      "zipEntries": 232,
+      "zipBytes": 52173063,
+      "zipSha256": "7afd8bd143b952f32f821f30621b155d90c1d00984779c407724f01b15887247",
+      "root": "D:\\Simulator\\artifacts\\visual-audit\\2026-10-02T14-11-51Z",
+      "zip": "D:\\Simulator\\artifacts\\visual-audit\\AlgorithmAtlas-visual-audit-2026-10-02T14-11-51Z.zip"
+    },
+    "publicExposure": "DISABLED_BY_DEFAULT",
+    "audit": "docs/audit/public-runner-prod-ops/README.md",
+    "openGates": "docs/audit/public-runner-prod-ops/OPEN_GATES.md"
   }
 }
