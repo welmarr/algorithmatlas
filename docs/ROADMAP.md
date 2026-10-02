@@ -13,9 +13,9 @@ The construction branch follows the numbered lots in the full build specificatio
 | 06  | Side-by-side algorithm comparison                                | Complete: three traversal pairs with dual playback              |
 | 07  | Contributor problem SDK, renderer SDK, versioned community packs | Complete: reviewed local registration and sample pack           |
 | 08  | AI-agnostic connector protocol and normalized response families  | Complete: seven validated families and compatible adapters      |
-| 09  | Isolated user-code execution foundation                          | Partial bounded browser JS interpreter; isolated runner planned |
-| 10  | Semantic interpreter over raw execution context                  | Partial known-algorithm mapping; broader inference planned      |
-| 11  | PostgreSQL, users, saved inputs, learning progress               | Planned                                                         |
+| 09  | Isolated user-code execution foundation                          | Complete for local bounded Python path; public access gated     |
+| 10  | Semantic interpreter over raw execution context                  | Complete for local array and constrained graph inference        |
+| 11  | PostgreSQL, users, saved inputs, learning progress               | Complete for optional local accounts and verified run saving    |
 | 12  | Security, accessibility, performance, deployment hardening       | Planned                                                         |
 
 Prioritize correctness and architecture across problem families before adding a large catalog. Add system services only when a workflow needs them. The browser interpreter is not the isolated execution boundary required before public arbitrary-code execution.
