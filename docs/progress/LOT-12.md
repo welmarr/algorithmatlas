@@ -13,7 +13,7 @@ Status: **PARTIAL**. The local hardening gate passes, but the public execution a
 - Additional controlled Python runner probes for memory pressure, output exhaustion, filesystem/process attempts, malformed source, and cleanup. The runner remains local CLI only.
 - Keyboard-operable tabs, ARIA tabpanels, browser checks for labels/text cues, mobile overflow, and reduced motion.
 - Opt-in Node benchmarks at 1k/10k/100k events and a separate real Chromium benchmark at the largest accepted array input (383 events). Results and limits are in `docs/PERFORMANCE.md`.
-- `pnpm verify` and `pnpm verify:full`; CI now has a PostgreSQL service and calls the full gate. Expanded architecture, security, API, accessibility, performance, and sandbox documentation plus a reconstruction book and eleven problem-family case studies.
+- `pnpm verify` and `pnpm verify:full`; CI now has a PostgreSQL service and calls the full gate. Expanded architecture, security, API, accessibility, performance, and sandbox documentation plus an architecture map, a reconstruction book, and eleven problem-family case studies.
 
 ## Verification
 

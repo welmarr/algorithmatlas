@@ -33,3 +33,20 @@
 | Number theory / geometry                       | `exponentiation`, `polygon-area`                            | Bounded numeric/point inputs and replay                                |
 
 The generic renderers consume `SimulationState`, not problem IDs. Many newer curated problems emit semantic drafts directly because their own algorithm knows the action; only selected paths use an explicit raw-operation mapper. The reference source shown on most pages is illustrative rather than executable user code.
+
+## Renderer matrix
+
+| Renderer  | Producer / demo                                        | Verified behavior and boundary                                                 |
+| --------- | ------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| Array     | Increasing Array, array and string cases               | Values, indices, active change and text before→after cue; one-dimensional      |
+| Grid      | Labyrinth, rooms, queens                               | Walls/visits/path or choices with row/column labels; bounded grid              |
+| Graph     | Message Route, Shortest Routes I                       | Directed/weighted edges, distances, visits, path metadata; bounded nodes/edges |
+| Tree      | Tree Diameter, Subordinates                            | Hierarchical node layout, visits/path, 390px layout check                      |
+| DP table  | Dice Combinations, Edit Distance                       | 1D/2D cells, dependencies, active target, labeled cells                        |
+| Queue     | Renderer gallery and BFS state                         | Ordered IDs and active item; not a general queue editor                        |
+| Stack     | Renderer gallery/state test                            | Ordered push/pop view; not a curated stack problem                             |
+| Heap      | Renderer gallery/state test                            | Numeric-priority order; not a curated heap problem                             |
+| Variables | Exponentiation and state inspector                     | Named values and change cues                                                   |
+| Code      | Executed Increasing Array source, references elsewhere | Active source line; most curated sources are illustrative                      |
+
+All ten have registration/capability checks and responsive gallery coverage. This matrix does not imply that every renderer has a dedicated curated problem or a completed manual screen-reader audit.
