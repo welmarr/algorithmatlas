@@ -1,6 +1,6 @@
 {
   "schemaVersion": "0.1",
-  "asOf": "2026-10-01",
+  "asOf": "2026-10-02",
   "baseline": {
     "branch": "baseline/audited-prototype-2026-10-01",
     "commit": "0107c9138cdfb28d5b97345866fae38e780c462e",
@@ -84,14 +84,73 @@
   },
   "auditRecord": "docs/audit/status.json",
   "vnext": {
+    "status": "COMPLETE",
+    "scope": "bounded-local-milestone",
     "baselineCommit": "5a5e6c7baffe369949f25a78b6c65f71ac2fe3cb",
+    "baselineBranch": "archive/mvp-before-visual-auth-python",
+    "baselineTag": "mvp-before-visual-auth-python",
     "branch": "feature/vnext-visual-auth-python",
+    "testedImplementationCommit": "00089c3b0b9727e30d8a0b043a5e397e22f159e8",
+    "freshCloneCommit": "4873ad58938d61260b584642fe7d13eda2b8af98",
+    "releaseRef": "refs/tags/vnext-visual-auth-python",
     "lots": {
-      "visual": "locally-verified",
-      "auth": "locally-verified",
-      "python": "locally-verified"
+      "visual": "COMPLETE",
+      "auth": "COMPLETE",
+      "pythonLocal": "COMPLETE",
+      "pythonPublic": "BLOCKED",
+      "pythonGeneralInference": "PARTIAL"
     },
-    "finalGate": "pending",
-    "freshClone": "pending"
-  }
+    "finalGate": "PASS",
+    "freshClone": "PASS",
+    "verification": {
+      "fast": {
+        "passed": 127,
+        "skipped": 15
+      },
+      "full": {
+        "passed": 138,
+        "skipped": 4
+      },
+      "e2e": {
+        "passed": 27,
+        "skipped": 0
+      },
+      "nodePerformance": {
+        "passed": 3
+      },
+      "cleanRunnerSecurity": {
+        "passed": 9
+      },
+      "cleanDockerBuild": "PASS",
+      "dockerHttpHealth": "PASS",
+      "livePreviewEditedPython": "PASS",
+      "productionDependencyAudit": "no-known-advisories",
+      "allDependencyAudit": "no-known-advisories"
+    },
+    "ci": {
+      "status": "PASS",
+      "verifiedCommit": "00089c3b0b9727e30d8a0b043a5e397e22f159e8",
+      "runUrl": "https://github.com/welmarr/algorithmatlas/actions/runs/36972546880",
+      "releaseRun": "Final main run checked after release push; completion report records its exact URL and SHA."
+    },
+    "audit": "docs/audit/vnext-visual-auth-python/README.md",
+    "openGates": "docs/audit/vnext-visual-auth-python/OPEN_GATES.md",
+    "cleanup": {
+      "policy": "project-scoped-only",
+      "retain": [
+        "active local PostgreSQL account volume",
+        "active local Mailpit",
+        "current Python runner image",
+        "active preview output",
+        "useful dependency caches"
+      ],
+      "remove": [
+        "temporary clone directories",
+        "generated test reports/screenshots",
+        "temporary test containers",
+        "superseded project images"
+      ]
+    }
+  },
+  "historicalScope": "Top-level baseline/construction/lots/verification describe the original construction; vnext is the current milestone."
 }

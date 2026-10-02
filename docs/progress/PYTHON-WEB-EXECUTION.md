@@ -17,3 +17,9 @@ Verified during implementation on 2026-10-02:
 The browser verification exposed ambiguous implicit select labels; explicit accessible names were added. Tests were corrected to target actual array/graph renderer markup. No trace or algorithm result was hard-coded to pass them. A generated full-page screenshot was inspected; screenshots remain ignored temporary artifacts.
 
 Reproducibility tooling now includes pnpm verify:isolated (fresh temporary DB/mail with exact cleanup), production browser mode and updated CI. Documentation includes the threat model, runbook, service limits, privacy and future public deployment gates.
+
+## Completed checkpoint reference
+
+Branch: feature/vnext-visual-auth-python. Starting SHA: 4cfa0d67af106a6d2665de0af7a76eda839f7473. Ending implementation SHA: 00089c3b0b9727e30d8a0b043a5e397e22f159e8. Changed subsystems: isolated-runner/jobs, execution service, Python trace, Own Code/API/player, migration 004/workspaces, verification scripts, tests and ADR-016.
+
+The pending statements above describe this lot's original checkpoint. The combined full/fresh-clone gates now pass; final counts, failures/fixes, cleanup, security limits and release references are recorded in [VNEXT-FINAL](VNEXT-FINAL.md) and the new final audit. Historic audit directories are unchanged.

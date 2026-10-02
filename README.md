@@ -38,3 +38,7 @@ Teaching steps now drive [declarative choreography](docs/VISUAL-CHOREOGRAPHY.md)
 ## Project documents
 
 Read [ARCHITECTURE.md](ARCHITECTURE.md), [DEVELOPMENT.md](DEVELOPMENT.md), [TESTING.md](TESTING.md), [SECURITY.md](SECURITY.md), and [docs/ROADMAP.md](docs/ROADMAP.md). Public APIs and extension guidance are in [SIMULATION-PROTOCOL.md](SIMULATION-PROTOCOL.md), [PROBLEM-SDK.md](PROBLEM-SDK.md), [RENDERER-SDK.md](RENDERER-SDK.md), [PACKS.md](PACKS.md), and [AI-CONNECTORS.md](AI-CONNECTORS.md).
+
+## Verified VNext release
+
+The visual/account/local Python milestone passes the full production browser gate and a fresh GitHub clone: 138 unit/integration/security tests and 27 browser tests, with separate optional performance runs. See [the current audit](docs/audit/vnext-visual-auth-python/README.md) for exact scope, revisions, skips and production gates. The preserved MVP archive remains available.

@@ -9,3 +9,9 @@ Use `packages/problems/src/index.ts` as a curated example. For an external contr
 A pack has a declarative `pack.json` with schema version, semantic pack version, publisher, license, namespaced problem IDs, renderer IDs, and safe relative module paths. `validatePackManifest` checks this data without importing code. `registerTrustedPack` requires an explicit `approvedLocalCode: true` option, rejects collisions and declaration mismatches, and smoke-runs the already imported local definitions. It is for build-time reviewed code only. See [PACKS.md](PACKS.md) for the trust and install policy and CLI commands.
 
 New event vocabulary requires a protocol change and tests. A new visual family requires a renderer with a canonical state contract; it must not inspect problem IDs.
+
+## VNext pedagogy boundary
+
+Producers may attach versioned, bounded `pedagogy` facts (reason, equation, labels, range/alignment) to semantic events. These are validated immutable teaching facts; renderer directives are derived separately by `@sim/visual-choreography`. Curated teaching strategies are explicit metadata, and an edited source run cannot inherit a curated algorithm claim automatically. Stable entity/item IDs must survive moves and swaps. See [VISUAL-CHOREOGRAPHY](docs/VISUAL-CHOREOGRAPHY.md).
+
+Python Own Code uses the separate raw-trace interpreter with bounded supported inference, provenance/confidence and a variables/raw fallback. Anonymous simulation and execution must not depend on a persistence account or AI. Packs remain trusted local code, not a public upload/execution mechanism.

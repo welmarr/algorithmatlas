@@ -57,3 +57,9 @@ Optional verified accounts/email reset, browser Python execution, full combined
 journeys, final security/performance audit, fresh clone reproduction, release
 merge/tag and final scoped cleanup remain pending. No public sandbox readiness
 claim is made by this visual checkpoint.
+
+## Completed checkpoint reference
+
+Branch: feature/vnext-visual-auth-python. Starting SHA: 5a5e6c7baffe369949f25a78b6c65f71ac2fe3cb. Ending implementation SHA: 6fb3573131642cdff4017c5e3e31e093489bb5b2. Changed subsystems: packages/visual-choreography, simulation-core, semantic-events, family producers, shared web player, tests and ADR-014.
+
+The pending statements above describe this lot's original checkpoint. The combined full/fresh-clone gates now pass; final counts, failures/fixes, cleanup, security limits and release references are recorded in [VNEXT-FINAL](VNEXT-FINAL.md) and the new final audit. Historic audit directories are unchanged.

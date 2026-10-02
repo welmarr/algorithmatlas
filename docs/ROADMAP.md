@@ -4,10 +4,10 @@
 
 The MVP baseline is preserved remotely at `5a5e6c7baffe369949f25a78b6c65f71ac2fe3cb` with its archive branch and annotated tag. New work is on `feature/vnext-visual-auth-python`.
 
-- Declarative family-aware choreography and semantic color: implemented and locally tested.
-- Optional verified accounts, Mailpit email, password reset and private saves: implemented and locally tested.
-- Anonymous browser Python, isolated local queue, trace/player, verified workspace persistence: implemented and locally tested; public execution gated.
-- Combined reproducibility/final release: see the current progress status and new milestone audit. Historic audit reports remain unchanged.
+- Declarative family-aware choreography and semantic color: complete for the bounded local milestone.
+- Optional verified accounts, Mailpit email, password reset and private saves: complete for the bounded local milestone.
+- Anonymous browser Python, isolated local queue, trace/player, verified workspace persistence: complete for the bounded local milestone; public execution gated.
+- Combined full gates and fresh GitHub clone: PASS. Release evidence is in [the VNext audit](audit/vnext-visual-auth-python/README.md). Historic audit reports remain unchanged.
 
 ## Original construction lots
 

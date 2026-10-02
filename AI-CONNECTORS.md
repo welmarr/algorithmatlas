@@ -15,3 +15,7 @@ The flow is: provider adapter → raw JSON → version/kind parser → vocabular
 Set `AI_LIVE_ENDPOINT` and `AI_LIVE_MODEL` (and optionally `AI_LIVE_API_KEY`) to opt into `tests/ai-live.test.ts` against a configured compatible endpoint. Core CI skips that test and needs no paid key. Live output must still pass the canonical schema validator. The frontend keeps credentials in memory for the current page only; no key is saved.
 
 Local hosted model example: set endpoint to `http://localhost:11434/v1/chat/completions` and enter the locally installed model's ID. External example: a compatible HTTPS chat completions endpoint and personal key. The app does not retain keys after refresh.
+
+## VNext regression boundary
+
+All final anonymous and verified-account browser journeys run with external AI configuration removed. Python tracing, semantic inference, choreography, authentication and persistence are deterministic local capabilities. Provider output cannot execute code, change canonical events or supply unvalidated choreography. Canonical response and invalid-payload regressions pass; the opt-in live provider test remains skipped without a configured endpoint. No live-provider compatibility claim is made by the local release.
