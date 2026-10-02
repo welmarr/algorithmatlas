@@ -50,6 +50,7 @@ Curated traces are generated in the browser. Inputs have bounded sizes, preventi
 - Event order, IDs, and output are deterministic for the same input and algorithm version.
 - Renderers never calculate algorithm answers.
 - AI responses are parsed into a narrow explanation type and never passed into the reducer.
+- The broader optional AI protocol validates seven versioned response families and negotiated vocabulary before a UI consumer sees them. Provider-specific transport shapes never enter simulation state.
 - Edited Increasing Array code is interpreted only through the bounded syntax whitelist; no host JavaScript execution occurs.
 
 ## Gap analysis

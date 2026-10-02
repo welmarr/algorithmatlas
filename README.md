@@ -25,7 +25,7 @@ Open http://localhost:3000. No database, account, API key, or AI service is requ
 | Renderer SDK              | `packages/renderer-sdk`, `apps/web`           | capability contracts and explicit custom renderer registration                  |
 | Code runtime              | `packages/code-runtime`                       | bounded editable JavaScript subset for Increasing Array                         |
 | Web player and lab        | `apps/web`                                    | Next.js, ten renderer families, four structure editors, side-by-side comparison |
-| Optional teacher adapters | `packages/ai-sdk`                             | built-in, local OpenAI-compatible, external OpenAI-compatible                   |
+| Optional teacher adapters | `packages/ai-sdk`                             | seven normalized response families; built-in and compatible endpoint adapters   |
 
 Full JavaScript/Python/C++ execution, an isolated multi-language sandbox, persistent data, and catalog expansion beyond the representative suite remain future work. The browser interpreter supports only the subset listed in [SECURITY.md](SECURITY.md). Current build status and lot reports are in `docs/progress`; the original independent audit remains in `docs/audit`.
 

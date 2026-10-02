@@ -12,7 +12,7 @@ The construction branch follows the numbered lots in the full build specificatio
 | 05  | Independent algorithm lab with direct editors                    | Complete: four structures and eight algorithms                  |
 | 06  | Side-by-side algorithm comparison                                | Complete: three traversal pairs with dual playback              |
 | 07  | Contributor problem SDK, renderer SDK, versioned community packs | Complete: reviewed local registration and sample pack           |
-| 08  | AI-agnostic connector protocol and normalized response families  | Partial explanation adapter; full protocol planned              |
+| 08  | AI-agnostic connector protocol and normalized response families  | Implemented; verification in progress                           |
 | 09  | Isolated user-code execution foundation                          | Partial bounded browser JS interpreter; isolated runner planned |
 | 10  | Semantic interpreter over raw execution context                  | Partial known-algorithm mapping; broader inference planned      |
 | 11  | PostgreSQL, users, saved inputs, learning progress               | Planned                                                         |

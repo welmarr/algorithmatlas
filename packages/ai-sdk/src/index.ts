@@ -1,4 +1,6 @@
 import type { AlgorithmEvent } from "@sim/semantic-events";
+export * from "./protocol";
+export * from "./compatible-provider";
 
 export interface StepExplanation {
   schemaVersion: "0.1";

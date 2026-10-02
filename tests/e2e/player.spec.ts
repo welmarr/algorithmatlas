@@ -72,6 +72,10 @@ test("custom input regenerates a deterministic trace and built-in teacher explai
   await page.getByRole("button", { name: "Next step" }).click();
   await page.getByRole("button", { name: "Explain current event" }).click();
   await expect(page.locator(".teacher-panel p")).toContainText("Read index 0");
+  await page.getByRole("button", { name: "Hint for current step" }).click();
+  await expect(page.locator(".teacher-panel p").last()).toContainText(
+    "Hint: Inspect the highlighted entity",
+  );
   const seek = page.getByRole("slider", { name: "Technical event position" });
   await seek.focus();
   await seek.press("End");

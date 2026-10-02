@@ -13,3 +13,5 @@ Lot 03 adds isolated server-rendered component checks, deterministic tree and DP
 Simulation correctness invariant: replaying all events must produce the same final state after any sequence of seeks. Algorithm correctness is independently checked against examples and oracles; trace equality alone does not prove the answer is correct.
 
 Lot 07 adds an executable sample community pack and custom renderer test. It validates the problem schema/trace/teaching contract, replays edited input, checks manifest traversal and duplicate rejection, verifies explicit trusted registration and collision guards, and renders the custom component with text cues. The contributor CLI smoke check creates and validates a temporary pack, then removes that verified temporary directory.
+
+Lot 08 adds fixture tests for all seven canonical AI response families, vocabulary normalization, capability rejection, bounded code-review findings, keyless built-in responses, compatible transport parsing, and malformed provider output. The browser suite checks the built-in hint on a real simulation step. `tests/ai-live.test.ts` is skipped unless `AI_LIVE_ENDPOINT` and `AI_LIVE_MODEL` are configured.

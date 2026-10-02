@@ -8,4 +8,6 @@ Community pack manifests are parsed as data. Validation checks namespaced IDs an
 
 Model credentials stay in component memory and are sent directly from the user's browser to the configured provider. The app does not store or log them. Browser CORS rules and the provider's privacy policy apply. External endpoints require HTTPS; local hosted models can use loopback HTTP. Users should enter keys only for trusted providers.
 
+The expanded optional AI protocol validates response versions, family fields, bounded text, IDs, code-review line numbers, semantic event vocabulary, and capability membership. Unknown fields are discarded. A model cannot introduce a new event type or visual command through this protocol, and no canonical response is passed to the reducer. Configured live-provider tests are opt-in; default CI stays keyless.
+
 Before full JavaScript, Python, C++, or server-side submissions are enabled, implement and review a Rust/WASI or equivalent isolated runtime with no host filesystem or network, CPU/memory/time/output/process limits, safe cleanup, rate limits, abuse controls, and explicit security tests. Parsing alone does not provide isolation. No arbitrary-code endpoint should be deployed before this work.

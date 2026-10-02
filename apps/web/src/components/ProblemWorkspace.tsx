@@ -8,6 +8,13 @@ import {
   localTeacher,
   localModelTeacher,
   openAICompatibleTeacher,
+  builtInAIProvider,
+  createAIRequest,
+  createCapabilities,
+  eventContext,
+  externalCompatibleProvider,
+  localCompatibleProvider,
+  requestCanonicalAI,
 } from "@sim/ai-sdk";
 import { getRendererLegend, Visuals } from "./Visuals";
 import {
@@ -43,6 +50,10 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
   const [model, setModel] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [teacherAnswer, setTeacherAnswer] = useState<{
+    eventId: string;
+    text: string;
+  } | null>(null);
+  const [hintAnswer, setHintAnswer] = useState<{
     eventId: string;
     text: string;
   } | null>(null);
@@ -144,6 +155,7 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
       setExecutedCode(source);
       setError("");
       setTeacherAnswer(null);
+      setHintAnswer(null);
       setMode("simulate");
     } catch (cause) {
       setErrorArea(
@@ -174,6 +186,60 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
           eventId: response.eventId,
           text: response.explanation,
         });
+    } catch (cause) {
+      setTeacherError(
+        cause instanceof Error ? cause.message : "Teacher unavailable",
+      );
+    } finally {
+      setTeacherBusy(false);
+    }
+  }
+  async function hintStep() {
+    if (!event) return;
+    setTeacherBusy(true);
+    setTeacherError("");
+    setHintAnswer(null);
+    try {
+      const capabilities = createCapabilities({
+        supportedConcepts: problem.metadata.tags,
+        supportedVisuals: [problem.metadata.renderer],
+        supportedSemanticEvents: [
+          ...new Set(run.events.map((item) => item.type)),
+        ],
+        availableAlgorithms: [problem.metadata.id],
+        problemContext: {
+          problemId: problem.metadata.id,
+          title: problem.metadata.title,
+          summary: problem.metadata.summary,
+        },
+        currentTeachingStep: {
+          title: teachingStep.title,
+          summary: teachingStep.summary,
+          eventIds: teachingStep.primaryEventIds,
+        },
+      });
+      const provider =
+        teacherMode === "built-in"
+          ? builtInAIProvider()
+          : teacherMode === "local-model"
+            ? localCompatibleProvider({
+                id: "local-compatible",
+                endpoint,
+                model,
+                apiKey,
+              })
+            : externalCompatibleProvider({
+                id: "external-compatible",
+                endpoint,
+                model,
+                apiKey,
+              });
+      const response = await requestCanonicalAI(
+        provider,
+        createAIRequest("hint", capabilities, eventContext(event)),
+      );
+      if (response.kind === "hint")
+        setHintAnswer({ eventId: event.eventId, text: response.text });
     } catch (cause) {
       setTeacherError(
         cause instanceof Error ? cause.message : "Teacher unavailable",
@@ -600,16 +666,17 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
                   const mode = e.target.value as typeof teacherMode;
                   setTeacherMode(mode);
                   setTeacherAnswer(null);
+                  setHintAnswer(null);
                   setEndpoint(
                     mode === "local-model"
                       ? "http://localhost:11434/v1/chat/completions"
-                      : "https://api.openai.com/v1/chat/completions",
+                      : "",
                   );
                 }}
               >
                 <option value="built-in">Built-in explanation</option>
                 <option value="local-model">Local model</option>
-                <option value="external">OpenAI compatible</option>
+                <option value="external">Compatible HTTPS model</option>
               </select>
               {teacherMode !== "built-in" && (
                 <>
@@ -617,6 +684,7 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
                   <input
                     id="teacher-endpoint"
                     value={endpoint}
+                    placeholder="https://provider.example/v1/chat/completions"
                     onChange={(e) => setEndpoint(e.target.value)}
                   />
                   <label htmlFor="teacher-model">Model</label>
@@ -637,8 +705,14 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
               <button onClick={explainStep} disabled={!event || teacherBusy}>
                 {teacherBusy ? "Explaining…" : "Explain current event"}
               </button>
+              <button onClick={hintStep} disabled={!event || teacherBusy}>
+                {teacherBusy ? "Working…" : "Hint for current step"}
+              </button>
               {teacherAnswer && teacherAnswer.eventId === event?.eventId && (
                 <p aria-live="polite">{teacherAnswer.text}</p>
+              )}
+              {hintAnswer && hintAnswer.eventId === event?.eventId && (
+                <p aria-live="polite">Hint: {hintAnswer.text}</p>
               )}
               {teacherError && (
                 <p className="error" role="alert">
