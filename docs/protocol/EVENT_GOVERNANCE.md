@@ -7,10 +7,10 @@
 | `SELECT`            | RESERVED     | No producer or distinct state meaning      |
 | `COMPARE`           | ACTIVE       | Editable array interpreter                 |
 | `UPDATE_VALUE`      | ACTIVE       | Editable array interpreter                 |
-| `CREATE_ENTITY`     | RESERVED     | No producer or renderer lifecycle test     |
+| `CREATE_ENTITY`     | ACTIVE       | Road Construction adds roads during replay |
 | `REMOVE_ENTITY`     | RESERVED     | No producer or renderer lifecycle test     |
 | `MARK`              | ACTIVE       | BFS path and tree diameter                 |
-| `UNMARK`            | EXPERIMENTAL | Reducer supports reset; no producer        |
+| `UNMARK`            | ACTIVE       | Two pointers and queen backtracking        |
 | `ANNOTATE`          | ACTIVE       | Tree passes                                |
 | `READ_INDEX`        | ACTIVE       | Editable array interpreter                 |
 | `WRITE_INDEX`       | ACTIVE       | Editable array interpreter                 |
@@ -19,7 +19,7 @@
 | `VISIT_NODE`        | ACTIVE       | Graph BFS mapper                           |
 | `DISCOVER_NODE`     | ACTIVE       | Graph BFS mapper                           |
 | `VISIT_EDGE`        | RESERVED     | No producer or reducer behavior            |
-| `RELAX_EDGE`        | EXPERIMENTAL | Edge cue exists; no shortest-path producer |
+| `RELAX_EDGE`        | ACTIVE       | Shortest Routes I                          |
 | `SET_DISTANCE`      | ACTIVE       | Graph BFS mapper                           |
 | `SET_PARENT`        | ACTIVE       | Graph BFS mapper                           |
 | `QUEUE_PUSH`        | ACTIVE       | Grid and graph BFS mappers                 |
@@ -46,11 +46,12 @@
 | `ENTER_SUBTREE`     | RESERVED     | No producer or subtree state meaning       |
 | `EXIT_SUBTREE`      | RESERVED     | No producer or subtree state meaning       |
 | `SET_DEPTH`         | ACTIVE       | Tree diameter                              |
+| `SET_SUBTREE_SIZE`  | ACTIVE       | Subordinates postorder traversal           |
 | `FUNCTION_CALL`     | RESERVED     | No call-stack producer or renderer         |
 | `FUNCTION_RETURN`   | ACTIVE       | Editable array interpreter                 |
 | `BACKTRACK`         | RESERVED     | No producer or reducer behavior            |
 
-`validateEvent` checks type-specific required payload fields, allowed payload keys, entity count and kind, finite values, legal statuses, and nonnegative distances and depths. A reserved name is not a supported event merely because it appears in `EVENT_TYPES`.
+`validateEvent` checks type-specific required payload fields, allowed payload keys, entity count and kind, finite values, legal statuses, and nonnegative distances, depths, and subtree counts. A reserved name is not a supported event merely because it appears in `EVENT_TYPES`.
 
 ## Raw operations and deterministic mapping
 

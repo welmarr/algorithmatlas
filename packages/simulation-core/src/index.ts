@@ -52,6 +52,7 @@ export function cloneState(state: SimulationState): SimulationState {
 function focusKind(type: EventType): StepFocusKind {
   switch (type) {
     case "UPDATE_VALUE":
+    case "CREATE_ENTITY":
     case "WRITE_INDEX":
     case "SWAP":
     case "RELAX_EDGE":
@@ -59,6 +60,7 @@ function focusKind(type: EventType): StepFocusKind {
     case "SET_CELL_DISTANCE":
     case "SET_PARENT":
     case "SET_DEPTH":
+    case "SET_SUBTREE_SIZE":
     case "DP_UPDATE":
     case "DP_TRANSITION":
     case "DP_BASE_CASE":
@@ -125,7 +127,7 @@ export function reduceEvent(
   const kind =
     event.type === "ANNOTATE" && variable ? "update" : focusKind(event.type);
   let before: Primitive | undefined;
-  if (kind === "update" && id) {
+  if (kind === "update" && id && event.type !== "CREATE_ENTITY") {
     const entity = requiredEntity(state, id);
     before =
       event.type === "SET_DISTANCE" || event.type === "SET_CELL_DISTANCE"
@@ -134,7 +136,9 @@ export function reduceEvent(
           ? entity.metadata?.parent
           : event.type === "SET_DEPTH"
             ? entity.metadata?.depth
-            : entity.value;
+            : event.type === "SET_SUBTREE_SIZE"
+              ? entity.metadata?.subtreeSize
+              : entity.value;
   } else if (variable && Object.hasOwn(event.payload, "value")) {
     before = state.variables[variable];
   }
@@ -151,6 +155,11 @@ export function reduceEvent(
   switch (event.type) {
     case "CREATE_ENTITY": {
       if (!id) break;
+      if (state.entities[id])
+        throw new SimulationError(
+          "INVALID_TRACE",
+          `Entity ${id} already exists`,
+        );
       const kind = stringPayload(event, "kind") as
         VisualEntity["kind"] | undefined;
       state.entities[id] = {
@@ -159,6 +168,10 @@ export function reduceEvent(
         label: stringPayload(event, "label") ?? id,
         value,
         status: "idle",
+        metadata:
+          event.type === "CREATE_ENTITY"
+            ? { from: event.payload.from, to: event.payload.to }
+            : undefined,
       };
       break;
     }
@@ -194,6 +207,13 @@ export function reduceEvent(
         requiredEntity(state, id).metadata = {
           ...requiredEntity(state, id).metadata,
           depth: value,
+        };
+      break;
+    case "SET_SUBTREE_SIZE":
+      if (id)
+        requiredEntity(state, id).metadata = {
+          ...requiredEntity(state, id).metadata,
+          subtreeSize: value,
         };
       break;
     case "DISCOVER_NODE":
@@ -437,12 +457,13 @@ export class SimulationTimeline {
 /** Build a small pedagogical sequence without discarding any technical event. */
 export function createTeachingSteps(
   timeline: SimulationTimeline,
-  renderer: RendererKind,
+  _renderer: RendererKind,
   output: string,
 ): TeachingStep[] {
   const events = timeline.events;
   const positions: number[] = [];
-  if (renderer === "array") {
+  const increasingArray = timeline.metadata.problemId === "increasing-array";
+  if (increasingArray) {
     const pointers = events
       .map((event, index) => ({ event, position: index + 1 }))
       .filter(({ event }) => event.type === "MOVE_POINTER");
@@ -467,6 +488,18 @@ export function createTeachingSteps(
       "MARK",
       "SET_DISTANCE",
       "SET_CELL_DISTANCE",
+      "SET_SUBTREE_SIZE",
+      "WRITE_INDEX",
+      "SWAP",
+      "MOVE_POINTER",
+      "RELAX_EDGE",
+      "HEAP_EXTRACT",
+      "STACK_POP",
+      "STACK_PUSH",
+      "QUEUE_PUSH",
+      "QUEUE_POP",
+      "ANNOTATE",
+      "CREATE_ENTITY",
     ]);
     for (const event of events)
       if (salient.has(event.type) && event.step < events.length)
@@ -512,7 +545,7 @@ export function createTeachingSteps(
       let summary = isFinal
         ? `The algorithm returns ${output}.`
         : primary.explanation;
-      if (renderer === "array" && write && !isFinal) {
+      if (increasingArray && write && !isFinal) {
         const index = write.entities[0]?.split(":")[1] ?? "?";
         const change =
           typeof before === "number" && typeof after === "number"
@@ -523,7 +556,7 @@ export function createTeachingSteps(
             ? `Increase ${before} → ${after} (+${change})`
             : `Update index ${index}: ${before} → ${after}`;
         summary = `At index ${index}, change ${before} to ${after}${change !== undefined && change > 0 ? ` using ${change} increments` : ""}.`;
-      } else if (renderer === "array" && !isFinal) {
+      } else if (increasingArray && !isFinal) {
         const pointer = segment.find((event) => event.type === "MOVE_POINTER");
         const index = pointer?.entities[0]?.split(":")[1];
         title = index ? `Keep index ${index}` : primary.explanation;

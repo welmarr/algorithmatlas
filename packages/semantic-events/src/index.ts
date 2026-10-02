@@ -43,6 +43,7 @@ export const EVENT_TYPES = [
   "ENTER_SUBTREE",
   "EXIT_SUBTREE",
   "SET_DEPTH",
+  "SET_SUBTREE_SIZE",
   "FUNCTION_CALL",
   "FUNCTION_RETURN",
   "BACKTRACK",
@@ -54,6 +55,7 @@ export type EventMaturity =
 const activeEvents = new Set<EventType>([
   "ANNOTATE",
   "COMPARE",
+  "CREATE_ENTITY",
   "DISCOVER_CELL",
   "DISCOVER_NODE",
   "DP_BASE_CASE",
@@ -64,12 +66,15 @@ const activeEvents = new Set<EventType>([
   "MOVE_POINTER",
   "QUEUE_POP",
   "QUEUE_PUSH",
+  "RELAX_EDGE",
   "READ_INDEX",
   "SET_CELL_DISTANCE",
   "SET_DEPTH",
+  "SET_SUBTREE_SIZE",
   "SET_DISTANCE",
   "SET_PARENT",
   "UPDATE_VALUE",
+  "UNMARK",
   "VISIT_CELL",
   "VISIT_NODE",
   "VISIT_TREE_NODE",
@@ -81,13 +86,11 @@ const experimentalEvents = new Set<EventType>([
   "HEAP_INSERT",
   "HEAP_UPDATE",
   "QUEUE_PEEK",
-  "RELAX_EDGE",
   "SET_CELL_STATE",
   "STACK_PEEK",
   "STACK_POP",
   "STACK_PUSH",
   "SWAP",
-  "UNMARK",
 ]);
 export const EVENT_GOVERNANCE: Readonly<Record<EventType, EventMaturity>> =
   Object.freeze(
@@ -168,6 +171,16 @@ const scalar: PayloadRule = (value) =>
 const one = (prefix?: string): EventSchema => ({ entities: 1, prefix });
 const eventSchemas: Partial<Record<EventType, EventSchema>> = {
   ANNOTATE: { entities: 0, optional: { variable: identifier, value: scalar } },
+  CREATE_ENTITY: {
+    ...one("graph:edge:"),
+    required: {
+      kind: (value) => value === "graph-edge",
+      label: (value) =>
+        typeof value === "string" && value.length > 0 && value.length <= 32,
+      from: nodeLabel,
+      to: nodeLabel,
+    },
+  },
   COMPARE: {
     entities: 0,
     required: { taken: (value) => typeof value === "boolean" },
@@ -215,6 +228,7 @@ const eventSchemas: Partial<Record<EventType, EventSchema>> = {
   SET_CELL_DISTANCE: { ...one("grid:"), required: { value: nonnegative } },
   SET_CELL_STATE: { ...one("grid:"), required: { status } },
   SET_DEPTH: { ...one("tree:node:"), required: { value: nonnegative } },
+  SET_SUBTREE_SIZE: { ...one("tree:node:"), required: { value: nonnegative } },
   SET_DISTANCE: { ...one("graph:node:"), required: { value: nonnegative } },
   SET_PARENT: { ...one("graph:node:"), required: { value: nodeLabel } },
   SWAP: { entities: 2, prefix: "array:" },

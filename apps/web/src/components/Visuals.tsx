@@ -273,6 +273,9 @@ export function GraphVisual({
             node.metadata?.depth !== undefined
               ? `depth=${node.metadata.depth}`
               : undefined,
+            node.metadata?.subtreeSize !== undefined
+              ? `below=${node.metadata.subtreeSize}`
+              : undefined,
             node.metadata?.parent !== undefined
               ? `p=${node.metadata.parent}`
               : undefined,

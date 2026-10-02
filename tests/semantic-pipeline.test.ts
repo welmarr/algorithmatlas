@@ -22,7 +22,7 @@ describe("governed event protocol", () => {
   it("classifies every vocabulary entry and rejects reserved trace events", () => {
     expect(Object.keys(EVENT_GOVERNANCE)).toHaveLength(EVENT_TYPES.length);
     expect(EVENT_GOVERNANCE.WRITE_INDEX).toBe("ACTIVE");
-    expect(EVENT_GOVERNANCE.RELAX_EDGE).toBe("EXPERIMENTAL");
+    expect(EVENT_GOVERNANCE.RELAX_EDGE).toBe("ACTIVE");
     expect(EVENT_GOVERNANCE.HEAP_INSERT).toBe("EXPERIMENTAL");
     expect(EVENT_GOVERNANCE.VISIT_EDGE).toBe("RESERVED");
     expect(() => event("VISIT_EDGE", ["graph:edge:1"], {})).toThrow("reserved");

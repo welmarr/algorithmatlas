@@ -15,6 +15,9 @@ import {
 } from "@sim/problem-sdk";
 import type { EventDraft, EventType } from "@sim/semantic-events";
 import { mapBfsTrace, recordBfs } from "./bfs-mapper";
+import { arrayProblems } from "./extended-arrays";
+import { graphProblems } from "./extended-graphs";
+import { mixedProblems } from "./extended-mixed";
 
 function meta(
   input: Omit<
@@ -145,6 +148,12 @@ const labyrinth = defineProblem({
     renderer: "grid",
     sourcePath: "1193",
     summary: "Find a shortest walk from A to B through open cells.",
+    constraints: [
+      {
+        label: "Interactive grid",
+        value: "2–16 rows and 2–24 columns; exactly one A and B",
+      },
+    ],
     tags: ["BFS", "grid"],
     examples: [{ input: '{"rows":["A..",".#.","..B"]}', output: "4" }],
     complexity: { time: "O(rows × columns)", space: "O(rows × columns)" },
@@ -322,6 +331,9 @@ const messageRoute = defineProblem({
     renderer: "graph",
     sourcePath: "1667",
     summary: "Find a route with the fewest edges between two nodes.",
+    constraints: [
+      { label: "Interactive graph", value: "2–16 nodes and up to 40 edges" },
+    ],
     tags: ["BFS", "shortest path"],
     examples: [
       {
@@ -542,6 +554,7 @@ const treeDiameter = defineProblem({
     renderer: "tree",
     sourcePath: "1131",
     summary: "Find the longest simple path in a tree.",
+    constraints: [{ label: "Interactive tree", value: "2–16 connected nodes" }],
     tags: ["tree", "BFS"],
     examples: [
       {
@@ -684,6 +697,7 @@ const diceCombinations = defineProblem({
     renderer: "dp",
     sourcePath: "1633",
     summary: "Count ordered dice rolls that add up to a target.",
+    constraints: [{ label: "Interactive target", value: "0–48" }],
     tags: ["DP", "counting"],
     examples: [{ input: '{"target":3}', output: "4" }],
     complexity: { time: "O(6n)", space: "O(n)" },
@@ -776,6 +790,9 @@ export const problems: ProblemEntry[] = [
   entry(messageRoute),
   entry(treeDiameter),
   entry(diceCombinations),
+  ...arrayProblems,
+  ...graphProblems,
+  ...mixedProblems,
 ];
 export function getProblem(id: string): ProblemEntry | undefined {
   return problems.find((problem) => problem.metadata.id === id);

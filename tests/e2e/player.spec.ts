@@ -31,6 +31,36 @@ test("browse, learn, and replay an array problem", async ({ page }) => {
   await expect(page.locator(".result")).toContainText("5");
 });
 
+test("new representative problems regenerate their own traces from custom input", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.locator(".problem-card")).toHaveCount(20);
+  await page.goto("/problems/edit-distance");
+  await page.waitForLoadState("networkidle");
+  await page.getByLabel("JSON input").fill('{"first":"CAT","second":"CUT"}');
+  await page.getByRole("button", { name: "Run simulation" }).click();
+  const seek = page.getByRole("slider", { name: "Learning position" });
+  await seek.focus();
+  await seek.press("End");
+  await expect(page.locator(".result")).toContainText("1");
+  await expect(page.locator(".dp-visual")).toBeVisible();
+
+  await page.goto("/problems/road-construction");
+  await page.waitForLoadState("networkidle");
+  await expect(page.locator(".graph-edge")).toHaveCount(0);
+  await page.getByRole("button", { name: "Next step" }).click();
+  await expect(page.locator(".graph-edge")).toHaveCount(1);
+  await page
+    .getByLabel("JSON input")
+    .fill('{"cities":3,"roads":[[1,2],[2,3]]}');
+  await page.getByRole("button", { name: "Run simulation" }).click();
+  const roadSeek = page.getByRole("slider", { name: "Learning position" });
+  await roadSeek.focus();
+  await roadSeek.press("End");
+  await expect(page.locator(".result")).toContainText("2 2 | 1 3");
+});
+
 test("custom input regenerates a deterministic trace and built-in teacher explains a step", async ({
   page,
 }) => {
