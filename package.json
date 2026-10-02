@@ -9,6 +9,8 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "contributor": "node scripts/contributor.mjs",
+    "runner:build": "docker build -t simulator-python-runner:0.1 runner/python",
+    "runner:local": "node scripts/run-python.mjs",
     "lint": "eslint .",
     "format:check": "prettier --check ."
   },
@@ -17,6 +19,7 @@
     "@next/eslint-plugin-next": "15.5.26",
     "@playwright/test": "1.52.0",
     "@sim/ai-sdk": "workspace:*",
+    "@sim/isolated-runner": "workspace:*",
     "@sim/domain": "workspace:*",
     "@sim/problem-sdk": "workspace:*",
     "@sim/renderer-sdk": "workspace:*",

@@ -23,6 +23,9 @@ importers:
       '@sim/domain':
         specifier: workspace:*
         version: link:packages/domain
+      '@sim/isolated-runner':
+        specifier: workspace:*
+        version: link:packages/isolated-runner
       '@sim/problem-sdk':
         specifier: workspace:*
         version: link:packages/problem-sdk
@@ -131,6 +134,8 @@ importers:
         version: 8.18.0
 
   packages/domain: {}
+
+  packages/isolated-runner: {}
 
   packages/problem-sdk:
     dependencies:
