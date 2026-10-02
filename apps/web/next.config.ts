@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
     "@sim/code-runtime",
     "@sim/domain",
     "@sim/problems",
+    "@sim/persistence",
     "@sim/problem-sdk",
     "@sim/semantic-events",
     "@sim/simulation-core",

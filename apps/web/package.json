@@ -13,6 +13,7 @@
     "@sim/domain": "workspace:*",
     "@sim/problems": "workspace:*",
     "@sim/problem-sdk": "workspace:*",
+    "@sim/persistence": "workspace:*",
     "@sim/renderer-sdk": "workspace:*",
     "@sim/semantic-events": "workspace:*",
     "@sim/simulation-core": "workspace:*",

@@ -59,7 +59,33 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
   } | null>(null);
   const [teacherError, setTeacherError] = useState("");
   const [teacherBusy, setTeacherBusy] = useState(false);
+  const [saveName, setSaveName] = useState("My input");
+  const [saveStatus, setSaveStatus] = useState("");
+  const [hydrated, setHydrated] = useState(false);
   const [, redraw] = useState(0);
+  useEffect(() => setHydrated(true), []);
+  useEffect(() => {
+    const savedId = new URLSearchParams(window.location.search).get("saved");
+    if (!savedId || !/^[0-9a-f-]{36}$/.test(savedId)) return;
+    let active = true;
+    fetch(`/api/progress/inputs/${savedId}`)
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Could not load that saved input");
+        return response.json();
+      })
+      .then((saved: { problemId: string; input: unknown }) => {
+        if (!active || saved.problemId !== problemId) return;
+        const next = problem.run(saved.input);
+        setRawInput(JSON.stringify(saved.input, null, 2));
+        setRun(next);
+        setPlaybackMode("learning");
+        setSaveStatus("Saved input loaded.");
+      })
+      .catch(() => active && setSaveStatus("Could not load that saved input."));
+    return () => {
+      active = false;
+    };
+  }, [problem, problemId]);
   useEffect(() => {
     const unsubscribe = run.timeline.subscribe(() => redraw((n) => n + 1));
     return () => {
@@ -165,6 +191,43 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
       );
       setError(
         cause instanceof Error ? cause.message : "Could not run this input",
+      );
+    }
+  }
+  async function saveItem(kind: "runs" | "inputs" | "submissions") {
+    setSaveStatus("");
+    try {
+      const body =
+        kind === "runs"
+          ? { problemId, input: run.input }
+          : kind === "inputs"
+            ? { problemId, input: JSON.parse(rawInput), name: saveName }
+            : { problemId, language: "javascript", source: draftCode };
+      const response = await fetch(`/api/progress/${kind}`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (response.status === 401) {
+        setSaveStatus("Sign in to save progress.");
+        return;
+      }
+      if (!response.ok) {
+        const detail = await response.json().catch(() => ({}));
+        throw new Error(
+          typeof detail.error === "string" ? detail.error : "Save failed",
+        );
+      }
+      setSaveStatus(
+        kind === "runs"
+          ? "Run saved to your dashboard."
+          : kind === "inputs"
+            ? "Input saved to your dashboard."
+            : "Code saved to your account.",
+      );
+    } catch (cause) {
+      setSaveStatus(
+        cause instanceof Error ? cause.message : "Could not save this item.",
       );
     }
   }
@@ -582,6 +645,7 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
               <textarea
                 id="problem-input"
                 spellCheck={false}
+                disabled={!hydrated}
                 value={rawInput}
                 onChange={(e) => setRawInput(e.target.value)}
               />
@@ -590,9 +654,43 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
                   {error}
                 </p>
               )}
-              <button className="run-button" onClick={() => regenerate()}>
+              <button
+                className="run-button"
+                onClick={() => regenerate()}
+                disabled={!hydrated}
+              >
                 Run simulation ↗
               </button>
+              <div className="save-controls">
+                <label htmlFor="save-input-name">Save as</label>
+                <input
+                  id="save-input-name"
+                  disabled={!hydrated}
+                  value={saveName}
+                  maxLength={64}
+                  onChange={(e) => setSaveName(e.target.value)}
+                />
+                <button onClick={() => saveItem("inputs")} disabled={!hydrated}>
+                  Save input
+                </button>
+                <button
+                  onClick={() => saveItem("runs")}
+                  disabled={!hydrated || executedCode !== problem.source}
+                  title={
+                    executedCode !== problem.source
+                      ? "Only reference runs can be verified and saved"
+                      : undefined
+                  }
+                >
+                  Save reference run
+                </button>
+                <Link href="/account">Account</Link>
+              </div>
+              {saveStatus && (
+                <p className="save-status" role="status">
+                  {saveStatus}
+                </p>
+              )}
             </section>
             <section className="panel code-panel">
               <div className="eyebrow">
@@ -611,21 +709,34 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
                   <textarea
                     id="code-editor"
                     spellCheck={false}
+                    disabled={!hydrated}
                     value={draftCode}
                     onChange={(e) => setDraftCode(e.target.value)}
                   />
                   <div className="code-editor-actions">
-                    <button className="run-button" onClick={() => regenerate()}>
+                    <button
+                      className="run-button"
+                      onClick={() => regenerate()}
+                      disabled={!hydrated}
+                    >
                       Run code &amp; input ↗
                     </button>
                     <button
                       className="restore-button"
+                      disabled={!hydrated}
                       onClick={() => {
                         setDraftCode(problem.source);
                         regenerate(problem.source);
                       }}
                     >
                       Restore reference
+                    </button>
+                    <button
+                      className="restore-button"
+                      disabled={!hydrated}
+                      onClick={() => saveItem("submissions")}
+                    >
+                      Save code
                     </button>
                   </div>
                   {error && errorArea === "code" && (

@@ -11,6 +11,7 @@
     "contributor": "node scripts/contributor.mjs",
     "runner:build": "docker build -t simulator-python-runner:0.1 runner/python",
     "runner:local": "node scripts/run-python.mjs",
+    "db:migrate": "pnpm --filter @sim/persistence migrate",
     "lint": "eslint .",
     "format:check": "prettier --check ."
   },
@@ -22,6 +23,7 @@
     "@sim/isolated-runner": "workspace:*",
     "@sim/domain": "workspace:*",
     "@sim/problem-sdk": "workspace:*",
+    "@sim/persistence": "workspace:*",
     "@sim/renderer-sdk": "workspace:*",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",

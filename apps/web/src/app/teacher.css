@@ -32,3 +32,41 @@
   font-size: 13px;
   color: #52645b;
 }
+.save-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 14px;
+  align-items: center;
+}
+.save-controls label {
+  grid-column: 1/-1;
+  font-size: 12px;
+  font-weight: 700;
+}
+.save-controls input {
+  grid-column: 1/-1;
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+}
+.save-controls button {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--soft);
+  padding: 9px 10px;
+  font-weight: 700;
+}
+.save-controls a {
+  color: var(--green);
+  text-decoration: underline;
+  font-size: 13px;
+}
+.save-status {
+  font-size: 13px;
+  color: var(--green);
+  margin: 12px 0 0;
+}
