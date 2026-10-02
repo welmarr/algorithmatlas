@@ -1,0 +1,9 @@
+# Final construction audit — 2026-10-01
+
+**Classification: MVP.** This is a fresh audit of implementation commit `1b70043` on `build/full-platform`. It does not alter the original five-problem prototype audit under `docs/audit`. The original baseline is commit `0107c9138cdfb28d5b97345866fae38e780c462e`, branch `baseline/audited-prototype-2026-10-01`, annotated tag `prototype-audit-2026-10-01`. There is no Git remote and no pushed CI result.
+
+Twenty curated problems accept bounded custom input and produce deterministic replay and learning steps. Ten renderer families, an independent lab, side-by-side traversal comparison, optional PostgreSQL accounts/progress, and seven validated optional AI response families exist. Increasing Array accepts editable bounded JavaScript-subset code, and the exact input `[8,2,5,1,7]` yields four input-dependent writes and 17 moves. A separate local Python Docker CLI produces raw traces and narrow semantic interpretations. It has no HTTP entry point. C++ and Java are not implemented.
+
+The local `pnpm verify:full` gate passed at this commit: 126 unit/integration tests passed (4 optional skips), 19 Chromium tests passed (1 opt-in benchmark skipped), production build, Docker web build, runner security probes, PostgreSQL migration, and production dependency audit with no known advisories. The full development dependency audit also reported no known advisories. Opt-in synthetic Node and bounded browser benchmarks were run separately. See [TEST_REPORT.md](TEST_REPORT.md), [FEATURE_MATRIX.md](FEATURE_MATRIX.md), and [OPEN_GATES.md](OPEN_GATES.md).
+
+The MVP classification reflects working bounded learning workflows and local reproducibility. It does **not** authorize production deployment of arbitrary code or claim WCAG conformance. The public execution security review, C++/Java paths, live model test, high-scale browser rendering, manual accessibility audit, and production operations review remain open.
