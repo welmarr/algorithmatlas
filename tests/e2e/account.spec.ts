@@ -7,6 +7,7 @@ test.skip(!process.env.E2E_DATABASE_URL, "PostgreSQL browser test is opt-in");
 test("account saves a curated run and restores a private input", async ({
   page,
 }) => {
+  test.slow(); // Full registration, save, logout, and login flow under parallel CI load.
   process.env.DATABASE_URL = process.env.E2E_DATABASE_URL;
   const email = `learner-${randomUUID()}@example.test`;
   try {

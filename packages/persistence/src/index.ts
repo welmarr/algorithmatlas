@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import pg from "pg";
 
 const { Pool } = pg;
@@ -25,12 +25,52 @@ export async function databaseReady(): Promise<boolean> {
   try {
     const result = await databasePool().query(
       "SELECT 1 FROM schema_migrations WHERE name = $1",
-      ["001_initial.sql"],
+      ["002_rate_limits.sql"],
     );
     return Boolean(result.rowCount);
   } catch {
     return false;
   }
+}
+
+/** Atomic fixed-window quota shared by every web worker using this database. */
+export async function consumeRateLimit(
+  action: string,
+  subject: string,
+  limit: number,
+  windowSeconds: number,
+): Promise<boolean> {
+  if (
+    !/^[a-z-]{1,32}$/.test(action) ||
+    !subject ||
+    !Number.isSafeInteger(limit) ||
+    limit < 1 ||
+    limit > 1000 ||
+    !Number.isSafeInteger(windowSeconds) ||
+    windowSeconds < 1 ||
+    windowSeconds > 86400
+  ) {
+    throw new TypeError("Invalid rate-limit configuration");
+  }
+  const keyHash = createHash("sha256")
+    .update(`${action}:${subject}`)
+    .digest("hex");
+  const result = await databasePool().query(
+    `INSERT INTO rate_limits (key_hash, window_end, attempts) VALUES ($1, now() + ($2::int * interval '1 second'), 1)
+     ON CONFLICT (key_hash) DO UPDATE SET
+       attempts = CASE WHEN rate_limits.window_end <= now() THEN 1 ELSE LEAST(rate_limits.attempts + 1, $3::int + 1) END,
+       window_end = CASE WHEN rate_limits.window_end <= now() THEN now() + ($2::int * interval '1 second') ELSE rate_limits.window_end END
+     RETURNING attempts <= $3::int AS allowed`,
+    [keyHash, windowSeconds, limit],
+  );
+  return result.rows[0].allowed;
+}
+
+export async function pruneExpiredRateLimits(): Promise<number> {
+  const result = await databasePool().query(
+    "DELETE FROM rate_limits WHERE window_end < now() - interval '1 day'",
+  );
+  return result.rowCount ?? 0;
 }
 
 export interface StoredUser {

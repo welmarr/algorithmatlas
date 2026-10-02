@@ -1,0 +1,5 @@
+# Optional AI protocol v0.1
+
+`packages/ai-sdk/src/protocol.ts` defines seven canonical response families: explanation, hint, alternative algorithm, concept explanation, code review, debug explanation, and semantic classification. An adapter receives a versioned request plus negotiated capabilities; raw provider output passes parsing, vocabulary normalization, field bounds, and capability validation before a UI consumer sees it. Unknown fields are discarded, including attempted state changes or renderer commands.
+
+`openAICompatibleProvider` supports compatible Chat Completions endpoints, with separate loopback and HTTPS policies. The built-in connector works without credentials. The UI currently consumes explanation and hint; other families are SDK capabilities, not finished page flows. Live integration is opt-in through `AI_LIVE_ENDPOINT` and `AI_LIVE_MODEL`. Disconnecting every external provider leaves simulation and correctness unchanged. See [AI-CONNECTORS.md](AI-CONNECTORS.md) and `tests/ai-protocol.test.ts`.

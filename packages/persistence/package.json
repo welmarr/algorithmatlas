@@ -5,7 +5,8 @@
   "type": "module",
   "exports": "./src/index.ts",
   "scripts": {
-    "migrate": "node scripts/migrate.mjs"
+    "migrate": "node scripts/migrate.mjs",
+    "prune": "node scripts/prune.mjs"
   },
   "dependencies": {
     "pg": "^8.16.3"

@@ -11,7 +11,7 @@ pnpm install
 pnpm dev
 ```
 
-Open http://localhost:3000. No database, account, API key, or AI service is required for the current simulations. `pnpm test`, `pnpm typecheck`, `pnpm lint`, and `pnpm build` validate the local milestone.
+Open http://localhost:3000. No database, account, API key, or AI service is required for simulations. Optional PostgreSQL accounts are described in [docs/PERSISTENCE.md](docs/PERSISTENCE.md). Run `pnpm verify` for fast checks or `pnpm verify:full` with PostgreSQL and Docker configured for the full local gate.
 
 ## What is implemented
 
@@ -26,8 +26,10 @@ Open http://localhost:3000. No database, account, API key, or AI service is requ
 | Code runtime              | `packages/code-runtime`                       | bounded editable JavaScript subset for Increasing Array                         |
 | Web player and lab        | `apps/web`                                    | Next.js, ten renderer families, four structure editors, side-by-side comparison |
 | Optional teacher adapters | `packages/ai-sdk`                             | seven normalized response families; built-in and compatible endpoint adapters   |
+| Optional account storage  | `packages/persistence`, `apps/web`            | PostgreSQL migrations, account sessions, saved inputs, submissions, progress    |
+| Local Python runner       | `packages/isolated-runner`, `runner/python`   | bounded Docker CLI, raw trace, semantic mapping; developer-only                 |
 
-Full JavaScript/Python/C++ execution, an isolated multi-language sandbox, persistent data, and catalog expansion beyond the representative suite remain future work. The browser interpreter supports only the subset listed in [SECURITY.md](SECURITY.md). Current build status and lot reports are in `docs/progress`; the original independent audit remains in `docs/audit`.
+The browser does not expose arbitrary Python, C++, or Java execution. Python execution and interpretation are available through a local developer CLI, with no public runner route. The browser interpreter supports only the subset listed in [SECURITY.md](SECURITY.md). Current build status and lot reports are in `docs/progress`; the original independent audit remains in `docs/audit`.
 
 ## Project documents
 

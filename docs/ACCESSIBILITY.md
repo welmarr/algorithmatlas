@@ -1,0 +1,5 @@
+# Accessibility status
+
+The problem player uses labeled playback controls and range slider, ARIA tab/tabpanel relationships, arrow-key navigation between Learn and Simulation tabs, a live text action cue, labeled array/grid/DP/graph visuals, and text alongside color cues. The 390px player test checks horizontal overflow. CSS disables focus pulse animation under `prefers-reduced-motion: reduce`; the informational cue remains visible. `tests/e2e/accessibility.spec.ts` exercises these behaviors in Chromium, and the existing renderer E2E suite covers the ten renderer families at mobile width.
+
+Keyboard and DOM assertions are automated, but a manual screen-reader pass (for example NVDA/VoiceOver), independent contrast audit of every state, zoom/reflow review, and assistive-technology testing of every renderer are still required before claiming WCAG conformance. The 383-row technical event list in a maximum array run can be cumbersome for keyboard and screen-reader users. A bounded/virtualized event list with position announcements is a planned improvement. The built-in AI text is advisory and never carries essential simulation state alone.

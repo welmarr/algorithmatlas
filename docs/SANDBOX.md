@@ -1,0 +1,9 @@
+# Sandbox threat model and validation
+
+The local Python runner accepts untrusted source only through a developer CLI, never through the Next.js server. Its adversary may attempt infinite loops, memory pressure, excessive output, imports, file writes, subprocesses, network access, and malformed code. The host Docker daemon and operator account are trusted parts of this design; this is not a defense against a malicious Docker administrator or a kernel escape.
+
+`packages/isolated-runner/src/index.mjs` fixes host limits: two concurrent executions, five seconds wall time, 24 KiB request, 256 KiB response. `runner/python/trace.py` caps source, input, captured output, and trace length. `docker run` adds `--rm`, `--network none`, non-root execution, read-only filesystem, memory/CPU/PID limits, no mounts, and no ports. The test image is built from `runner/python`. No named or anonymous Docker volume is needed. Termination is driven by the host and cleanup is verified by the Docker tests.
+
+The AST allow/deny check is defense in depth, not a Python language security proof. A container alone is also not enough for unrestricted multi-tenant public execution. Prior to a public endpoint, review Docker daemon/rootless mode, host kernel hardening, resource exhaustion across concurrent users, disk/temp quota, per-user and edge rate limits, execution queueing, logging without source/secret leakage, image provenance, incident response, and independent penetration testing. C++ and Java require separate compiler/runtime images and threat models. The browser JavaScript subset has a distinct boundary and is described in `SECURITY.md`.
+
+Run the controlled probes with `RUNNER_DOCKER_TEST=1 pnpm exec vitest run tests/isolated-runner-docker.test.ts`; no exploit payloads or destructive host writes are required. A passing local probe checks this configuration on the current Docker host, not all future hosts.

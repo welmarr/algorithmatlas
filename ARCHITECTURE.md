@@ -2,12 +2,12 @@
 
 ## Repository inventory and baseline
 
-The repository was empty at the start of Lot 0 (2026-10-01). There was no Git history, dependency graph, code, test suite, or existing behavior to preserve. The current monorepo was created from that baseline.
+The audited repository began as a five-problem prototype without a commit. Its original files and audit were preserved at commit `0107c9138cdfb28d5b97345866fae38e780c462e`, baseline branch `baseline/audited-prototype-2026-10-01`, and tag `prototype-audit-2026-10-01`. The current work is on `build/full-platform`.
 
 ## Target layers
 
 ```text
-Curated problem or bounded browser interpreter
+Curated problem, bounded browser interpreter, or local Python CLI
                  ↓
         versioned raw operations
                  ↓
@@ -25,7 +25,9 @@ Curated problem or bounded browser interpreter
                  ↓
      React renderers and controls
 
-Optional teacher connector → validated explanation only
+Optional teacher connector → validated advisory response only
+
+Optional PostgreSQL → accounts, sessions, saved inputs, progress
 ```
 
 `packages/problems` depends on the problem SDK, code runtime, and event contracts. `packages/code-runtime` parses a small JavaScript subset into raw execution records, then semantic events for Increasing Array. `packages/simulation-core` depends on domain and event contracts. `apps/web` is the composition root; no lower package imports React or Next.js. `packages/ai-sdk` receives events and returns explanation text but cannot write simulation state. See `docs/DEPENDENCIES.md` for the full dependency map.
@@ -40,7 +42,7 @@ The audited prototype is preserved at local commit `0107c9138cdfb28d5b97345866fa
 
 ## Current structure and deviations
 
-The initial structure uses `apps/web`, framework-free packages, tests, and docs. A dedicated API, worker, Rust crates, PostgreSQL, S3, Python pipeline, and isolated multi-language executor have not been created. Their boundaries and order are recorded in the roadmap. The browser interpreter is bounded and supports a limited code subset; it is not the future arbitrary-code executor.
+The structure uses `apps/web`, framework-free packages, tests, and docs. PostgreSQL persistence is optional and isolated in `packages/persistence`. A local Python Docker runner and semantic interpreter exist as developer APIs; they are not exposed by Next.js. No Rust crate, C++/Java runner, public code service, S3 trace store, or broad worker pipeline is present. The browser interpreter is bounded and supports a limited code subset; it is not a full JavaScript runtime.
 
 Curated traces are generated in the browser. Inputs have bounded sizes, preventing excessive replay and rendering. The timeline builds immutable snapshots at configurable intervals, and seek starts from the closest preceding snapshot. Visual entities have canonical IDs and a generic state model. Renderers read state; algorithm packs never import UI code. Comparison runs both built-in algorithms against the same validated input, then keeps separate timelines. An independent checker validates graph and grid routes, BFS shortest length, and tree coverage; semantic event counts are kept separate from wall-clock claims.
 
@@ -55,4 +57,4 @@ Curated traces are generated in the browser. Inputs have bounded sizes, preventi
 
 ## Gap analysis
 
-Current coverage includes browsing and learning across twenty representative problems, ten visual families, editable JSON inputs, a separate algorithm lab with direct array/grid/graph/tree editors, a comparison workspace for three traversal pairs, controls, code lines, state inspection, replay, no-AI operation, and a browser-interpreted Increasing Array code editor with source-linked events. The lab runner depends on shared domain, events, and simulation core contracts, not on the CSES problem registry. The following remain open: additional comparison pairs, broad performance suites, persistent data and migrations, isolated multi-language execution, editable code for the other problem families, Python tooling, the full book, and deployment infrastructure for those services. Optional model adapters exist, but a real model requires a user-hosted endpoint or external credentials and compatible CORS policy.
+Current coverage includes browsing and learning across twenty representative problems, ten visual families, editable JSON inputs, an independent algorithm lab with array/grid/graph/tree editors, a comparison workspace for three traversal pairs, controls, code lines, replay, no-AI operation, an editable Increasing Array JavaScript subset, optional PostgreSQL accounts, and a local Python trace CLI. The lab runner depends on shared contracts, not on the CSES registry. Open work includes a public reviewed sandbox path, C++/Java, editable code across more problems, independently verified live AI endpoints, browser scaling beyond bounded inputs, and production operations. Optional model adapters require a user-hosted endpoint or external credentials and compatible CORS policy.

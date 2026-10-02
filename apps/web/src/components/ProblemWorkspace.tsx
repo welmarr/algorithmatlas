@@ -336,25 +336,48 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
       </div>
       <div className="mode-tabs" role="tablist" aria-label="Problem mode">
         <button
+          id="problem-learn-tab"
           role="tab"
           aria-selected={mode === "learn"}
+          aria-controls="problem-learn-panel"
+          tabIndex={mode === "learn" ? 0 : -1}
           className={mode === "learn" ? "selected" : ""}
           onClick={() => setMode("learn")}
+          onKeyDown={(event) => {
+            if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+            event.preventDefault();
+            setMode("simulate");
+            document.getElementById("problem-simulate-tab")?.focus();
+          }}
         >
           Learn the idea
         </button>
         <button
+          id="problem-simulate-tab"
           role="tab"
           aria-selected={mode === "simulate"}
+          aria-controls="problem-simulate-panel"
+          tabIndex={mode === "simulate" ? 0 : -1}
           className={mode === "simulate" ? "selected" : ""}
           onClick={() => setMode("simulate")}
+          onKeyDown={(event) => {
+            if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+            event.preventDefault();
+            setMode("learn");
+            document.getElementById("problem-learn-tab")?.focus();
+          }}
         >
           Simulation{" "}
           <span className="tab-count">{run.teachingSteps.length} lessons</span>
         </button>
       </div>
       {mode === "learn" ? (
-        <div className="learn-layout">
+        <div
+          id="problem-learn-panel"
+          className="learn-layout"
+          role="tabpanel"
+          aria-labelledby="problem-learn-tab"
+        >
           <article className="panel learning-panel">
             <div className="eyebrow">INTUITION</div>
             <h2>{problem.metadata.learning.intuition}</h2>
@@ -397,7 +420,12 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
           </aside>
         </div>
       ) : (
-        <div className="sim-layout">
+        <div
+          id="problem-simulate-panel"
+          className="sim-layout"
+          role="tabpanel"
+          aria-labelledby="problem-simulate-tab"
+        >
           <div className="sim-main">
             <section
               className="panel visual-panel"

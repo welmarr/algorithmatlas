@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   createSession,
   createUser,
+  consumeRateLimit,
   dashboardData,
   databasePool,
   databaseReady,
@@ -82,6 +83,16 @@ describe("PostgreSQL account isolation", () => {
           savedInputs: [],
           learning: [],
         });
+        const rateSubject = `test-${suffix}`;
+        expect(await consumeRateLimit("test-quota", rateSubject, 2, 60)).toBe(
+          true,
+        );
+        expect(await consumeRateLimit("test-quota", rateSubject, 2, 60)).toBe(
+          true,
+        );
+        expect(await consumeRateLimit("test-quota", rateSubject, 2, 60)).toBe(
+          false,
+        );
         await deleteSession(token);
         expect(await findSessionUser(token)).toBeNull();
         const columns = await databasePool().query(

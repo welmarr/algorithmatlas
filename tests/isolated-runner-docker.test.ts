@@ -66,6 +66,33 @@ describe("local Docker Python runner", () => {
   );
 
   dockerIt(
+    "bounds output and rejects malformed or host-accessing code",
+    async () => {
+      const output = await runPython({
+        source: "def solve(data):\n    print('x' * 9000)\n    return 1",
+        input: {},
+      });
+      expect(output.status).toBe("limit");
+      const file = await runPython({
+        source: "def solve(data):\n    return open('/etc/passwd').read()",
+        input: {},
+      });
+      expect(file.status).toBe("error");
+      expect(file.error).toContain("NameError");
+      const process = await runPython({
+        source: "import subprocess\ndef solve(data):\n    return 1",
+        input: {},
+      });
+      expect(process.status).toBe("error");
+      expect(process.error).toContain("ImportError");
+      const malformed = await runPython({ source: "def solve(:", input: {} });
+      expect(malformed.status).toBe("error");
+      expect(malformed.error).toContain("SyntaxError");
+    },
+    15000,
+  );
+
+  dockerIt(
     "bounds an infinite loop through the trace limit",
     async () => {
       const result = await runPython(
@@ -77,6 +104,28 @@ describe("local Docker Python runner", () => {
       );
       expect(result.status).toBe("limit");
       expect(result.error).toContain("Trace exceeded");
+    },
+    10000,
+  );
+
+  dockerIt(
+    "contains memory pressure inside the container limit",
+    async () => {
+      let outcome = "rejected";
+      try {
+        const result = await runPython(
+          {
+            source:
+              "def solve(data):\n    values = [0] * 30000000\n    return len(values)",
+            input: {},
+          },
+          { timeoutMs: 3000 },
+        );
+        outcome = result.status;
+      } catch {
+        // An OOM-killed container or host timeout rejects at the runner boundary.
+      }
+      expect(outcome).not.toBe("ok");
     },
     10000,
   );

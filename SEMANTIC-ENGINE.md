@@ -1,0 +1,5 @@
+# Semantic engine
+
+The deterministic mapper boundary in `packages/semantic-events` converts a list of raw operations into event drafts. `createEvents` then gives drafts validated, deterministic IDs and contiguous technical positions. Event-specific validation rejects missing or illegal payload fields, wrong entity cardinality, invalid statuses, reserved vocabulary, and unsupported schema versions. The reducer consumes only validated `AlgorithmEvent` objects.
+
+Curated Increasing Array maps array reads/writes and changes from actual browser-subset execution. Labyrinth and Message Route map BFS operations. The local Python interpreter uses observed writes and a constrained graph-relaxation pattern; it records inference provenance and confidence, and never treats an ambiguous assignment as a proven relaxation. AI does not decide correctness or write simulation state. The complete path and limitations are documented in [docs/SEMANTIC-INTERPRETER.md](docs/SEMANTIC-INTERPRETER.md); tests include `tests/semantic-pipeline.test.ts` and `tests/semantic-interpreter.test.ts`.

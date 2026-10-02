@@ -1,0 +1,5 @@
+# Raw trace protocol v0.1
+
+`RawTraceEvent` records observed execution operations before algorithm-level interpretation. It has an independent schema version, an operation name, data, and optional source reference. The curated array/BFS mappers record domain-aware operations; the Python CLI records source lines and changes observed during bounded execution. Raw records are not visual commands and should not be displayed as if their operation names were pedagogical claims.
+
+The mapping preference is explicit instrumentation, deterministic structural mapping, constrained source/runtime inference, and then optional AI assistance for explanations. Known curated problems may emit semantic drafts directly where they already know the meaningful operation. `packages/semantic-events` validates semantic output separately. `packages/semantic-interpreter` keeps provenance and confidence for Python mappings; unsupported changes degrade to a source-linked annotation while preserving the raw record. See [SIMULATION-PROTOCOL.md](SIMULATION-PROTOCOL.md), [docs/SEMANTIC-INTERPRETER.md](docs/SEMANTIC-INTERPRETER.md), and the respective pipeline tests.

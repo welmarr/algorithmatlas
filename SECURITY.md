@@ -10,4 +10,20 @@ Model credentials stay in component memory and are sent directly from the user's
 
 The expanded optional AI protocol validates response versions, family fields, bounded text, IDs, code-review line numbers, semantic event vocabulary, and capability membership. Unknown fields are discarded. A model cannot introduce a new event type or visual command through this protocol, and no canonical response is passed to the reducer. Configured live-provider tests are opt-in; default CI stays keyless.
 
-Before full JavaScript, Python, C++, or server-side submissions are enabled, implement and review a Rust/WASI or equivalent isolated runtime with no host filesystem or network, CPU/memory/time/output/process limits, safe cleanup, rate limits, abuse controls, and explicit security tests. Parsing alone does not provide isolation. No arbitrary-code endpoint should be deployed before this work.
+## Local Python execution boundary
+
+The separate developer CLI executes Python in a dedicated image with `--network none`, a read-only root filesystem, a non-root identity, no mounts or published ports, a temporary writable area, bounded memory/CPU/PIDs, host timeout, request/output caps, and `--rm` cleanup. AST checks reduce accidental misuse but do not substitute for isolation. Docker daemon access is privileged infrastructure; a daemon compromise or unsafe host configuration is outside the runner's protection. The runner is **not** connected to an HTTP endpoint. Controlled integration probes cover loops, import/network attempts, filesystem writes, process spawning, malformed source, excessive output, and forced timeout. See [docs/SANDBOX.md](docs/SANDBOX.md) and [docs/RUNNER.md](docs/RUNNER.md).
+
+## Accounts and request protection
+
+Optional PostgreSQL accounts use salted scrypt password hashes, random 256-bit session tokens stored as SHA-256 hashes, HttpOnly/SameSite cookies, and Secure cookies in production. SQL uses parameters and user-scoped queries. Mutating routes check same-origin form/API requests and cap request sizes; curated results are recomputed on the server. Database-backed fixed-window counters cap login, registration, and account mutations across web instances. Authentication events produce structured, PII-free action/outcome logs. Expired sessions and counters can be removed with `pnpm db:prune`. The limits are coarse and global login buckets can be exhausted by an attacker; a trusted edge proxy should also apply IP/connection limits. Reverse-proxy host/forwarded-protocol handling needs a deployment-specific review.
+
+The web response adds CSP, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, and `Permissions-Policy`. The CSP allows inline scripts/styles for the current Next.js app and allows configured HTTPS AI connections plus loopback development connections. This is a partial XSS mitigation, not a strict nonce-based policy. React renders provider text and user labels as text; the platform does not insert AI HTML into the DOM. Credentials are never written to progress storage or application logs.
+
+## Dependency review (2026-10-01)
+
+The original production audit listed five advisories: one Playwright advisory and four PostCSS advisories. The direct Playwright package was updated to 1.55.1 and a workspace override resolves PostCSS to 8.5.23. A full audit then revealed two moderate Vitest/@vitest/mocker advisories in development tooling; Vitest was updated to 4.1.11. `pnpm audit --prod --audit-level=low` and `pnpm audit --audit-level=low` now report no known advisories. Playwright is test tooling, PostCSS is a CSS build dependency, and Vitest is test tooling; reachability is different from a remote runtime exploit. An empty audit is time-bound and does not prove the dependency graph is vulnerability-free. The controlled update is validated by full type, unit, browser, production, and Docker gates.
+
+## Release gate
+
+Do not expose arbitrary Python, JavaScript, C++, or Java code execution publicly before an independent sandbox review, edge abuse controls, and a deployment-specific proxy/TLS review. Backup/restore, account retention, monitoring, and a production security review are also outstanding. The current project must not be labeled a production-ready public code runner.

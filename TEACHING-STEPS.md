@@ -1,0 +1,5 @@
+# Teaching steps v0.1
+
+`TeachingStep` is a versioned learning projection over the immutable `AlgorithmEvent` sequence. It carries an ID, zero-based learning index, title, summary, inclusive event range, primary event IDs, visual references, and optional source/concept cues. `packages/simulation-core/src/index.ts` validates contiguous coverage and maps a learning position to its final technical event position. Technical seeking remains available independently for debugging. The player defaults to learning positions and labels the two counters separately.
+
+Increasing Array `[8,2,5,1,7]` has an initial state, four visible increase lessons (2→8, 5→8, 1→8, 7→8), and a final lesson; its many reads/comparisons/variable events remain inspectable in technical mode. A teaching cue is presentation metadata and cannot mutate `SimulationState`. When a user changes input or editable code, the algorithm reruns and both events and steps are regenerated from the new execution. See `tests/teaching-steps.test.ts` and `tests/e2e/player.spec.ts` for grouping, seeking, and exact output checks.

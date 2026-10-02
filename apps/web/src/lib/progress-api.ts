@@ -1,5 +1,5 @@
 import { currentUser, readBoundedBody, assertSameOrigin } from "./auth";
-import { databaseReady } from "@sim/persistence";
+import { consumeRateLimit, databaseReady } from "@sim/persistence";
 
 export async function authorizedUser(request: Request, mutate = false) {
   if (!(await databaseReady()))
@@ -26,6 +26,17 @@ export async function authorizedUser(request: Request, mutate = false) {
         { status: 401 },
       ),
     };
+  if (
+    mutate &&
+    !(await consumeRateLimit("account-mutation", user.id, 120, 60))
+  ) {
+    return {
+      response: Response.json(
+        { error: "Save limit reached. Try again shortly." },
+        { status: 429 },
+      ),
+    };
+  }
   return { user };
 }
 

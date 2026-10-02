@@ -2,20 +2,20 @@
 
 The construction branch follows the numbered lots in the full build specification. Detailed verified status is in `docs/progress/status.json` and the individual lot reports.
 
-| Lot | Scope                                                            | Status                                                          |
-| --- | ---------------------------------------------------------------- | --------------------------------------------------------------- |
-| 00  | Inventory, architecture, baseline, CI, development setup         | Complete for the empty baseline                                 |
-| 01  | Domain contracts, semantic events, validators                    | Complete for v0.1                                               |
-| 02  | Reducer, snapshots, deterministic seek and playback              | Complete for bounded traces                                     |
-| 03  | Renderer families and player                                     | Complete for ten renderer families                              |
-| 04  | Representative curated problems                                  | Complete: twenty problems                                       |
-| 05  | Independent algorithm lab with direct editors                    | Complete: four structures and eight algorithms                  |
-| 06  | Side-by-side algorithm comparison                                | Complete: three traversal pairs with dual playback              |
-| 07  | Contributor problem SDK, renderer SDK, versioned community packs | Complete: reviewed local registration and sample pack           |
-| 08  | AI-agnostic connector protocol and normalized response families  | Complete: seven validated families and compatible adapters      |
-| 09  | Isolated user-code execution foundation                          | Complete for local bounded Python path; public access gated     |
-| 10  | Semantic interpreter over raw execution context                  | Complete for local array and constrained graph inference        |
-| 11  | PostgreSQL, users, saved inputs, learning progress               | Complete for optional local accounts and verified run saving    |
-| 12  | Security, accessibility, performance, deployment hardening       | Planned                                                         |
+| Lot | Scope                                                            | Status                                                       |
+| --- | ---------------------------------------------------------------- | ------------------------------------------------------------ |
+| 00  | Preserve the audited five-problem prototype in Git              | Complete: baseline branch, commit, and tag                   |
+| 01  | Teaching steps, mobile fixes, browser-subset semantics           | Complete for bounded v0.1                                    |
+| 02  | Event schemas, vocabulary governance, raw/semantic pipeline      | Complete for implemented curated mappers                     |
+| 03  | Renderer families and player                                     | Complete for ten renderer families                           |
+| 04  | Representative curated problems                                  | Complete: twenty problems                                    |
+| 05  | Independent algorithm lab with direct editors                    | Complete: four structures and eight algorithms               |
+| 06  | Side-by-side algorithm comparison                                | Complete: three traversal pairs with dual playback           |
+| 07  | Contributor problem SDK, renderer SDK, versioned community packs | Complete: reviewed local registration and sample pack        |
+| 08  | AI-agnostic connector protocol and normalized response families  | Complete: seven validated families and compatible adapters   |
+| 09  | Isolated user-code execution foundation                          | Complete for local bounded Python path; public access gated  |
+| 10  | Semantic interpreter over raw execution context                  | Complete for local array and constrained graph inference     |
+| 11  | PostgreSQL, users, saved inputs, learning progress               | Complete for optional local accounts and verified run saving |
+| 12  | Security, accessibility, performance, deployment hardening       | Partial: local gates pass; public release gates remain       |
 
-Prioritize correctness and architecture across problem families before adding a large catalog. Add system services only when a workflow needs them. The browser interpreter is not the isolated execution boundary required before public arbitrary-code execution.
+Next priorities are an independently reviewed public code runner, more editable-code families and languages, browser-scale event virtualization, a manual screen-reader and contrast audit, deployment proxy/backup/monitoring review, and a live optional AI endpoint test. The browser interpreter is not the isolated execution boundary required before public arbitrary-code execution. The final construction audit is in `docs/audit/final` and does not change the historical prototype audit.
