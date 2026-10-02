@@ -160,6 +160,7 @@ export class PythonJobs {
           job.code =
             error instanceof RunnerError ? error.code : "PYTHON_INTERNAL_ERROR";
           job.status = job.code === "PYTHON_CANCELLED" ? "cancelled" : "failed";
+          if (job.code === "PYTHON_CLEANUP_FAILED") this.closed = true;
         } finally {
           job.request = undefined;
           job.finishedAt = Date.now();

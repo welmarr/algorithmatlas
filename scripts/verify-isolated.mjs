@@ -102,7 +102,10 @@ try {
   console.info(
     "Fresh disposable PostgreSQL and Mailpit ready; no external email or AI.",
   );
-  const result = spawnSync(process.execPath, ["scripts/verify.mjs", "full"], {
+  const mode = process.argv[2] ?? "full";
+  if (!["full", "public-runner", "prod-ops", "capture"].includes(mode))
+    throw new Error("Invalid verification mode");
+  const result = spawnSync(process.execPath, ["scripts/verify.mjs", mode], {
     env,
     stdio: "inherit",
     windowsHide: true,

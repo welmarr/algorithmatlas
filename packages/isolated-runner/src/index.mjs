@@ -29,9 +29,13 @@ export function validateRunnerRequest(request) {
     throw new RangeError("Runner request exceeds 24 KiB");
   return payload;
 }
-export function dockerRunArguments(name) {
+export function dockerRunArguments(name, image = RUNNER_IMAGE) {
   if (!/^simulator-python-runner-[0-9a-f-]{36}$/.test(name))
     throw new TypeError("Invalid runner container name");
+  if (image !== RUNNER_IMAGE && !/^sha256:[a-f0-9]{64}$/.test(image))
+    throw new TypeError(
+      "Runner image must be the local development tag or a pinned image ID",
+    );
   return [
     "create",
     "-i",
@@ -57,7 +61,7 @@ export function dockerRunArguments(name) {
     "--pids-limit",
     "32",
     "--tmpfs",
-    "/tmp:rw,noexec,nosuid,size=8m",
+    "/tmp:rw,noexec,nosuid,nodev,size=8m",
     "--ulimit",
     "nofile=64:64",
     "--ulimit",
@@ -66,10 +70,10 @@ export function dockerRunArguments(name) {
     "cpu=2:2",
     "--label",
     "com.algorithm-atlas.runner=python",
-    RUNNER_IMAGE,
+    image,
   ];
 }
-function docker(
+export function docker(
   args,
   { input, timeoutMs = 5000, signal, limit = MAX_RESPONSE_BYTES } = {},
 ) {
@@ -117,9 +121,35 @@ function docker(
   });
 }
 let activeRuns = 0;
+export async function removeRunnerContainer(name) {
+  if (!/^simulator-python-runner-[0-9a-f-]{36}$/.test(name))
+    throw new TypeError("Invalid runner name");
+  try {
+    const present = await docker(["ps", "-aq", "--filter", `name=^${name}$`], {
+      limit: 1024,
+    });
+    if (present.trim()) await docker(["rm", "-f", name], { limit: 1024 });
+    if (
+      (
+        await docker(["ps", "-aq", "--filter", `name=^${name}$`], {
+          limit: 1024,
+        })
+      ).trim()
+    )
+      throw new Error("still present");
+  } catch {
+    throw new RunnerError("PYTHON_CLEANUP_FAILED");
+  }
+}
 export async function runPython(
   request,
-  { timeoutMs = 5000, signal, runId = randomUUID() } = {},
+  {
+    timeoutMs = 5000,
+    signal,
+    runId = randomUUID(),
+    image = RUNNER_IMAGE,
+    onCleanup = () => {},
+  } = {},
 ) {
   const payload = validateRunnerRequest(request);
   if (!Number.isInteger(timeoutMs) || timeoutMs < 100 || timeoutMs > 5000)
@@ -131,7 +161,7 @@ export async function runPython(
   let created = false;
   try {
     // Finish creation before honoring cancellation: never race rm against a pending create.
-    await docker(dockerRunArguments(name), { limit: 1024 });
+    await docker(dockerRunArguments(name, image), { limit: 1024 });
     created = true;
     const stdout = await docker(["start", "--attach", "--interactive", name], {
       input: payload,
@@ -172,8 +202,11 @@ export async function runPython(
   } finally {
     try {
       // Explicit cleanup happens before the scheduler can reuse this slot.
-      if (created) await docker(["rm", "-f", name], { limit: 1024 });
-      else await docker(["rm", "-f", name], { limit: 1024 }).catch(() => {});
+      const cleanupStart = Date.now();
+      await removeRunnerContainer(name);
+      onCleanup(Date.now() - cleanupStart);
+      // A timed-out create can finish in the daemon after its CLI exits. Stop admission.
+      if (!created) throw new RunnerError("PYTHON_CLEANUP_FAILED");
     } finally {
       activeRuns--;
     }

@@ -108,7 +108,10 @@ export function OwnCodeWorkspace({ enabled }: { enabled: boolean }) {
     try {
       const response = await fetch("/api/python/jobs", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          "idempotency-key": crypto.randomUUID(),
+        },
         body: JSON.stringify({ source, input: data }),
       });
       const job = await response.json();

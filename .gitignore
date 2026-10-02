@@ -16,3 +16,4 @@ __pycache__/
 .cache/
 mailpit-data/
 postgres-data/
+artifacts/

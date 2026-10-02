@@ -17,14 +17,15 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       timeout: 120000,
     },
-    ...(process.env.PYTHON_EXECUTION_ENABLED === "local"
+    ...(process.env.PYTHON_EXECUTION_ENABLED === "local" ||
+    process.env.PUBLIC_PYTHON_EXECUTION_ENABLED === "true"
       ? [
           {
             command: "node apps/execution/server.mjs",
             url: `${process.env.PYTHON_ORCHESTRATOR_URL}/health`,
             reuseExistingServer: false,
             gracefulShutdown: { signal: "SIGTERM" as const, timeout: 10000 },
-            timeout: 15000,
+            timeout: 60000,
           },
         ]
       : []),

@@ -12,12 +12,19 @@ export function databaseConfigured(): boolean {
 export function databasePool(): pg.Pool {
   if (!process.env.DATABASE_URL)
     throw new Error("DATABASE_URL is not configured");
-  pool ??= new Pool({
-    connectionString: process.env.DATABASE_URL,
-    max: 10,
-    connectionTimeoutMillis: 10000,
-    idleTimeoutMillis: 30000,
-  });
+  if (!pool) {
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      max: 10,
+      connectionTimeoutMillis: 10000,
+      idleTimeoutMillis: 30000,
+    });
+    pool.on("error", () =>
+      console.error(
+        JSON.stringify({ event: "database-connection-unavailable" }),
+      ),
+    );
+  }
   return pool;
 }
 
@@ -26,7 +33,7 @@ export async function databaseReady(): Promise<boolean> {
   try {
     const result = await databasePool().query(
       "SELECT 1 FROM schema_migrations WHERE name = $1",
-      ["004_python_workspaces.sql"],
+      ["005_execution_operations.sql"],
     );
     return Boolean(result.rowCount);
   } catch {

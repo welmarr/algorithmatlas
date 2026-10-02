@@ -1,7 +1,11 @@
-import { spawnSync } from "node:child_process";
+import { spawnSync, execFileSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 
-const full = process.argv[2] === "full";
+const mode = process.argv[2] ?? "fast";
+const full = mode === "full";
+const serviceGate = ["full", "public-runner", "prod-ops", "capture"].includes(
+  mode,
+);
 const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 
 function run(label, args, extraEnv = {}, command = pnpm) {
@@ -15,7 +19,7 @@ function run(label, args, extraEnv = {}, command = pnpm) {
   if (result.status !== 0) process.exit(result.status ?? 1);
 }
 
-if (full) {
+if (serviceGate) {
   if (
     !process.env.DATABASE_URL ||
     !process.env.MAILPIT_API ||
@@ -29,10 +33,43 @@ if (full) {
   process.env.EMAIL_TRANSPORT = "mailpit";
   process.env.PYTHON_EXECUTION_ENABLED = "local";
   process.env.PYTHON_ORCHESTRATOR_KEY = randomBytes(32).toString("hex");
+  process.env.EXECUTION_CAPABILITY_KEY = randomBytes(32).toString("hex");
+  process.env.ABUSE_HASH_KEY = randomBytes(32).toString("hex");
+  process.env.EMAIL_OUTBOX_KEY = randomBytes(32).toString("hex");
+  process.env.PUBLIC_PYTHON_EXECUTION_ENABLED = "true";
+  process.env.PYTHON_GUEST_EXECUTION_ENABLED = "true";
+  process.env.PYTHON_VERIFIED_EXECUTION_ENABLED = "true";
+  process.env.RUNNER_PREFLIGHT_PROFILE = "test-production";
+  process.env.DB_TEST_URL = process.env.DATABASE_URL;
+  process.env.RUNNER_DOCKER_TEST = "1";
   process.env.PYTHON_ORCHESTRATOR_PORT ??= "3041";
   process.env.PYTHON_ORCHESTRATOR_URL = `http://127.0.0.1:${process.env.PYTHON_ORCHESTRATOR_PORT}`;
   run("PostgreSQL migrations", ["db:migrate"]);
   run("Python runner image", ["runner:build"]);
+  process.env.PYTHON_RUNNER_IMAGE = execFileSync(
+    "docker",
+    ["image", "inspect", "simulator-python-runner:0.1", "--format", "{{.Id}}"],
+    { encoding: "utf8", windowsHide: true },
+  ).trim();
+}
+if (mode === "public-runner") {
+  run("public runner preflight", ["runner:preflight"]);
+  run("public runner release tests", [
+    "exec",
+    "vitest",
+    "run",
+    "tests/operations-policy.test.ts",
+    "tests/execution-queue-db.test.ts",
+    "tests/public-runner-integration.test.ts",
+    "tests/isolated-runner.test.ts",
+    "tests/isolated-runner-docker.test.ts",
+    "tests/python-security-docker.test.ts",
+    "tests/python-jobs.test.ts",
+  ]);
+  console.info(
+    "Public runner verification passed (loopback test-production profile).",
+  );
+  process.exit(0);
 }
 for (const command of ["format:check", "lint", "typecheck", "test", "build"]) {
   run(

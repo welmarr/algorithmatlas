@@ -19,7 +19,9 @@
     "format:check": "prettier --check .",
     "verify:isolated": "node scripts/verify-isolated.mjs",
     "execution:serve": "node apps/execution/server.mjs",
-    "dev:python": "node scripts/dev-python.mjs"
+    "dev:python": "node scripts/dev-python.mjs",
+    "runner:preflight": "node scripts/runner-preflight.mjs",
+    "verify:public-runner": "node scripts/verify-isolated.mjs public-runner"
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "15.5.26",
@@ -46,6 +48,7 @@
     "react-dom": "^19.1.0",
     "typescript": "^5.8.3",
     "vitest": "^4.1.11",
-    "@sim/visual-choreography": "workspace:*"
+    "@sim/visual-choreography": "workspace:*",
+    "@sim/operations": "workspace:*"
   }
 }

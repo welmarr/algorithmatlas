@@ -1,10 +1,10 @@
 import { existsSync } from "node:fs";
-import { randomBytes } from "node:crypto";
+import { ensureLocalSecrets } from "./local-secrets.mjs";
 import { createRequire } from "node:module";
 import { spawn } from "node:child_process";
 if (existsSync(".env")) process.loadEnvFile(".env");
 process.env.PYTHON_EXECUTION_ENABLED = "local";
-process.env.PYTHON_ORCHESTRATOR_KEY ??= randomBytes(32).toString("hex");
+ensureLocalSecrets();
 process.env.PYTHON_ORCHESTRATOR_PORT ??= "3040";
 process.env.PYTHON_ORCHESTRATOR_URL = `http://127.0.0.1:${process.env.PYTHON_ORCHESTRATOR_PORT}`;
 const { stop } = await import("../apps/execution/server.mjs");

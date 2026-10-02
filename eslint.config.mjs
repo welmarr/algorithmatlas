@@ -3,7 +3,15 @@ import tsPlugin from "@typescript-eslint/eslint-plugin";
 import nextPlugin from "@next/eslint-plugin-next";
 
 export default [
-  { ignores: ["**/node_modules/**", "**/.next/**", "**/dist/**"] },
+  {
+    ignores: [
+      "**/node_modules/**",
+      "**/.next/**",
+      "**/dist/**",
+      "artifacts/**",
+      ".cache/**",
+    ],
+  },
   {
     files: ["**/*.{ts,tsx}"],
     languageOptions: {

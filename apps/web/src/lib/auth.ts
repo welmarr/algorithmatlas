@@ -1,7 +1,9 @@
 import { createHash, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
+import { requestContext } from "@sim/operations";
 import {
   createSession,
+  databaseConfigured,
   findSessionUser,
   type StoredUser,
 } from "@sim/persistence";
@@ -55,23 +57,14 @@ export async function currentUser(): Promise<Omit<
   StoredUser,
   "passwordHash"
 > | null> {
+  if (!databaseConfigured()) return null;
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token || !/^[A-Za-z0-9_-]{43}$/.test(token)) return null;
   return findSessionUser(tokenHash(token));
 }
 
 export function assertSameOrigin(request: Request): void {
-  const origin = request.headers.get("origin");
-  const host = request.headers.get("host") ?? new URL(request.url).host;
-  const protocol =
-    request.headers.get("x-forwarded-proto") ??
-    new URL(request.url).protocol.replace(":", "");
-  if (
-    !origin ||
-    new URL(origin).host !== host ||
-    new URL(origin).protocol !== `${protocol}:`
-  )
-    throw new Error("Cross-origin form submission rejected");
+  requestContext(request, process.env, { mutate: true });
 }
 
 export function formRedirect(request: Request, path: string): URL {

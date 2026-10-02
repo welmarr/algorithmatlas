@@ -3,7 +3,8 @@ import { expect, test } from "@playwright/test";
 import { databasePool } from "@sim/persistence";
 import { emailLink } from "./mail";
 test.skip(
-  process.env.PYTHON_EXECUTION_ENABLED !== "local",
+  process.env.PYTHON_EXECUTION_ENABLED !== "local" &&
+    process.env.PUBLIC_PYTHON_EXECUTION_ENABLED !== "true",
   "Requires the local Python orchestrator",
 );
 test("anonymous A–Z journey reaches edited Python and source-linked visual changes without AI", async ({

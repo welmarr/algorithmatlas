@@ -29,6 +29,9 @@ importers:
       '@sim/isolated-runner':
         specifier: workspace:*
         version: link:packages/isolated-runner
+      '@sim/operations':
+        specifier: workspace:*
+        version: link:packages/operations
       '@sim/persistence':
         specifier: workspace:*
         version: link:packages/persistence
@@ -98,6 +101,9 @@ importers:
       '@sim/isolated-runner':
         specifier: workspace:*
         version: link:../../packages/isolated-runner
+      '@sim/operations':
+        specifier: workspace:*
+        version: link:../../packages/operations
       '@sim/persistence':
         specifier: workspace:*
         version: link:../../packages/persistence
@@ -165,7 +171,24 @@ importers:
 
   packages/domain: {}
 
-  packages/isolated-runner: {}
+  packages/isolated-runner:
+    dependencies:
+      '@sim/operations':
+        specifier: workspace:*
+        version: link:../operations
+
+  packages/operations:
+    dependencies:
+      nodemailer:
+        specifier: 10.0.13
+        version: 10.0.13
+      pg:
+        specifier: ^8.16.3
+        version: 8.23.1
+    devDependencies:
+      '@types/pg':
+        specifier: ^8.15.5
+        version: 8.23.1
 
   packages/persistence:
     dependencies:

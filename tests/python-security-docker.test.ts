@@ -31,6 +31,30 @@ dockerIt(
       ],
       ["def solve(data): return (1).__class__", "PYTHON_POLICY_REJECTED"],
       [
+        "def solve(data): return open('/proc/self/environ').read()",
+        "PYTHON_POLICY_REJECTED",
+      ],
+      [
+        "def solve(data): return open('/proc/1/root/etc/shadow').read()",
+        "PYTHON_POLICY_REJECTED",
+      ],
+      [
+        "import socket\ndef solve(data): return socket.getaddrinfo('example.invalid',80)",
+        "PYTHON_POLICY_REJECTED",
+      ],
+      [
+        "import urllib.request\ndef solve(data): return urllib.request.urlopen('http://169.254.169.254/').read()",
+        "PYTHON_POLICY_REJECTED",
+      ],
+      [
+        "import os\ndef solve(data): return os.fork()",
+        "PYTHON_POLICY_REJECTED",
+      ],
+      [
+        "import os\ndef solve(data): return dict(os.environ)",
+        "PYTHON_POLICY_REJECTED",
+      ],
+      [
         "def solve(data):\n    print('x'*9000)\n    return 0",
         "PYTHON_OUTPUT_LIMIT",
       ],
@@ -42,7 +66,7 @@ dockerIt(
       expect(result.code, source).toBe(code);
     }
   },
-  60000,
+  90000,
 );
 dockerIt(
   "cancellation and wall timeout remove their containers before resolving",
