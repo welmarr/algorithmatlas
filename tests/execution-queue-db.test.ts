@@ -334,13 +334,16 @@ suite("durable execution admission and worker", () => {
       await failed.start();
       await expect.poll(() => failed.fault).toBe(true);
       expect(failed.ready()).toBe(false);
-      expect(
-        (
-          await db.pool.query(
-            "SELECT enabled FROM operational_controls WHERE name='runner_paused'",
-          )
-        ).rows[0].enabled,
-      ).toBe(true);
+      await expect
+        .poll(
+          async () =>
+            (
+              await db.pool.query(
+                "SELECT enabled FROM operational_controls WHERE name='runner_paused'",
+              )
+            ).rows[0]?.enabled,
+        )
+        .toBe(true);
     } finally {
       await failed.close();
     }

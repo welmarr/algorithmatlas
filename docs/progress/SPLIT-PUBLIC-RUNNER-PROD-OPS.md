@@ -17,3 +17,9 @@ Baseline reverified before source changes: frozen install, fast gate (127 passed
 6. New independent audit directory, non-force merge and annotated release only after all gates; scoped cleanup retaining final screenshots/ZIP.
 
 Current implementation status: IN PROGRESS. No public exposure or independent security-review approval is claimed.
+
+## Verification concurrency correction
+
+A later clean-clone fast run also exceeded the default 5-second randomized grid/queen tests under Vitest's automatic host-wide file concurrency. Limited Vitest to two files at once so property checks and Docker probes have a predictable shared host budget. No test assertion or Python execution deadline was relaxed. The final candidate is reverified with this setting.
+
+Remote run 37014521862 exposed a test synchronization race: worker.fault becomes true before the asynchronous durable pause transaction commits. The worker correctly stops immediately; the assertion now polls the actual database pause row instead of dereferencing it prematurely. Public runtime behavior is unchanged.
