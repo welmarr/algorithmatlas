@@ -22,6 +22,7 @@ export default function RootLayout({
           <nav aria-label="Main navigation">
             <Link href="/">Problems</Link>
             <Link href="/lab">Algorithm Lab</Link>
+            <Link href="/lab/compare">Compare</Link>
           </nav>
           <span className="offline-badge">Deterministic core</span>
         </header>

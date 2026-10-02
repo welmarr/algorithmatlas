@@ -1,6 +1,6 @@
 # Algorithm Atlas
 
-Interactive algorithm simulations powered by a deterministic event engine. The current construction branch includes twenty curated problems spanning arrays, search, DP, graphs, trees, strings, backtracking, mathematics, geometry, and range structures. Each accepts custom JSON input and produces versioned learning steps, exact technical event replay, and optional step explanations across ten renderer families. The independent [Algorithm Lab](ALGORITHM-LAB.md) offers direct array, grid, graph, and tree editors with eight built-in algorithms. Increasing Array also runs an editable, bounded JavaScript subset; its source highlights follow the code that actually executed. The other problem pages show reference code alongside input-dependent traces.
+Interactive algorithm simulations powered by a deterministic event engine. The current construction branch includes twenty curated problems spanning arrays, search, DP, graphs, trees, strings, backtracking, mathematics, geometry, and range structures. Each accepts custom JSON input and produces versioned learning steps, exact technical event replay, and optional step explanations across ten renderer families. The independent [Algorithm Lab](ALGORITHM-LAB.md) offers direct array, grid, graph, and tree editors with eight built-in algorithms. [Algorithm Comparison](ALGORITHM-COMPARISON.md) replays two traversals side by side on one editable input. Increasing Array also runs an editable, bounded JavaScript subset; its source highlights follow the code that actually executed. The other problem pages show reference code alongside input-dependent traces.
 
 ## Run locally
 
@@ -15,18 +15,18 @@ Open http://localhost:3000. No database, account, API key, or AI service is requ
 
 ## What is implemented
 
-| Layer                     | Location                                      | Status                                                         |
-| ------------------------- | --------------------------------------------- | -------------------------------------------------------------- |
-| Domain contracts          | `packages/domain`                             | v0.1 types                                                     |
-| Semantic event protocol   | `packages/semantic-events`                    | v0.1 event-specific validator, mapper API, governed vocabulary |
-| Replay engine             | `packages/simulation-core`                    | reducer, snapshots, seek, playback                             |
-| Teaching steps            | `packages/domain`, `packages/simulation-core` | grouped learning navigation over technical events              |
-| Problem SDK and pack      | `packages/problem-sdk`, `packages/problems`   | twenty curated problems with validation and source links       |
-| Code runtime              | `packages/code-runtime`                       | bounded editable JavaScript subset for Increasing Array        |
-| Web player and lab        | `apps/web`                                    | Next.js, ten renderer families, four structure editors         |
-| Optional teacher adapters | `packages/ai-sdk`                             | built-in, local OpenAI-compatible, external OpenAI-compatible  |
+| Layer                     | Location                                      | Status                                                                          |
+| ------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------- |
+| Domain contracts          | `packages/domain`                             | v0.1 types                                                                      |
+| Semantic event protocol   | `packages/semantic-events`                    | v0.1 event-specific validator, mapper API, governed vocabulary                  |
+| Replay engine             | `packages/simulation-core`                    | reducer, snapshots, seek, playback                                              |
+| Teaching steps            | `packages/domain`, `packages/simulation-core` | grouped learning navigation over technical events                               |
+| Problem SDK and pack      | `packages/problem-sdk`, `packages/problems`   | twenty curated problems with validation and source links                        |
+| Code runtime              | `packages/code-runtime`                       | bounded editable JavaScript subset for Increasing Array                         |
+| Web player and lab        | `apps/web`                                    | Next.js, ten renderer families, four structure editors, side-by-side comparison |
+| Optional teacher adapters | `packages/ai-sdk`                             | built-in, local OpenAI-compatible, external OpenAI-compatible                   |
 
-Full JavaScript/Python/C++ execution, an isolated multi-language sandbox, persistent data, comparison mode, and catalog expansion beyond the representative suite remain future work. The browser interpreter supports only the subset listed in [SECURITY.md](SECURITY.md). Current build status and lot reports are in `docs/progress`; the original independent audit remains in `docs/audit`.
+Full JavaScript/Python/C++ execution, an isolated multi-language sandbox, persistent data, and catalog expansion beyond the representative suite remain future work. The browser interpreter supports only the subset listed in [SECURITY.md](SECURITY.md). Current build status and lot reports are in `docs/progress`; the original independent audit remains in `docs/audit`.
 
 ## Project documents
 

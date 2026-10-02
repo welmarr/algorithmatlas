@@ -13,9 +13,14 @@ export default function LabPage() {
             responds. Every run stays on this page.
           </p>
         </div>
-        <Link className="back-link" href="/lab/renderers">
-          Structure gallery →
-        </Link>
+        <div className="lab-heading-links">
+          <Link className="back-link" href="/lab/compare">
+            Compare algorithms →
+          </Link>
+          <Link className="back-link" href="/lab/renderers">
+            Structure gallery →
+          </Link>
+        </div>
       </div>
       <AlgorithmLab />
     </main>

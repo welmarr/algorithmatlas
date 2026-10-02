@@ -2,6 +2,8 @@
 
 The lab at `/lab` is an independent workspace. It runs algorithms from `apps/web/src/lib/algorithm-lab.ts` and does not load a CSES problem definition or require a problem page. All inputs and runs stay in the browser.
 
+The linked [comparison workspace](ALGORITHM-COMPARISON.md) runs two of these algorithms on the same edited input with separate timelines.
+
 | Structure | Algorithms                                      | Editor                                                          |
 | --------- | ----------------------------------------------- | --------------------------------------------------------------- |
 | Array     | Insertion sort, linear search                   | Add, remove, and change values; set a search target             |

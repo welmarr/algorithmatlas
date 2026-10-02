@@ -1,18 +1,21 @@
 # Implementation roadmap
 
-| Lot | Scope                                                   | Exit evidence                       | Status                                    |
-| --- | ------------------------------------------------------- | ----------------------------------- | ----------------------------------------- |
-| 0   | Inventory, architecture, ADRs, CI, development setup    | Docs and CI                         | Complete for empty baseline               |
-| 1   | Domain, event protocol, IDs, validators                 | Protocol tests                      | Complete for v0.1                         |
-| 2   | Reducer, snapshots, seek, playback                      | Replay tests                        | Complete for bounded traces               |
-| 3   | Array, grid, graph, tree, DP renderers and player       | Production build                    | Complete for first five families          |
-| 4   | 15–20 diverse curated problems and correctness tests    | Family oracle/property suites       | Complete: twenty representative problems  |
-| 5   | Structured input editors, lab, comparison               | Browser E2E workflows               | Lab and editors complete; comparison next |
-| 6   | External pack/plugin validation and renderer SDK        | Third-party sample pack             | Planned                                   |
-| 7   | Model adapters, privacy controls, model evaluation      | Local/external integration tests    | In progress: adapters and schema tests    |
-| 8   | Isolated multi-language runtime and Tree-sitter         | Security review and isolation tests | Planned; no arbitrary-code endpoint       |
-| 9   | Raw trace and semantic mapping for one language         | End-to-end code trace               | Partial: bounded JS array interpreter     |
-| 10  | PostgreSQL, object storage, API/worker, migrations      | Persistence integration tests       | Planned when shared data is needed        |
-| 11  | Hardening, accessibility, performance, deployment, book | Full verification matrix            | Planned                                   |
+The construction branch follows the numbered lots in the full build specification. Detailed verified status is in `docs/progress/status.json` and the individual lot reports.
 
-Prioritize correctness and architecture across problem families before adding large catalogs. Add system services only when an actual workflow needs them.
+| Lot | Scope                                                            | Status                                                          |
+| --- | ---------------------------------------------------------------- | --------------------------------------------------------------- |
+| 00  | Inventory, architecture, baseline, CI, development setup         | Complete for the empty baseline                                 |
+| 01  | Domain contracts, semantic events, validators                    | Complete for v0.1                                               |
+| 02  | Reducer, snapshots, deterministic seek and playback              | Complete for bounded traces                                     |
+| 03  | Renderer families and player                                     | Complete for ten renderer families                              |
+| 04  | Representative curated problems                                  | Complete: twenty problems                                       |
+| 05  | Independent algorithm lab with direct editors                    | Complete: four structures and eight algorithms                  |
+| 06  | Side-by-side algorithm comparison                                | Three traversal pairs implemented; verification in progress     |
+| 07  | Contributor problem SDK, renderer SDK, versioned community packs | Planned                                                         |
+| 08  | AI-agnostic connector protocol and normalized response families  | Partial explanation adapter; full protocol planned              |
+| 09  | Isolated user-code execution foundation                          | Partial bounded browser JS interpreter; isolated runner planned |
+| 10  | Semantic interpreter over raw execution context                  | Partial known-algorithm mapping; broader inference planned      |
+| 11  | PostgreSQL, users, saved inputs, learning progress               | Planned                                                         |
+| 12  | Security, accessibility, performance, deployment hardening       | Planned                                                         |
+
+Prioritize correctness and architecture across problem families before adding a large catalog. Add system services only when a workflow needs them. The browser interpreter is not the isolated execution boundary required before public arbitrary-code execution.
