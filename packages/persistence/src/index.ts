@@ -33,7 +33,7 @@ export async function databaseReady(): Promise<boolean> {
   try {
     const result = await databasePool().query(
       "SELECT 1 FROM schema_migrations WHERE name = $1",
-      ["005_execution_operations.sql"],
+      ["006_email_outbox.sql"],
     );
     return Boolean(result.rowCount);
   } catch {

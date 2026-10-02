@@ -1,6 +1,6 @@
 # Optional verified accounts
 
-Anonymous visitors can use the catalog, simulations, Lab, comparison and the configured local Python player. Accounts enable durable saves. Browser drafts use sessionStorage in the current tab; they are not cloud saves and contain no provider credentials.
+Anonymous visitors can use the catalog, simulations, Lab, comparison and the configured Python player. Accounts enable durable saves. Browser drafts use sessionStorage in the current tab; they are not cloud saves and contain no provider credentials.
 
 ## Flow and contract
 
@@ -12,7 +12,7 @@ Session cookies are HttpOnly, SameSite=Lax, path=/, 30 days and Secure in produc
 
 Verification links expire after 24 hours; reset links after 30 minutes. Issuing a replacement consumes older links for that purpose. Transactions lock the user row so concurrent redemption succeeds once. Reset changes the password and deletes all sessions atomically. Session creation locks and checks the password hash observed at login, closing the stale-login/reset race.
 
-Forgot-password responds identically for existing and unknown emails, with a 750 ms minimum. SMTP delivery runs after the response through [Next after](https://nextjs.org/docs/app/api-reference/functions/after), avoiding SMTP-dependent response timing. It is an in-process delivery task: process loss can lose an email; request a fresh link. A durable outbox is a production gate.
+Forgot-password responds identically for existing and unknown emails, with a 750 ms minimum. Token hashes and AES-GCM encrypted email payloads commit to a durable PostgreSQL outbox before the response. A separate SMTP worker retries with leases and a five-attempt ceiling. See [email operations](EMAIL.md).
 
 ## Abuse controls and privacy
 
@@ -26,4 +26,4 @@ Apply migrations with pnpm db:migrate. Migration 003 adds email verification and
 
 tests/auth-db.test.ts tests hashing, legacy verification, link expiry/replacement/concurrent consumption, reset revocation and stale login. tests/e2e/account.spec.ts and auth-security.spec.ts use real PostgreSQL, Mailpit and browser forms, including cross-user access, CSRF, invalid passwords, generic reset, reused links, resend limits and anonymous draft continuity.
 
-Public deployment still requires TLS, trusted proxy configuration, durable email delivery, operational abuse monitoring and backups. No third-party SMTP account is required for local use.
+Durable email, native backup/restore and retention are implemented. Public deployment still requires actual TLS/proxy configuration, approved SMTP credentials, backup storage, operational alert wiring and security review. No third-party SMTP account is required for local use.

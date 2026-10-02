@@ -152,5 +152,39 @@
       ]
     }
   },
-  "historicalScope": "Top-level baseline/construction/lots/verification describe the original construction; vnext is the current milestone."
+  "historicalScope": "Top-level construction and vnext are preserved historical milestones; publicRunnerProdOps is the current split.",
+  "publicRunnerProdOps": {
+    "status": "PARTIAL",
+    "branch": "feature/public-runner-prod-ops",
+    "baselineCommit": "113ddfc09275fc21f44f8f2e74c82dd76e64da7e",
+    "baselineBranch": "archive/pre-public-runner-prod-ops",
+    "baselineTag": "pre-public-runner-prod-ops",
+    "runnerCheckpoint": "d66c0b9",
+    "lots": {
+      "publicRunnerArchitecture": "COMPLETE",
+      "publicRunnerIsolation": "PARTIAL",
+      "publicRunnerAbuseControls": "COMPLETE",
+      "publicRunnerOperations": "COMPLETE",
+      "productionSMTPAdapter": "COMPLETE",
+      "emailOutbox": "COMPLETE",
+      "backupRestore": "COMPLETE",
+      "retention": "COMPLETE",
+      "productionProxy": "PARTIAL",
+      "manualSecurityReview": "NOT STARTED"
+    },
+    "verification": {
+      "publicRunner": {
+        "passed": 31
+      },
+      "prodOps": {
+        "passed": 17,
+        "e2e": 4
+      },
+      "full": "PENDING",
+      "freshClone": "PENDING",
+      "remoteCI": "PENDING",
+      "visualCapture": "PENDING"
+    },
+    "publicExposure": "DISABLED_BY_DEFAULT"
+  }
 }

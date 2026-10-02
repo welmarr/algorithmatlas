@@ -18,3 +18,7 @@ Queue wait defaults to 15 seconds (maximum 30); terminal retention defaults to 5
 In direct local development, IP controls use one shared loopback identity and ignore forwarded headers. Public requests require the explicitly trusted proxy path: fixed APP_URL host/origin, authenticated proxy header and exactly one valid x-real-ip. The edge must overwrite those headers and prevent direct backend access. Never enable trust of arbitrary client X-Forwarded-* headers.
 
 Account signup/login/resend/forgot/reset have separate database-backed limits; verified save mutations are bounded per account. The production email/operations lot adds the shared ingress policy and incident controls. Public execution remains off by default; independent guest/verified/global and worker switches preserve learning and saved-work access.
+
+## Account operations update
+
+Signup/resend/forgot limits are three per identity per hour; login/reset five per fifteen minutes. Each action also has an IP ceiling (login 50/hour, others 30/hour) and global 100/hour. Save mutations allow 120/account/minute and 240/IP/minute. Rejections return a bounded error and Retry-After. Account deletion requires password plus exact confirmation, limited to three/account/15min with IP/global ceilings. Database signup_disabled and email_paused incident switches persist across restarts. See EMAIL.md and RETENTION.md.

@@ -1,5 +1,6 @@
 import { currentUser, readBoundedBody, assertSameOrigin } from "./auth";
 import { consumeRateLimit, databaseReady } from "@sim/persistence";
+import { requestContext, opaqueHash, secret } from "@sim/operations";
 
 export async function authorizedUser(request: Request, mutate = false) {
   if (!(await databaseReady()))
@@ -38,12 +39,18 @@ export async function authorizedUser(request: Request, mutate = false) {
     };
   if (
     mutate &&
-    !(await consumeRateLimit("account-mutation", user.id, 120, 60))
+    (!(await consumeRateLimit("account-mutation", user.id, 120, 60)) ||
+      !(await consumeRateLimit(
+        "save-ip",
+        opaqueHash(requestContext(request).ip, secret("ABUSE_HASH_KEY")),
+        240,
+        60,
+      )))
   ) {
     return {
       response: Response.json(
         { error: "Save limit reached. Try again shortly." },
-        { status: 429 },
+        { status: 429, headers: { "retry-after": "60" } },
       ),
     };
   }

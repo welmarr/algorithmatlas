@@ -1,4 +1,88 @@
 import type { Pool, PoolClient } from "pg";
+export function pruneOperations(options?: {
+  pool?: Pool;
+  env?: Environment;
+  batch?: number;
+}): Promise<Record<string, number>>;
+export function operationsStatus(pool?: Pool): Promise<Record<string, unknown>>;
+export function inspectAccount(
+  userId: string,
+  pool?: Pool,
+): Promise<{
+  user: Record<string, unknown>;
+  counts: Record<string, number>;
+} | null>;
+export function deleteAccount(
+  userId: string,
+  expectedPasswordHash: string,
+  pool?: Pool,
+): Promise<boolean>;
+export interface EmailRow {
+  id: string;
+  user_id: string;
+  purpose: string;
+  encrypted_payload: string;
+  claim_id: string;
+  attempt_count: number;
+  recipient: string;
+  token_hash: string;
+}
+export interface MailTransport {
+  sendMail(message: Record<string, unknown>): Promise<unknown>;
+  close?(): void;
+}
+export function smtpConfig(env?: Environment): {
+  options: Record<string, unknown>;
+  from: { name: string; address: string };
+};
+export function emailReadyConfig(env?: Environment): boolean;
+export function sealEmail(
+  payload: unknown,
+  row: Pick<EmailRow, "id" | "user_id" | "purpose">,
+  key: string,
+): string;
+export function openEmail(
+  value: string,
+  row: Pick<EmailRow, "id" | "user_id" | "purpose">,
+  key: string,
+): { url: string };
+export function renderAccountEmail(
+  purpose: string,
+  url: string,
+): { subject: string; text: string; html: string };
+export class EmailStore {
+  constructor(options?: { pool?: Pool; env?: Environment });
+  pool: Pool;
+  env: Environment;
+  enqueue(
+    user: { id: string; email: string },
+    purpose: "verify" | "reset",
+  ): Promise<string>;
+  register(
+    email: string,
+    displayName: string,
+    passwordHash: string,
+  ): Promise<{
+    id: string;
+    email: string;
+    displayName: string;
+    passwordHash: string;
+    emailVerified: boolean;
+  }>;
+  claim(): Promise<EmailRow | null>;
+  deliver(row: EmailRow, transport: MailTransport): Promise<string>;
+  health(): Promise<{ ready: boolean; status: string }>;
+}
+export class EmailWorker {
+  constructor(options?: {
+    store?: EmailStore;
+    transport?: MailTransport;
+    intervalMs?: number;
+  });
+  start(): Promise<this>;
+  tick(): Promise<void>;
+  close(): Promise<void>;
+}
 export type Environment = Record<string, string | undefined>;
 export interface QueueConfig {
   concurrency: number;

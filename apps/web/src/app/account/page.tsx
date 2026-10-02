@@ -44,11 +44,13 @@ export default async function AccountPage({
       )}
       {params.notice && (
         <p className="save-status" role="status">
-          {params.notice === "verified"
-            ? "Email verified. You can now save your work."
-            : params.notice === "password-reset"
-              ? "Password reset. Sign in with your new password."
-              : "Check your inbox for a verification link. If verification is needed, a link has been sent."}
+          {params.notice === "deleted"
+            ? "Your account and saved work have been deleted. You can continue learning anonymously."
+            : params.notice === "verified"
+              ? "Email verified. You can now save your work."
+              : params.notice === "password-reset"
+                ? "Password reset. Sign in with your new password."
+                : "Check your inbox for a verification link. If verification is needed, a link has been sent."}
         </p>
       )}
       {!ready ? (
@@ -80,6 +82,7 @@ export default async function AccountPage({
           <form method="post" action="/api/auth/logout">
             <button type="submit">Sign out</button>
           </form>
+          <Link href="/account/settings">Account &amp; data</Link>
         </section>
       ) : (
         <>

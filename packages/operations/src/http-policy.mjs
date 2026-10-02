@@ -5,7 +5,7 @@ export function constantEqual(left, right) {
   return (
     typeof left === "string" &&
     typeof right === "string" &&
-    left.length === right.length &&
+    Buffer.byteLength(left) === Buffer.byteLength(right) &&
     timingSafeEqual(Buffer.from(left), Buffer.from(right))
   );
 }

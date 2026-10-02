@@ -1,5 +1,4 @@
 import { databaseReady, findUserByEmail } from "@sim/persistence";
-import { after } from "next/server";
 import { normalizeEmail } from "../../../../lib/auth";
 import {
   accountFailure,
@@ -7,9 +6,9 @@ import {
   accountQuota,
   accountReply,
   AuthError,
+  emailConfigured,
   sendAccountLink,
 } from "../../../../lib/account-service";
-import { logSecurityEvent } from "../../../../lib/observability";
 export async function POST(request: Request) {
   const started = Date.now();
   try {
@@ -22,16 +21,10 @@ export async function POST(request: Request) {
     } catch {
       throw new AuthError("AUTH_INVALID_INPUT");
     }
-    await accountQuota("forgot", email, 3, 3600);
+    await accountQuota(request, "forgot", email, 3, 3600);
+    if (!emailConfigured()) throw new AuthError("AUTH_EMAIL_UNAVAILABLE", 503);
     const user = await findUserByEmail(email);
-    after(async () => {
-      if (!user) return;
-      try {
-        await sendAccountLink(user, "reset");
-      } catch {
-        logSecurityEvent("password-reset-email", "rejected");
-      }
-    });
+    if (user) await sendAccountLink(user, "reset");
     await new Promise((resolve) =>
       setTimeout(resolve, Math.max(0, 750 - (Date.now() - started))),
     );

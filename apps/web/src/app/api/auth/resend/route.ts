@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     } catch {
       throw new AuthError("AUTH_INVALID_INPUT");
     }
-    await accountQuota("resend", email, 3, 3600);
+    await accountQuota(request, "resend", email, 3, 3600);
     const user = await findUserByEmail(email);
     if (user && !user.emailVerified) await sendAccountLink(user, "verify");
     return accountReply(request, "/account?notice=verification-sent", {

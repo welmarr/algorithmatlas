@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     const token = form.get("token");
     if (!token || !/^[A-Za-z0-9_-]{43}$/.test(token))
       throw new AuthError("AUTH_TOKEN_INVALID");
-    await accountQuota("reset", tokenHash(token), 5, 900);
+    await accountQuota(request, "reset", tokenHash(token), 5, 900);
     let password: string;
     try {
       password = validatePassword(form.get("password"));

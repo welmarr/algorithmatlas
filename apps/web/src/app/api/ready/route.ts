@@ -1,5 +1,11 @@
 import { databaseConfigured, databaseReady } from "@sim/persistence";
-import { executionMode, controls, secret } from "@sim/operations";
+import {
+  executionMode,
+  controls,
+  secret,
+  EmailStore,
+  emailReadyConfig,
+} from "@sim/operations";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export async function GET() {
@@ -36,11 +42,22 @@ export async function GET() {
       /* Readiness exposes bounded dependency status, never configuration. */
     }
   }
-  const ready = database !== "unavailable" && execution !== "unavailable";
+  let email = process.env.SMTP_HOST ? "unavailable" : "disabled";
+  if (database === "ready" && emailReadyConfig()) {
+    try {
+      email = (await new EmailStore().health()).status;
+    } catch {
+      /* Dependency unavailable. */
+    }
+  }
+  const ready =
+    database !== "unavailable" &&
+    execution !== "unavailable" &&
+    email !== "unavailable";
   return Response.json(
     {
       status: ready ? "ready" : "not_ready",
-      dependencies: { database, execution },
+      dependencies: { database, execution, email },
     },
     { status: ready ? 200 : 503, headers: { "cache-control": "no-store" } },
   );

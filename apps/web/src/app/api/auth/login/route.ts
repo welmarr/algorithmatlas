@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     } catch {
       throw new AuthError("AUTH_INVALID_CREDENTIALS", 401);
     }
-    await accountQuota("login", email, 5, 900);
+    await accountQuota(request, "login", email, 5, 900);
     const password = form.get("password");
     if (typeof password !== "string" || password.length > 128)
       throw new AuthError("AUTH_INVALID_CREDENTIALS", 401);

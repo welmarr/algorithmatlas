@@ -28,6 +28,7 @@ if (serviceGate) {
     throw new Error(
       "verify:full requires DATABASE_URL, SMTP_HOST/PORT and MAILPIT_API. Use pnpm verify:isolated for disposable services.",
     );
+  process.env.EMAIL_WORKER_HEALTH_PORT ??= "3042";
   process.env.E2E_PORT ??= "3012";
   process.env.APP_URL = `http://localhost:${process.env.E2E_PORT}`;
   process.env.EMAIL_TRANSPORT = "mailpit";
@@ -69,6 +70,34 @@ if (mode === "public-runner") {
   console.info(
     "Public runner verification passed (loopback test-production profile).",
   );
+  process.exit(0);
+}
+if (mode === "prod-ops") {
+  run("production operations release tests", [
+    "exec",
+    "vitest",
+    "run",
+    "tests/operations-policy.test.ts",
+    "tests/email-operations.test.ts",
+    "tests/backup-retention.test.ts",
+    "tests/auth-db.test.ts",
+    "tests/persistence-db.test.ts",
+  ]);
+  run("production web build", ["build"]);
+  run(
+    "account and readiness browser flows",
+    [
+      "exec",
+      "playwright",
+      "test",
+      "tests/e2e/account.spec.ts",
+      "tests/e2e/auth-security.spec.ts",
+      "tests/e2e/account-settings.spec.ts",
+      "tests/e2e/health.spec.ts",
+    ],
+    { E2E_DATABASE_URL: process.env.DATABASE_URL },
+  );
+  console.info("Production operations verification passed.");
   process.exit(0);
 }
 for (const command of ["format:check", "lint", "typecheck", "test", "build"]) {

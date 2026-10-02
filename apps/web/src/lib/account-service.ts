@@ -1,13 +1,17 @@
-import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
-import nodemailer from "nodemailer";
+import {
+  EmailStore,
+  emailReadyConfig,
+  requestContext,
+  opaqueHash,
+  secret,
+} from "@sim/operations";
 import {
   consumeRateLimit,
-  issueAccountToken,
   type StoredUser,
   type AccountTokenPurpose,
 } from "@sim/persistence";
-import { assertSameOrigin, readBoundedBody, readForm, tokenHash } from "./auth";
+import { assertSameOrigin, readBoundedBody, readForm } from "./auth";
 
 export type AuthCode =
   | "AUTH_INVALID_INPUT"
@@ -24,6 +28,7 @@ export class AuthError extends Error {
   constructor(
     public readonly code: AuthCode,
     public readonly status = 400,
+    public readonly retryAfter = 60,
   ) {
     super(code);
   }
@@ -109,92 +114,44 @@ export function accountFailure(
       { code: known.code, error: authMessages[known.code] },
       { status: 403 },
     );
-  return accountReply(
+  const response = accountReply(
     request,
     `${returnTo}?error=${known.code}`,
     { code: known.code, error: authMessages[known.code] },
     known.status,
   );
+  if (known.status === 429)
+    response.headers.set("retry-after", String(known.retryAfter));
+  return response;
 }
 export async function accountQuota(
+  request: Request,
   action: string,
   email: string,
   limit = 3,
   seconds = 3600,
 ): Promise<void> {
+  const ip = requestContext(request).ip;
+  const privateIp = opaqueHash("ip:" + ip, secret("ABUSE_HASH_KEY"));
   if (
+    !(await consumeRateLimit(
+      action + "-ip",
+      privateIp,
+      action === "login" ? 50 : 30,
+      3600,
+    )) ||
     !(await consumeRateLimit(`${action}-global`, "all", 100, 3600)) ||
     !(await consumeRateLimit(action, email, limit, seconds))
   )
-    throw new AuthError("AUTH_RATE_LIMITED", 429);
+    throw new AuthError("AUTH_RATE_LIMITED", 429, seconds);
 }
 export function emailConfigured(): boolean {
-  return Boolean(process.env.SMTP_HOST && process.env.APP_URL);
+  return emailReadyConfig();
 }
 export async function sendAccountLink(
   user: StoredUser,
   purpose: AccountTokenPurpose,
 ): Promise<void> {
   if (!emailConfigured()) throw new AuthError("AUTH_EMAIL_UNAVAILABLE", 503);
-  const app = new URL(process.env.APP_URL!);
-  if (
-    !["http:", "https:"].includes(app.protocol) ||
-    app.username ||
-    app.password ||
-    (process.env.NODE_ENV === "production" &&
-      app.protocol !== "https:" &&
-      !["localhost", "127.0.0.1"].includes(app.hostname))
-  )
-    throw new AuthError("AUTH_EMAIL_UNAVAILABLE", 503);
-  const token = randomBytes(32).toString("base64url");
-  await issueAccountToken(
-    user.id,
-    purpose,
-    tokenHash(token),
-    new Date(Date.now() + (purpose === "verify" ? 86400 : 1800) * 1000),
-  );
-  const url = new URL(
-    purpose === "verify" ? "/account/verify" : "/account/reset",
-    app.origin,
-  );
-  url.hash = new URLSearchParams({ token }).toString();
-  const local = process.env.EMAIL_TRANSPORT === "mailpit";
-  if (
-    local &&
-    !["localhost", "127.0.0.1", "mailpit"].includes(process.env.SMTP_HOST!)
-  )
-    throw new AuthError("AUTH_EMAIL_UNAVAILABLE", 503);
-  const transport = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT ?? (local ? 1025 : 587)),
-    secure: process.env.SMTP_SECURE === "true",
-    requireTLS: !local,
-    auth: process.env.SMTP_USER
-      ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD }
-      : undefined,
-    connectionTimeout: 5000,
-    greetingTimeout: 5000,
-    socketTimeout: 5000,
-    disableFileAccess: true,
-    disableUrlAccess: true,
-    logger: false,
-    debug: false,
-  });
-  try {
-    await transport.sendMail({
-      from:
-        process.env.EMAIL_FROM ??
-        "Algorithm Atlas <accounts@algorithmatlas.test>",
-      to: user.email,
-      subject:
-        purpose === "verify"
-          ? "Verify your Algorithm Atlas email"
-          : "Reset your Algorithm Atlas password",
-      text: `${purpose === "verify" ? "Verify your email to save your work. This link expires in 24 hours." : "Reset your password. This link expires in 30 minutes. All existing sessions will be signed out."}\n\n${url.toString()}\n\nIf you did not request this, ignore this email.`,
-    });
-  } catch {
-    throw new AuthError("AUTH_EMAIL_UNAVAILABLE", 503);
-  } finally {
-    transport.close();
-  }
+  await new EmailStore().enqueue(user, purpose);
 }

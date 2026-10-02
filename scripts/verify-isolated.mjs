@@ -11,9 +11,8 @@ async function port() {
   await new Promise((resolve) => server.close(resolve));
   return value;
 }
-const [dbPort, smtpPort, mailPort, webPort, runnerPort] = await Promise.all(
-  Array.from({ length: 5 }, port),
-);
+const [dbPort, smtpPort, mailPort, webPort, runnerPort, emailPort] =
+  await Promise.all(Array.from({ length: 6 }, port));
 function docker(args, required = true) {
   const result = spawnSync("docker", args, {
     encoding: "utf8",
@@ -87,6 +86,8 @@ try {
     SMTP_PORT: String(smtpPort),
     MAILPIT_API: `http://127.0.0.1:${mailPort}`,
     E2E_PORT: String(webPort),
+    EMAIL_WORKER_HEALTH_PORT: String(emailPort),
+    PG_TOOLS_CONTAINER: names[0],
     PYTHON_ORCHESTRATOR_PORT: String(runnerPort),
     E2E_PRODUCTION: "1",
     PERF_BROWSER: "1",

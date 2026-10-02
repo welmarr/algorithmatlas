@@ -216,7 +216,7 @@ export function OwnCodeWorkspace({ enabled }: { enabled: boolean }) {
             to run. Create an account to save your work.
           </p>
         </div>
-        <span className="python-local-badge">Local execution</span>
+        <span className="python-local-badge">Python execution</span>
       </div>
       {!enabled && (
         <p className="python-notice" role="status">

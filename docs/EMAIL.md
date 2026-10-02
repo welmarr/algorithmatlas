@@ -1,24 +1,31 @@
-# Email delivery
+# Email operations
 
-## Local Mailpit
+Account links are committed to PostgreSQL together with their one-use token hash. Signup additionally commits the user in that transaction. The Web process never waits for SMTP. A separate worker sends messages:
 
-Start optional services:
-
-```powershell
-# Set SIM_DB_PASSWORD in an ignored .env or your shell first.
-docker compose -f compose.yaml -f compose.db.yaml -f compose.auth.yaml up -d db mailpit
+```sh
+pnpm email:worker
 ```
 
-Mailpit's SMTP port is 127.0.0.1:11025; its inbox/API is http://127.0.0.1:18025. Ports are loopback-only. Mail is captured locally and not delivered externally. Storage is a temporary filesystem.
+Provide DATABASE_URL, APP_URL and a stable random 32-byte hexadecimal EMAIL_OUTBOX_KEY. Generate a key with Node crypto.randomBytes(32).toString("hex"); store it in the deployment secret manager, never source control. Ciphertext uses AES-256-GCM and binds row ID, user ID, purpose and template version as authenticated context. Back up this key separately from database dumps. The token URL is encrypted until delivery; terminal rows erase the ciphertext. The account token itself remains only a hash.
 
-For host development configure DATABASE_URL, APP_URL=http://127.0.0.1:3000, EMAIL_TRANSPORT=mailpit, SMTP_HOST=127.0.0.1, SMTP_PORT=11025. Apply pnpm db:migrate before starting the web process. For browser tests also set MAILPIT_API=http://127.0.0.1:18025 and E2E_DATABASE_URL to the disposable database. APP_URL must match E2E_PORT.
+## Transport
 
-The Compose web overlay uses service hostname mailpit:1025. A production Next server sets Secure cookies, so use browser localhost for local Compose development.
+For a production SMTP service: SMTP_HOST, SMTP_PORT (587 by default), SMTP_USERNAME, SMTP_PASSWORD, MAIL_FROM_ADDRESS and optional MAIL_FROM_NAME. SMTP_USER remains an alias. Set SMTP_SECURE=true for implicit TLS (default port 465); otherwise STARTTLS is required. Certificate validation is mandatory; NODE_TLS_REJECT_UNAUTHORIZED=0 is rejected. No provider SDK, paid service or provider account is required for local acceptance.
 
-## Delivery and recovery
+EMAIL_TRANSPORT=mailpit permits plaintext only to localhost, 127.0.0.1 or the compose service mailpit. It is a development/test transport. The generic adapter is tested through Mailpit; no real production mailbox/domain or deliverability claim has been verified. Configure SPF, DKIM, DMARC, bounce monitoring and provider credentials before production.
 
-The fixed sender defaults to accounts@algorithmatlas.test. Subjects and bodies contain no password. Verification and reset links are one-use and expire. Resend replaces earlier verification links. Missing SMTP configuration produces AUTH_EMAIL_UNAVAILABLE; learning continues. Forgot-password intentionally returns the same response even if delivery fails.
+## Delivery semantics
 
-For real SMTP, omit EMAIL_TRANSPORT=mailpit, configure SMTP_HOST/PORT/USER/PASSWORD and APP_URL with HTTPS. SMTP requires TLS and certificate validation; SMTP_SECURE=true selects implicit TLS. Secrets remain server-only. Nodemailer disables file/URL attachment resolution and SMTP debug logs, with 5-second transport timeouts. See [Nodemailer SMTP](https://nodemailer.com/smtp) and [Mailpit API](https://mailpit.axllent.org/docs/api-v1/).
+Workers claim one row with FOR UPDATE SKIP LOCKED, a 60-second lease and a unique claim ID. Attempts are bounded at five; transient failures retry after 5, 10, 20 and 40 seconds. Authentication/permanent SMTP rejection dead-letters immediately. A worker restart reclaims an expired lease; each attempt uses the same Message-ID and token. Replacement requests invalidate the older token and cancel its pending message.
 
-Mailpit must never be exposed publicly. Delete only this project's test messages/containers during cleanup. No external email was used in milestone tests.
+SMTP is at-least-once: a crash after server acceptance but before the database commit can deliver the same message again. Stable Message-ID helps receiving systems but cannot guarantee deduplication. The one-use token and five-attempt ceiling bound the consequences. A send already in progress can complete during account deletion or link replacement; its invalidated token cannot authorize an action.
+
+OUTGOING_EMAIL_ENABLED=false or `pnpm ops:control email_paused on` pauses delivery without losing pending links. Resume with the switch off. Dead letters are not automatically replayed: fix the transport and have the user request a fresh link. This avoids replaying expired credentials.
+
+The worker updates a heartbeat. Readiness checks freshness within 30 seconds; SMTP reachability is observed through delivery outcomes, not a synchronous health email. `pnpm ops:status` reports counts without recipients, tokens or payloads. Logs contain only row ID, attempt and bounded error category. Default terminal metadata retention is seven days. Schedule `pnpm db:prune`; see RETENTION.md.
+
+## Evidence
+
+Tests cover authenticated encryption/context tampering, transport TLS restrictions, transactional signup/replacement, concurrent claiming, lease recovery, consumed-token rejection, actual unreachable SMTP then a fresh worker delivering through Mailpit, five-attempt dead letter, heartbeat expiry and account deletion. Browser tests cover verification and password reset. Final audit records final gate counts.
+
+Adapter reference: [Nodemailer SMTP transport](https://nodemailer.com/smtp).

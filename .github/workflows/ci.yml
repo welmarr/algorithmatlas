@@ -33,6 +33,7 @@ jobs:
       E2E_PRODUCTION: "1"
       PERF_BROWSER: "1"
       CI: "1"
+      PG_TOOLS_CONTAINER: ${{ job.services.postgres.id }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -45,3 +46,5 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm verify:full
+      - run: pnpm verify:public-runner
+      - run: pnpm verify:prod-ops

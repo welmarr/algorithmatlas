@@ -27,3 +27,14 @@ export {
   OperationsError,
   validateJob,
 } from "./queue-store.mjs";
+export {
+  EmailStore,
+  EmailWorker,
+  smtpConfig,
+  emailReadyConfig,
+  sealEmail,
+  openEmail,
+  renderAccountEmail,
+} from "./email.mjs";
+export { inspectAccount, deleteAccount } from "./accounts.mjs";
+export { pruneOperations, operationsStatus } from "./retention.mjs";
