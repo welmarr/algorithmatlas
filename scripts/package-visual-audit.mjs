@@ -118,25 +118,35 @@ const index =
   JSON.stringify(manifest.counts, null, 2) +
   "\n\n## Review questions\n\n" +
   questions.map((q, i) => i + 1 + ". " + q).join("\n") +
-  "\n\n## Coverage notes\n\nHome and catalog share /. Sign-in and registration share /account. There is no supported dark mode. Only disposable test identities were used. Email action links are redacted. Error states come from actual runtime failures or explicit disposable service/quota fixtures. A database dependency failure exercises the application error boundary; the root-layout catastrophic boundary is not a separate route.\n\n## Screenshots\n\n| Image | Route | Viewport | Why review it |\n| --- | --- | --- | --- |\n" +
-  manifest.screenshots
+  "\n\n## Coverage notes\n\nHome and catalog share /. Sign-in and registration share /account. There is no supported dark mode. Only disposable test identities were used. Email action links are redacted. Error states come from actual runtime failures or explicit disposable service/quota fixtures. A database dependency failure exercises the application error boundary; the root-layout catastrophic boundary is not a separate route.\n" +
+  categories
+    .toSorted()
     .map(
-      (s) =>
-        "| [" +
-        s.filename +
-        "](" +
-        s.filename +
-        ") | " +
-        s.route +
-        " | " +
-        s.viewport.width +
-        "×" +
-        s.viewport.height +
-        " | " +
-        s.description.replaceAll("|", "/") +
-        " |",
+      (category) =>
+        "\n\n## " +
+        category.replace(/^\d+-/, "").replaceAll("-", " ") +
+        "\n\n| Image | Route | Viewport | Why review it |\n| --- | --- | --- | --- |\n" +
+        manifest.screenshots
+          .filter((s) => s.category === category)
+          .map(
+            (s) =>
+              "| [" +
+              s.filename +
+              "](" +
+              s.filename +
+              ") | " +
+              s.route +
+              " | " +
+              s.viewport.width +
+              "×" +
+              s.viewport.height +
+              " | " +
+              s.description.replaceAll("|", "/") +
+              " |",
+          )
+          .join("\n"),
     )
-    .join("\n") +
+    .join("") +
   "\n\n## Contact sheets\n\n" +
   contacts.map((f) => "- [" + f + "](" + f + ")").join("\n") +
   "\n";
