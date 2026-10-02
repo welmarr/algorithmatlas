@@ -245,6 +245,133 @@ suite(
       expect(metrics.counters.completed).toBeGreaterThan(0);
       expect(metrics.states.completed).toBe(1);
     }, 60000);
+    it("bounds real concurrent containers with timeout, cancellation and successful queued work", async () => {
+      const load = await testDatabase("load");
+      const store = new ExecutionStore({
+        pool: load.pool,
+        env: env(),
+        config: {
+          ...queueConfig({}),
+          concurrency: 2,
+          queueSize: 2,
+          guestQueued: 8,
+          queueWaitMs: 30000,
+        },
+      });
+      let active = 0,
+        peak = 0;
+      const worker = new DurableWorker({
+        store,
+        image,
+        runtimeId: "actual-load-test",
+        runner: async (request, options) => {
+          active++;
+          peak = Math.max(peak, active);
+          try {
+            return await runPython(request, options);
+          } finally {
+            active--;
+          }
+        },
+      });
+      const submit = (source: string) =>
+        store.submit(
+          { schemaVersion: "0.1", source, input: {} },
+          { ...actor, idempotencyKey: randomUUID() },
+        );
+      const heavy = "def solve(data): return sum(range(1000000000))";
+      const quick = "def solve(data): return 17";
+      const ids: string[] = [];
+      try {
+        const first = await submit(heavy),
+          second = await submit(heavy);
+        ids.push(first.id, second.id);
+        await worker.start();
+        await expect
+          .poll(
+            () => {
+              try {
+                const rows = JSON.parse(
+                  execFileSync(
+                    "docker",
+                    [
+                      "inspect",
+                      ...ids.map((id) => "simulator-python-runner-" + id),
+                    ],
+                    {
+                      encoding: "utf8",
+                      stdio: ["ignore", "pipe", "pipe"],
+                      windowsHide: true,
+                    },
+                  ),
+                );
+                return rows.filter(
+                  (row: { State: { Running: boolean } }) => row.State.Running,
+                ).length;
+              } catch {
+                return 0;
+              }
+            },
+            { timeout: 4000, interval: 100 },
+          )
+          .toBe(2);
+        const queued = await submit(quick),
+          cancelled = await submit(quick);
+        ids.push(queued.id, cancelled.id);
+        await expect(submit(quick)).rejects.toMatchObject({
+          code: "PYTHON_QUEUE_FULL",
+        });
+        expect(
+          await store.access(
+            cancelled.id,
+            cancelled.capability,
+            actor,
+            "cancel",
+          ),
+        ).toMatchObject({ status: "cancelled" });
+        const replacement = await submit(quick);
+        ids.push(replacement.id);
+        await store.access(first.id, first.capability, actor, "cancel");
+        await expect
+          .poll(async () => (await store.metrics()).states, {
+            timeout: 20000,
+            interval: 100,
+          })
+          .toMatchObject({ completed: 2, cancelled: 2, failed: 1 });
+        await expect.poll(() => worker.tasks.size).toBe(0);
+        expect(peak).toBe(2);
+        expect(
+          await store.access(second.id, second.capability, actor),
+        ).toMatchObject({ status: "failed", code: "PYTHON_TIMEOUT" });
+        expect(
+          await store.access(queued.id, queued.capability, actor),
+        ).toMatchObject({ status: "completed", result: { output: 17 } });
+        expect((await store.metrics()).counters).toMatchObject({
+          completed: 2,
+          cancelled: 2,
+          failed: 1,
+          timeouts: 1,
+        });
+        for (const id of ids)
+          expect(
+            execFileSync(
+              "docker",
+              [
+                "ps",
+                "-aq",
+                "--filter",
+                "name=^simulator-python-runner-" + id + "$",
+              ],
+              { encoding: "utf8", windowsHide: true },
+            ).trim(),
+          ).toBe("");
+      } finally {
+        await worker.close();
+        for (const id of ids)
+          await removeRunnerContainer("simulator-python-runner-" + id);
+        await load.close();
+      }
+    }, 60000);
     it("enforces CPU/wall budgets for a heavy builtin and removes its container", async () => {
       const id = randomUUID();
       await expect(

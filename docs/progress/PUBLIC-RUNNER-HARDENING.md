@@ -26,3 +26,9 @@ The preflight environment allowlist initially omitted Docker's HOME/HOSTNAME and
 Disposable release-gate services are removed in finally; actual job/orphan/probe containers are removed and absence asserted. A separate labeled temporary DB/mail pair remains for subsequent split development. Active local user DB/mail are preserved.
 
 Production email outbox, account operations, backup/restore/retention, full/fresh-clone/CI gates, complete visual artifact, final audit and release are still pending. No public feature is enabled by default.
+
+## Release-candidate evidence update
+
+Candidate d4ef3db passed fast (134/35 skipped), full (165/4 optional AI skips plus 28 browser), public runner (32), production operations (17 plus 4 browser), both dependency audits and actual remote CI run 37011853792. Added a further actual-container concurrency test: two active Docker containers, queue saturation and one-above rejection, queued/running cancellation, timeout mixed with successful queued work, final metrics and container absence. This supplements deterministic worker cleanup barriers. Its five-test integration file passes.
+
+The first temporary-clone full run overlapped other heavy local gates and exceeded a 5-second queen-fixture test and a 15-second multi-container test. These were timing failures; release verification is repeated without competing local gates and without weakening execution/test deadlines. The final audit records the successful clone and exact candidate.
