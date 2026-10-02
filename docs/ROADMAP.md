@@ -10,7 +10,7 @@ The construction branch follows the numbered lots in the full build specificatio
 | 03  | Renderer families and player                                     | Complete for ten renderer families                              |
 | 04  | Representative curated problems                                  | Complete: twenty problems                                       |
 | 05  | Independent algorithm lab with direct editors                    | Complete: four structures and eight algorithms                  |
-| 06  | Side-by-side algorithm comparison                                | Three traversal pairs implemented; verification in progress     |
+| 06  | Side-by-side algorithm comparison                                | Complete: three traversal pairs with dual playback              |
 | 07  | Contributor problem SDK, renderer SDK, versioned community packs | Planned                                                         |
 | 08  | AI-agnostic connector protocol and normalized response families  | Partial explanation adapter; full protocol planned              |
 | 09  | Isolated user-code execution foundation                          | Partial bounded browser JS interpreter; isolated runner planned |

@@ -9,7 +9,7 @@
   "construction": {
     "branch": "build/full-platform",
     "startingCommit": "0107c9138cdfb28d5b97345866fae38e780c462e",
-    "latestImplementationCommit": "ca6bd1d"
+    "latestImplementationCommit": "0a46793"
   },
   "lots": {
     "01": { "status": "complete", "report": "docs/progress/LOT-01.md" },
@@ -17,7 +17,7 @@
     "03": { "status": "complete", "report": "docs/progress/LOT-03.md" },
     "04": { "status": "complete", "report": "docs/progress/LOT-04.md" },
     "05": { "status": "complete", "report": "docs/progress/LOT-05.md" },
-    "06": { "status": "not_started" },
+    "06": { "status": "complete", "report": "docs/progress/LOT-06.md" },
     "07": { "status": "not_started" },
     "08": { "status": "not_started" },
     "09": { "status": "not_started" },
@@ -26,8 +26,8 @@
     "12": { "status": "not_started" }
   },
   "verification": {
-    "unitAndIntegration": { "passed": 90, "failed": 0, "skipped": 0 },
-    "e2e": { "passed": 13, "failed": 0, "skipped": 0 },
+    "unitAndIntegration": { "passed": 98, "failed": 0, "skipped": 0 },
+    "e2e": { "passed": 15, "failed": 0, "skipped": 0 },
     "format": "passed",
     "lint": "passed",
     "typecheck": "passed",
