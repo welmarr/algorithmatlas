@@ -1,0 +1,11 @@
+# Keep fresh checkouts reproducible on Windows and Linux (Prettier expects LF).
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.pdf binary
