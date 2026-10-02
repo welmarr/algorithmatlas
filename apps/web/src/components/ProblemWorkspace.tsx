@@ -16,7 +16,8 @@ import {
   localCompatibleProvider,
   requestCanonicalAI,
 } from "@sim/ai-sdk";
-import { getRendererLegend, Visuals } from "./Visuals";
+import { getRendererLegend } from "./Visuals";
+import { ChoreographyStage } from "./ChoreographyStage";
 import {
   CodeVisual,
   CollectionVisual,
@@ -132,10 +133,11 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
         teachingStepAtPosition(run.teachingSteps, timeline.position) + 1;
       if (next >= run.teachingSteps.length) setLearningPlaying(false);
       else seekTeachingStep(timeline, run.teachingSteps, next);
-    }, 1100 / timeline.speed);
+    }, 2600 / timeline.speed);
     return () => clearInterval(timer);
   }, [learningPlaying, learningPosition, run, timeline, timeline.speed]);
   const seekPosition = (position: number) => {
+    timeline.pause();
     if (playbackMode === "learning")
       seekTeachingStep(timeline, run.teachingSteps, position);
     else timeline.seek(position);
@@ -453,13 +455,22 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
                         inspect: "READING",
                         update: "VALUE CHANGED",
                         explore: "EXPLORING",
-                        result: "FINAL RESULT",
+                        result:
+                          timeline.position === timeline.length
+                            ? "FINAL RESULT"
+                            : "ACCEPTED",
                       }[focus.kind]
                     : "READY"}
                 </span>
                 <strong>{focusDetail}</strong>
               </div>
-              <Visuals
+              <ChoreographyStage
+                timeline={timeline}
+                tags={
+                  executedCode === problem.source ? problem.metadata.tags : []
+                }
+                step={playbackMode === "learning" ? teachingStep : undefined}
+                playing={playing}
                 kind={problem.metadata.renderer}
                 state={state}
                 source={executedCode}
@@ -513,6 +524,7 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
                   className="control-icon"
                   onClick={() => {
                     setLearningPlaying(false);
+                    timeline.pause();
                     timeline.rewind();
                   }}
                   aria-label="Rewind to start"
@@ -582,6 +594,7 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
                 >
                   <option value="0.5">0.5×</option>
                   <option value="1">1×</option>
+                  <option value="1.5">1.5×</option>
                   <option value="2">2×</option>
                   <option value="4">4×</option>
                 </select>

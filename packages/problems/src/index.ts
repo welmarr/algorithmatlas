@@ -69,6 +69,7 @@ function arrayInput(raw: unknown): { values: number[] } {
 }
 
 const increasingArray = defineProblem({
+  teachingStrategy: "monotone-array",
   metadata: meta({
     id: "increasing-array",
     title: "Increasing Array",
@@ -755,8 +756,8 @@ const diceCombinations = defineProblem({
         events.push(
           draft(
             "DP_UPDATE",
-            [`dp:${sum}`],
-            `dp[${sum}] becomes ${dp[sum]}.`,
+            [`dp:${sum}`, `dp:${sum - die}`],
+            `dp[${sum}] = ${dp[sum] - dp[sum - die]} + dp[${sum - die}] (${dp[sum - die]}) = ${dp[sum]}; choose ${die} as the last roll.`,
             { value: dp[sum], variable: "sum" },
             5,
           ),
@@ -774,7 +775,16 @@ function entry<T>(problem: ProblemDefinition<T>): ProblemEntry {
 export const problems: ProblemEntry[] = [
   {
     ...entry(increasingArray),
-    runCode: (raw, source) => runProblem({ ...increasingArray, source }, raw),
+    runCode: (raw, source) =>
+      runProblem(
+        {
+          ...increasingArray,
+          source,
+          teachingStrategy:
+            source === increasingArray.source ? "monotone-array" : undefined,
+        },
+        raw,
+      ),
   },
   entry(labyrinth),
   entry(messageRoute),

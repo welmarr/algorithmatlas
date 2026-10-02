@@ -12,7 +12,14 @@ import {
   rendererStateIssues,
   type RendererDescriptor,
 } from "@sim/renderer-sdk";
-import type { ComponentType } from "react";
+import {
+  useContext,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ComponentType,
+} from "react";
+import { PresentationContext } from "./PresentationContext";
 import { layoutDp, layoutTree } from "./renderer-layout";
 import {
   CodeVisual,
@@ -32,7 +39,7 @@ export const rendererLegends: Record<
   { label: string; cue: string }[]
 > = {
   array: [
-    { label: "Current value", cue: "active" },
+    { label: "Current value", cue: "inspect" },
     { label: "Value changed", cue: "update" },
   ],
   grid: [
@@ -110,43 +117,120 @@ function focusKey(entity: VisualEntity, state: SimulationState): string {
     : entity.id;
 }
 function ArrayVisual({ state }: { state: SimulationState }) {
+  const presentation = useContext(PresentationContext);
+  const root = useRef<HTMLDivElement>(null);
   const items = Object.values(state.entities)
     .filter((entity) => entity.kind === "array")
     .sort((a, b) => Number(a.label) - Number(b.label));
+  const order = items
+    .map((item) => `${item.metadata?.itemId ?? item.id}:${item.label}`)
+    .join("|");
+  useLayoutEffect(() => {
+    if (
+      !presentation.animate ||
+      !root.current ||
+      matchMedia("(prefers-reduced-motion: reduce)").matches
+    )
+      return;
+    const elements = Array.from(
+      root.current.querySelectorAll<HTMLElement>("[data-item-id]"),
+    );
+    const slots = new Map(
+      elements.map((element) => [
+        element.dataset.slot!,
+        { x: element.offsetLeft, y: element.offsetTop },
+      ]),
+    );
+    const animations: Animation[] = [];
+    for (const element of elements) {
+      const from = presentation.previousSlots?.[element.dataset.itemId!],
+        to = element.dataset.slot!;
+      const a = from !== undefined ? slots.get(from) : undefined,
+        b = slots.get(to);
+      if (a && b && from !== to)
+        animations.push(
+          element.animate(
+            [
+              { transform: `translate(${a.x - b.x}px, ${a.y - b.y}px)` },
+              {
+                transform: `translate(${(a.x - b.x) / 2}px, ${Math.min(a.y - b.y, 0) - 25}px)`,
+                offset: 0.5,
+              },
+              { transform: "translate(0, 0)" },
+            ],
+            { duration: presentation.durationMs, easing: "ease-in-out" },
+          ),
+        );
+    }
+    return () => animations.forEach((animation) => animation.cancel());
+  }, [
+    order,
+    presentation.animate,
+    presentation.durationMs,
+    presentation.previousSlots,
+  ]);
   return (
-    <div className="array-visual" role="list" aria-label="Array values">
-      {items.map((item) => (
-        <div
-          role="listitem"
-          key={focusKey(item, state)}
-          className={className(item, state)}
-          aria-label={`Index ${item.label}: ${item.value}, ${item.status}${isCurrent(item, state) ? `, current ${state.focus?.kind}` : ""}`}
-        >
-          {isCurrent(item, state) && (
-            <span className="cell-cue" aria-hidden="true">
-              {cueLabels[state.focus?.kind ?? "inspect"]}
-            </span>
-          )}
-          <strong>{item.value}</strong>
-          <small>{item.label}</small>
-          {isCurrent(item, state) &&
-            state.focus?.kind === "update" &&
-            state.focus.before !== undefined &&
-            state.focus.after !== undefined &&
-            state.focus.before !== state.focus.after && (
-              <span
-                className="value-change"
-                aria-label={`Changed from ${state.focus.before} to ${state.focus.after}`}
-              >
-                {String(state.focus.before)} → {String(state.focus.after)}
+    <div
+      ref={root}
+      className="array-visual"
+      role="list"
+      aria-label="Array values"
+    >
+      {items.map((item) => {
+        const label = presentation.labels.find(
+          (label) => label.entityId === item.id,
+        );
+        const pointers = Object.entries(state.variables)
+          .filter(
+            ([name, value]) =>
+              ["left", "right"].includes(name) && value === Number(item.label),
+          )
+          .map(([name]) => (name === "left" ? "L" : "R"));
+        return (
+          <div
+            role="listitem"
+            key={String(item.metadata?.itemId ?? item.id)}
+            data-item-id={item.metadata?.itemId ?? item.id}
+            data-slot={item.label}
+            className={`${className(item, state)}${label ? ` role-${label.role}` : ""}`}
+            aria-label={`Index ${item.label}: ${item.value}, ${item.status}${isCurrent(item, state) ? `, current ${state.focus?.kind}` : ""}`}
+          >
+            {isCurrent(item, state) && (
+              <span className="cell-cue" aria-hidden="true">
+                {label?.label ??
+                  (pointers.join(" / ") ||
+                    cueLabels[state.focus?.kind ?? "inspect"])}
               </span>
             )}
-        </div>
-      ))}
+            <strong>{item.value}</strong>
+            <small>{item.label}</small>
+            {item.metadata?.originalIndex !== undefined && (
+              <span className="original-index">
+                original {Number(item.metadata.originalIndex) + 1}
+              </span>
+            )}
+            {isCurrent(item, state) &&
+              label?.role !== "comparison" &&
+              label?.role !== "dependency" &&
+              state.focus?.kind === "update" &&
+              state.focus.before !== undefined &&
+              state.focus.after !== undefined &&
+              state.focus.before !== state.focus.after && (
+                <span
+                  className="value-change"
+                  aria-label={`Changed from ${state.focus.before} to ${state.focus.after}`}
+                >
+                  {String(state.focus.before)} → {String(state.focus.after)}
+                </span>
+              )}
+          </div>
+        );
+      })}
     </div>
   );
 }
 function GridVisual({ state }: { state: SimulationState }) {
+  const presentation = useContext(PresentationContext);
   const cells = Object.values(state.entities).filter(
     (entity) => entity.kind === "grid",
   );
@@ -166,17 +250,22 @@ function GridVisual({ state }: { state: SimulationState }) {
           role="gridcell"
           key={focusKey(cell, state)}
           className={className(cell, state)}
-          aria-label={`Row ${cell.metadata?.row}, column ${cell.metadata?.col}: ${cell.label === "#" ? "wall" : cell.label === "." ? "open" : cell.label}, ${cell.status}${isCurrent(cell, state) ? `, current ${state.focus?.kind}` : ""}`}
+          aria-label={`Row ${cell.metadata?.row}, column ${cell.metadata?.col}: ${cell.metadata?.queen && cell.status === "path" ? "queen" : cell.label === "#" ? "wall" : cell.label === "." ? "open" : cell.label}, ${cell.status}${isCurrent(cell, state) ? `, ${presentation.labels.find((label) => label.entityId === cell.id)?.label ?? `current ${state.focus?.kind}`}` : ""}`}
         >
           <span>
             {cell.label === "."
               ? cell.status === "path"
-                ? "•"
+                ? cell.metadata?.queen
+                  ? "♛"
+                  : "•"
                 : ""
               : cell.label === "#"
                 ? ""
                 : cell.label}
           </span>
+          {cell.metadata?.distance !== undefined && cell.status !== "path" && (
+            <small className="cell-distance">{cell.metadata.distance}</small>
+          )}
         </div>
       ))}
     </div>
@@ -189,6 +278,7 @@ export function GraphVisual({
   state: SimulationState;
   tree?: boolean;
 }) {
+  const presentation = useContext(PresentationContext);
   const nodes = Object.values(state.entities).filter((entity) =>
     tree ? entity.kind === "tree-node" : entity.kind === "graph-node",
   );
@@ -246,7 +336,7 @@ export function GraphVisual({
               return a && b ? (
                 <line
                   key={`${edge.from}:${edge.to}`}
-                  className="graph-edge"
+                  className={`graph-edge${nodes.find((node) => node.label === edge.from)?.status === "path" && nodes.find((node) => node.label === edge.to)?.status === "path" ? " status-path" : ""}`}
                   x1={a.x}
                   y1={a.y}
                   x2={b.x}
@@ -265,7 +355,7 @@ export function GraphVisual({
               return a && b ? (
                 <g key={edge.id}>
                   <line
-                    className={`graph-edge status-${edge.status}${isCurrent(edge, state) ? " is-active" : ""}`}
+                    className={`graph-edge status-${edge.status === "active" && !isCurrent(edge, state) ? "idle" : edge.status}${isCurrent(edge, state) ? " is-active" : ""}`}
                     x1={a.x}
                     y1={a.y}
                     x2={directed ? b.x - (dx / distance) * 29 : b.x}
@@ -294,7 +384,7 @@ export function GraphVisual({
             return a && b ? (
               <line
                 key={`parent:${node.id}`}
-                className="parent-link"
+                className={`parent-link${node.status === "path" ? " status-path" : ""}`}
                 x1={a.x}
                 y1={a.y}
                 x2={b.x}
@@ -330,7 +420,9 @@ export function GraphVisual({
                   y={point.y - 38}
                   textAnchor="middle"
                 >
-                  {cueLabels[state.focus?.kind ?? "inspect"]}
+                  {presentation.labels.find(
+                    (label) => label.entityId === node.id,
+                  )?.label ?? cueLabels[state.focus?.kind ?? "inspect"]}
                 </text>
               )}
               <text x={point.x} y={point.y + 5} textAnchor="middle">
@@ -400,6 +492,7 @@ function DpCell({
     <div
       key={focusKey(cell, state)}
       role="cell"
+      data-dp-cell={cell.id}
       className={`${className(cell, state)}${dependency ? " is-dependency" : ""}`}
       aria-label={`dp row ${row}, column ${col} equals ${cell.value}${dependency ? ", dependency" : focusIndex === 0 ? ", current target" : ""}`}
     >
@@ -413,6 +506,41 @@ function DpCell({
 }
 
 export function DPVisual({ state }: { state: SimulationState }) {
+  const root = useRef<HTMLDivElement>(null);
+  const [arrows, setArrows] = useState<
+    { x1: number; y1: number; x2: number; y2: number }[]
+  >([]);
+  const active = state.activeEntities.join("|");
+  useLayoutEffect(() => {
+    const element = root.current;
+    if (!element) return;
+    const measure = () => {
+      const ids = active.split("|");
+      const boxes = ids.map((id) =>
+        Array.from(
+          element.querySelectorAll<HTMLElement>("[data-dp-cell]"),
+        ).find((cell) => cell.dataset.dpCell === id),
+      );
+      const target = boxes[0];
+      setArrows(
+        target
+          ? boxes
+              .slice(1)
+              .filter((box): box is HTMLElement => !!box)
+              .map((box) => ({
+                x1: box.offsetLeft + box.offsetWidth / 2,
+                y1: box.offsetTop + box.offsetHeight / 2,
+                x2: target.offsetLeft + target.offsetWidth / 2,
+                y2: target.offsetTop + target.offsetHeight / 2,
+              }))
+          : [],
+      );
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [active]);
   const cells = Object.values(state.entities).filter(
     (entity) => entity.kind === "dp",
   );
@@ -420,6 +548,7 @@ export function DPVisual({ state }: { state: SimulationState }) {
   return (
     <div
       className="dp-visual"
+      ref={root}
       role="table"
       aria-label="Dynamic programming values"
     >
@@ -429,13 +558,18 @@ export function DPVisual({ state }: { state: SimulationState }) {
         )}
         {Array.from({ length: layout.columnCount }, (_, col) => (
           <div key={col} role="columnheader">
-            {layout.twoDimensional ? col : (layout.rows[0][col]?.label ?? col)}
+            {layout.rows[0][col]?.metadata?.colLabel ??
+              (layout.twoDimensional
+                ? col
+                : (layout.rows[0][col]?.label ?? col))}
           </div>
         ))}
       </div>
       {layout.rows.map((row, rowIndex) => (
         <div className="dp-row" role="row" key={rowIndex}>
-          {layout.twoDimensional && <div role="rowheader">{rowIndex}</div>}
+          {layout.twoDimensional && (
+            <div role="rowheader">{row[0]?.metadata?.rowLabel ?? rowIndex}</div>
+          )}
           {row.map((cell, col) => (
             <DpCell
               key={cell?.id ?? `empty:${rowIndex}:${col}`}
@@ -447,6 +581,11 @@ export function DPVisual({ state }: { state: SimulationState }) {
           ))}
         </div>
       ))}
+      <svg className="dp-dependency-arrows" aria-hidden="true">
+        {arrows.map((arrow, index) => (
+          <line key={index} {...arrow} />
+        ))}
+      </svg>
     </div>
   );
 }

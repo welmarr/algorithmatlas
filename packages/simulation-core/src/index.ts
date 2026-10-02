@@ -105,7 +105,10 @@ function sortHeap(state: SimulationState, name: string): void {
     const rightPriority =
       typeof rightValue === "number" ? rightValue : Infinity;
     return (
-      leftPriority - rightPriority || (left < right ? -1 : left > right ? 1 : 0)
+      leftPriority - rightPriority ||
+      Number(state.entities[left]?.metadata?.priorityOrder ?? 0) -
+        Number(state.entities[right]?.metadata?.priorityOrder ?? 0) ||
+      (left < right ? -1 : left > right ? 1 : 0)
     );
   });
 }
@@ -276,6 +279,13 @@ export function reduceEvent(
         const old = requiredEntity(state, left).value;
         requiredEntity(state, left).value = requiredEntity(state, right).value;
         requiredEntity(state, right).value = old;
+        // Slot ids stay fixed; item identity and original index travel with the value.
+        const metadata = requiredEntity(state, left).metadata;
+        requiredEntity(state, left).metadata = requiredEntity(
+          state,
+          right,
+        ).metadata;
+        requiredEntity(state, right).metadata = metadata;
       }
       break;
     }
@@ -292,6 +302,17 @@ export interface TimelineOptions {
   snapshotInterval?: number;
   speed?: number;
   metadata?: Record<string, Primitive>;
+}
+
+function immutableCopy<T>(value: T): T {
+  const copy = structuredClone(value);
+  const freeze = (item: unknown) => {
+    if (!item || typeof item !== "object") return;
+    for (const child of Object.values(item)) freeze(child);
+    Object.freeze(item);
+  };
+  freeze(copy);
+  return copy;
 }
 
 export class SimulationTimeline {
@@ -318,13 +339,14 @@ export class SimulationTimeline {
           ...validateEvent(event),
           entities: Object.freeze([...event.entities]) as unknown as string[],
           payload: Object.freeze({ ...event.payload }),
+          pedagogy: event.pedagogy ? immutableCopy(event.pedagogy) : undefined,
           sourceRef: event.sourceRef
             ? Object.freeze({ ...event.sourceRef })
             : undefined,
         }),
       ),
     );
-    this.metadata = options.metadata ?? {};
+    this.metadata = Object.freeze({ ...options.metadata });
     this.rate = options.speed ?? 1;
     const interval = options.snapshotInterval ?? 100;
     if (!Number.isSafeInteger(interval) || interval < 1)
@@ -384,7 +406,8 @@ export class SimulationTimeline {
     for (const listener of this.listeners) listener();
   }
 
-  seek(position: number): SimulationState {
+  /** Read a snapshot projection without moving playback or notifying subscribers. */
+  stateAt(position: number): SimulationState {
     if (
       !Number.isSafeInteger(position) ||
       position < 0 ||
@@ -400,6 +423,10 @@ export class SimulationTimeline {
     let state = cloneState(snapshot.state);
     for (let index = snapshot.position; index < position; index++)
       state = reduceEvent(state, this.events[index]);
+    return state;
+  }
+  seek(position: number): SimulationState {
+    const state = this.stateAt(position);
     this.current = state;
     this.cursor = position;
     this.emit();
@@ -462,7 +489,8 @@ export function createTeachingSteps(
 ): TeachingStep[] {
   const events = timeline.events;
   const positions: number[] = [];
-  const increasingArray = timeline.metadata.problemId === "increasing-array";
+  const increasingArray =
+    timeline.metadata.teachingStrategy === "monotone-array";
   if (increasingArray) {
     const pointers = events
       .map((event, index) => ({ event, position: index + 1 }))

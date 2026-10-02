@@ -260,6 +260,7 @@ function arrayTrace(
     state.entities[id] = {
       id,
       kind: "array",
+      metadata: { itemId: `item:${i}`, originalIndex: i },
       label: String(i),
       value,
       status: "idle",

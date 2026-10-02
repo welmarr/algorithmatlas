@@ -12,5 +12,5 @@ export default async function ProblemPage({
 }) {
   const { id } = await params;
   if (!getProblem(id)) notFound();
-  return <ProblemWorkspace problemId={id} />;
+  return <ProblemWorkspace key={id} problemId={id} />;
 }

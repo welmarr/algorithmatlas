@@ -1,0 +1,285 @@
+:root {
+  --semantic-current: var(--cue-inspect);
+  --semantic-current-bg: var(--cue-inspect-bg);
+  --semantic-changed: var(--cue-update);
+  --semantic-changed-bg: var(--cue-update-bg);
+  --semantic-accepted: var(--cue-explore);
+  --semantic-accepted-bg: var(--cue-explore-bg);
+  --semantic-rejected: #6c5963;
+  --semantic-neutral: #607166;
+}
+.choreography-stage {
+  min-width: 0;
+  margin-top: 16px;
+}
+.reasoning-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+}
+.reasoning-toolbar button,
+.reasoning-phases button {
+  font-size: 11px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 5px 8px;
+  color: var(--semantic-neutral);
+  background: white;
+  cursor: pointer;
+}
+.reasoning-phases {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 10px 0;
+}
+.reasoning-phases button[aria-pressed="true"] {
+  border-color: var(--semantic-current);
+  background: var(--semantic-current-bg);
+  color: var(--semantic-current);
+  font-weight: 700;
+}
+.reasoning-facts {
+  padding: 14px 16px;
+  background: #f6f8f5;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.reasoning-facts p {
+  margin: 7px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.reasoning-equation {
+  color: var(--semantic-current);
+  font:
+    600 17px/1.5 "DM Mono",
+    monospace;
+  overflow-wrap: anywhere;
+}
+.reasoning-range {
+  margin: 14px 0 4px;
+  font-size: 12px;
+}
+.reasoning-range small {
+  color: var(--semantic-rejected);
+}
+.range-track {
+  height: 12px;
+  position: relative;
+  margin: 16px 5px 10px;
+  border-radius: 3px;
+  background: repeating-linear-gradient(
+    135deg,
+    #e0e5df,
+    #e0e5df 3px,
+    #f4f6f2 3px,
+    #f4f6f2 7px
+  );
+}
+.range-track span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--semantic-current-bg);
+  border: 2px solid var(--semantic-current);
+  min-width: 3px;
+}
+.range-track b {
+  position: absolute;
+  top: -17px;
+  transform: translateX(-50%);
+  color: var(--semantic-changed);
+}
+.reasoning-frontier {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12px;
+  margin: 12px 0;
+  padding: 10px;
+  border-left: 3px solid var(--semantic-accepted);
+  background: var(--semantic-accepted-bg);
+}
+.reasoning-frontier span {
+  overflow-wrap: anywhere;
+}
+.reasoning-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px 15px;
+  font:
+    10px/1.6 "DM Mono",
+    monospace;
+  color: var(--semantic-neutral);
+}
+.reasoning-legend .legend-role-current,
+.reasoning-legend .legend-role-comparison,
+.reasoning-legend .legend-role-dependency {
+  color: var(--semantic-current);
+}
+.reasoning-legend .legend-role-changed {
+  color: var(--semantic-changed);
+}
+.reasoning-legend .legend-role-accepted,
+.reasoning-legend .legend-role-path {
+  color: var(--semantic-accepted);
+}
+.array-visual {
+  position: relative;
+}
+.array-visual .visual-entity.role-comparison {
+  background: var(--semantic-current-bg) !important;
+  border: 2px dashed var(--semantic-current) !important;
+  box-shadow: none;
+}
+.array-visual .visual-entity.role-changed {
+  background: var(--semantic-changed-bg) !important;
+  border: 3px solid var(--semantic-changed) !important;
+  box-shadow: none;
+}
+.array-visual .visual-entity.role-accepted {
+  border: 3px double var(--semantic-accepted) !important;
+  background: var(--semantic-accepted-bg) !important;
+}
+.array-visual .visual-entity.role-rejected {
+  border: 2px dashed var(--semantic-rejected) !important;
+  background: #f3f0f1 !important;
+}
+.array-visual .visual-entity.role-dependency {
+  border-style: dashed;
+}
+.role-comparison .cell-cue {
+  background: var(--semantic-current);
+}
+.role-comparison .cell-cue::after {
+  border-top-color: var(--semantic-current);
+}
+.graph-edge.status-path,
+.parent-link.status-path {
+  stroke: var(--semantic-accepted);
+  stroke-width: 5;
+}
+.dp-visual {
+  position: relative;
+}
+.dp-dependency-arrows {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+.dp-dependency-arrows line {
+  stroke: var(--semantic-current);
+  stroke-width: 2;
+  stroke-dasharray: 4 3;
+  opacity: 0.6;
+}
+.choreography-stage .dp-row .visual-entity.is-active.is-dependency {
+  background: var(--semantic-current-bg) !important;
+  border: 2px dashed var(--semantic-current) !important;
+  box-shadow: none;
+}
+.original-index {
+  position: absolute;
+  top: calc(100% + 27px);
+  white-space: nowrap;
+  font:
+    9px "DM Mono",
+    monospace;
+  color: var(--semantic-neutral);
+}
+.original-index ~ .value-change {
+  top: calc(100% + 42px);
+}
+.cell-distance {
+  position: absolute;
+  bottom: 2px;
+  right: 3px;
+  font-size: 10px;
+}
+.grid-visual .visual-entity {
+  position: relative;
+}
+.geometry-diagram {
+  display: block;
+  width: 100%;
+  max-height: 330px;
+  margin-top: 15px;
+}
+.geometry-diagram polygon {
+  fill: var(--semantic-current-bg);
+  stroke: var(--semantic-neutral);
+  stroke-width: 1;
+}
+.geometry-diagram line {
+  stroke: var(--semantic-neutral);
+  stroke-width: 2;
+}
+.geometry-diagram circle {
+  fill: var(--semantic-neutral);
+}
+.geometry-diagram text {
+  fill: #233c30;
+  font:
+    12px "DM Mono",
+    monospace;
+}
+.geometry-diagram .geometry-current line {
+  stroke: var(--semantic-changed);
+  stroke-width: 5;
+}
+.geometry-diagram .geometry-current circle {
+  fill: var(--semantic-changed);
+}
+.geometry-diagram .geometry-current text {
+  fill: var(--semantic-changed);
+  font-weight: 700;
+}
+.strategy-geometry .array-visual {
+  padding: 35px 0 45px;
+}
+.string-alignment {
+  margin: 14px 0;
+  overflow: auto;
+}
+.string-alignment pre {
+  font:
+    18px/1.8 "DM Mono",
+    monospace;
+  letter-spacing: 3px;
+}
+.auxiliary-structure {
+  padding: 12px 0;
+}
+.auxiliary-structure h3 {
+  font-size: 13px;
+}
+.choreography-stage .visual-entity.is-active,
+.choreography-stage .is-active circle {
+  animation: none;
+}
+@media (max-width: 700px) {
+  .reasoning-equation {
+    font-size: 14px;
+  }
+  .reasoning-facts {
+    padding: 10px;
+  }
+  .reasoning-toolbar .eyebrow {
+    font-size: 9px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .choreography-stage *,
+  .choreography-stage *::before,
+  .choreography-stage *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

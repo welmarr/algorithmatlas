@@ -12,6 +12,36 @@ export type EntityStatus =
   "idle" | "active" | "discovered" | "visited" | "path" | "blocked";
 export type Primitive = string | number | boolean | null;
 
+export type SemanticRole =
+  | "current"
+  | "comparison"
+  | "changed"
+  | "dependency"
+  | "accepted"
+  | "rejected"
+  | "path";
+/** Producer-supplied reasoning facts, never CSS or executable UI instructions. */
+export interface PedagogyHint {
+  schemaVersion: "0.1";
+  equation?: string;
+  reason?: string;
+  labels?: { entityId: string; label: string; role: SemanticRole }[];
+  range?: {
+    low: number;
+    high: number;
+    mid?: number;
+    previousLow?: number;
+    previousHigh?: number;
+    label: string;
+  };
+  alignment?: {
+    text: string;
+    pattern: string;
+    offset: number;
+    matched: number;
+  };
+}
+
 export interface VisualEntity {
   id: string;
   kind: EntityKind;

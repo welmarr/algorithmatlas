@@ -237,6 +237,15 @@ const shortestRoutes = defineProblem({
         kind: "graph-node",
         label: node,
         status: "idle",
+        metadata: { distance: "∞" },
+      };
+      state.entities[`heap:item:${node}`] = {
+        id: `heap:item:${node}`,
+        kind: "heap-item",
+        label: node,
+        metadata: { priorityOrder: nodes.indexOf(node) },
+        value: 1000000000,
+        status: "idle",
       };
     });
     edges.forEach(([from, to, weight], i) => {
@@ -250,6 +259,25 @@ const shortestRoutes = defineProblem({
       };
     });
     dist.set(source, 0);
+    const enqueued = new Set([source]);
+    events.push(
+      event(
+        "HEAP_UPDATE",
+        [`heap:item:${source}`],
+        "Source enters the priority queue with distance 0.",
+        { value: 0 },
+        2,
+      ),
+    );
+    events.push(
+      event(
+        "HEAP_INSERT",
+        [`heap:item:${source}`],
+        "Insert the source.",
+        {},
+        2,
+      ),
+    );
     events.push(
       event(
         "SET_DISTANCE",
@@ -270,6 +298,20 @@ const shortestRoutes = defineProblem({
       done.add(node);
       events.push(
         event(
+          "HEAP_EXTRACT",
+          [`heap:item:${node}`],
+          `Extract minimum distance ${dist.get(node)} for ${node}.`,
+          {},
+          4,
+          {
+            schemaVersion: "0.1",
+            reason:
+              "The minimum unsettled distance is final because edge weights are nonnegative.",
+          },
+        ),
+      );
+      events.push(
+        event(
           "VISIT_NODE",
           [`graph:node:${node}`],
           `Settle ${node} at distance ${dist.get(node)}.`,
@@ -287,10 +329,51 @@ const shortestRoutes = defineProblem({
             `Try ${from}→${to}: ${dist.get(node)} + ${weight} = ${candidate}.`,
             { value: candidate },
             6,
+            {
+              schemaVersion: "0.1",
+              equation: `${dist.get(node)} + ${weight} = ${candidate} ${candidate < dist.get(to)! ? "<" : "≥"} ${Number.isFinite(dist.get(to)!) ? dist.get(to) : "∞"}`,
+              reason:
+                candidate < dist.get(to)!
+                  ? "A shorter route was found. Update the distance, predecessor and queue priority."
+                  : "This candidate does not improve the known distance. Reject the relaxation.",
+              labels: [
+                {
+                  entityId: `graph:node:${from}`,
+                  label: "From",
+                  role: "current",
+                },
+                {
+                  entityId: `graph:node:${to}`,
+                  label: "Candidate",
+                  role: "comparison",
+                },
+              ],
+            },
           ),
         );
         if (candidate < dist.get(to)!) {
           dist.set(to, candidate);
+          events.push(
+            event(
+              "HEAP_UPDATE",
+              [`heap:item:${to}`],
+              `Priority of ${to} becomes ${candidate}.`,
+              { value: candidate },
+              6,
+            ),
+          );
+          if (!enqueued.has(to)) {
+            enqueued.add(to);
+            events.push(
+              event(
+                "HEAP_INSERT",
+                [`heap:item:${to}`],
+                `Queue ${to} with candidate distance ${candidate}.`,
+                {},
+                6,
+              ),
+            );
+          }
           events.push(
             event(
               "SET_DISTANCE",

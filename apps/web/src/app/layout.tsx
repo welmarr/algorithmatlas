@@ -3,6 +3,7 @@ import Link from "next/link";
 import "./globals.css";
 import "./teacher.css";
 import "./animation.css";
+import "./choreography.css";
 
 export const metadata: Metadata = {
   title: "Algorithm Atlas",

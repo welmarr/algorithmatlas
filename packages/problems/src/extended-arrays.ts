@@ -11,6 +11,7 @@ import {
   metadata,
   numbers,
   numberState,
+  sortedItems,
 } from "./extended-shared";
 
 const distinctNumbers = defineProblem({
@@ -43,18 +44,7 @@ const distinctNumbers = defineProblem({
   trace({ values }) {
     const state = numberState(values),
       events: EventDraft[] = [];
-    const sorted = [...values].sort((a, b) => a - b);
-    sorted.forEach((value, i) =>
-      events.push(
-        event(
-          "WRITE_INDEX",
-          [`array:${i}`],
-          `Sorted position ${i} contains ${value}.`,
-          { value },
-          1,
-        ),
-      ),
-    );
+    const sorted = sortedItems(values, events).map((item) => item.value);
     let count = 0;
     sorted.forEach((value, i) => {
       events.push(
@@ -106,7 +96,7 @@ const twoSum = defineProblem({
       explanation: "A pointer move discards sums that cannot equal the target.",
     },
   }),
-  defaultInput: { values: [2, 7, 5, 1], target: 8 },
+  defaultInput: { values: [8, 1, 6, 3, 10, 4], target: 12 },
   source: `const items = values.map((value,index) => ({value,index})).sort((a,b) => a.value-b.value);\nlet left = 0, right = items.length-1;\nwhile (left < right) {\n  const sum = items[left].value + items[right].value;\n  if (sum === target) return [items[left].index+1, items[right].index+1].sort((a,b)=>a-b).join(' ');\n  if (sum < target) left++; else right--;\n}\nreturn 'IMPOSSIBLE';`,
   parseInput(raw) {
     return {
@@ -117,9 +107,7 @@ const twoSum = defineProblem({
   trace({ values, target }) {
     const state = numberState(values),
       events: EventDraft[] = [];
-    const items = values
-      .map((value, index) => ({ value, index }))
-      .sort((a, b) => a.value - b.value || a.index - b.index);
+    const items = sortedItems(values, events);
     let left = 0,
       right = items.length - 1,
       answer = "IMPOSSIBLE";
@@ -129,19 +117,19 @@ const twoSum = defineProblem({
         sum = a.value + b.value;
       events.push(
         event(
-          "MARK",
-          [`array:${a.index}`],
+          "MOVE_POINTER",
+          [`array:${left}`],
           `Low value ${a.value} at original position ${a.index + 1}.`,
-          { status: "active" },
+          { variable: "left", value: left },
           3,
         ),
       );
       events.push(
         event(
-          "MARK",
-          [`array:${b.index}`],
+          "MOVE_POINTER",
+          [`array:${right}`],
           `High value ${b.value} at original position ${b.index + 1}.`,
-          { status: "active" },
+          { variable: "right", value: right },
           3,
         ),
       );
@@ -152,6 +140,21 @@ const twoSum = defineProblem({
           `${a.value} + ${b.value} = ${sum}; target is ${target}.`,
           { variable: "sum", value: sum },
           4,
+          {
+            schemaVersion: "0.1",
+            equation: `${a.value} + ${b.value} = ${sum} ${sum === target ? "=" : sum < target ? "<" : ">"} ${target}`,
+            reason:
+              sum === target
+                ? `Found the target. Return original positions ${a.index + 1} and ${b.index + 1}.`
+                : sum < target
+                  ? "The sum is too small. Even the largest remaining partner is insufficient for L; move L right to increase the sum."
+                  : "The sum is too large. Even the smallest remaining partner is excessive for R; move R left to decrease the sum.",
+            labels: [
+              { entityId: `array:${left}`, label: "L", role: "comparison" },
+              { entityId: `array:${right}`, label: "R", role: "comparison" },
+            ],
+            range: { low: left, high: right, label: "Remaining candidates" },
+          },
         ),
       );
       if (sum === target) {
@@ -159,7 +162,7 @@ const twoSum = defineProblem({
         events.push(
           event(
             "MARK",
-            [`array:${a.index}`],
+            [`array:${left}`],
             "First matching value.",
             { status: "path" },
             5,
@@ -168,7 +171,7 @@ const twoSum = defineProblem({
         events.push(
           event(
             "MARK",
-            [`array:${b.index}`],
+            [`array:${right}`],
             "Second matching value.",
             { status: "path" },
             5,
@@ -180,8 +183,8 @@ const twoSum = defineProblem({
         events.push(
           event(
             "UNMARK",
-            [`array:${a.index}`],
-            "Discard this low value.",
+            [`array:${left}`],
+            "Discard this low value: every remaining sum with it is too small; move L right.",
             {},
             6,
           ),
@@ -191,8 +194,8 @@ const twoSum = defineProblem({
         events.push(
           event(
             "UNMARK",
-            [`array:${b.index}`],
-            "Discard this high value.",
+            [`array:${right}`],
+            "Discard this high value: every remaining sum with it is too large; move R left.",
             {},
             6,
           ),
@@ -261,6 +264,11 @@ const slidingWindowSum = defineProblem({
         `First window sum: ${sum}.`,
         { variable: "sum", value: sum },
         2,
+        {
+          schemaVersion: "0.1",
+          equation: `${values.slice(0, window).join(" + ")} = ${sum}`,
+          range: { low: 0, high: window - 1, label: "Window" },
+        },
       ),
     );
     for (let right = window; right < values.length; right++) {
@@ -291,6 +299,25 @@ const slidingWindowSum = defineProblem({
           `Window ${left + 1}–${right} sums to ${sum}.`,
           { variable: "sum", value: sum },
           5,
+          {
+            schemaVersion: "0.1",
+            equation: `${sum - values[right] + values[left]} − ${values[left]} + ${values[right]} = ${sum}`,
+            reason:
+              "Subtract the outgoing value, add the incoming value; the shared middle stays in the window.",
+            range: { low: left + 1, high: right, label: "Window" },
+            labels: [
+              {
+                entityId: `array:${left}`,
+                label: "Outgoing −",
+                role: "rejected",
+              },
+              {
+                entityId: `array:${right}`,
+                label: "Incoming +",
+                role: "accepted",
+              },
+            ],
+          },
         ),
       );
       sums.push(sum);
@@ -337,6 +364,8 @@ const factoryMachines = defineProblem({
     let low = 0,
       high = Math.min(...values) * target;
     while (low + 1 < high) {
+      const previousLow = low,
+        previousHigh = high;
       const mid = Math.floor((low + high) / 2);
       let made = 0;
       values.forEach((time, i) => {
@@ -370,6 +399,22 @@ const factoryMachines = defineProblem({
           `Search interval is (${low}, ${high}].`,
           { variable: "mid", value: mid },
           5,
+          {
+            schemaVersion: "0.1",
+            equation: `${made} ${made >= target ? "≥" : "<"} ${target} products at time ${mid}`,
+            reason:
+              made >= target
+                ? "Midpoint is sufficient. Keep it as the upper bound; all later times can be discarded."
+                : "Midpoint is insufficient. Discard it and all earlier times; seek a later feasible time.",
+            range: {
+              low,
+              high,
+              mid,
+              previousLow,
+              previousHigh,
+              label: "Candidate time interval (low, high]",
+            },
+          },
         ),
       );
     }
@@ -460,6 +505,13 @@ const staticRangeSum = defineProblem({
           `Query ${index + 1}: prefix[${right}] − prefix[${left - 1}] = ${sum}.`,
           { variable: "sum", value: sum },
           3,
+          {
+            schemaVersion: "0.1",
+            equation: `${prefix[right]} − ${prefix[left - 1]} = ${sum}`,
+            reason:
+              "Subtract the prefix before the left boundary; its contribution cancels.",
+            range: { low: left - 1, high: right - 1, label: "Queried indices" },
+          },
         ),
       );
       return sum;
@@ -538,8 +590,41 @@ const dynamicRangeSum = defineProblem({
       data = [...values],
       bit = Array<number>(values.length + 1).fill(0),
       answers: number[] = [];
+    for (let i = 1; i <= values.length; i++) {
+      const id = `dp:${i}`;
+      state.entities[id] = {
+        id,
+        kind: "dp",
+        label: String(i),
+        value: 0,
+        status: "idle",
+        metadata: { colLabel: `${i - (i & -i) + 1}…${i}` },
+      };
+    }
     const add = (index: number, delta: number) => {
-      for (let at = index; at <= data.length; at += at & -at) bit[at] += delta;
+      for (let at = index; at <= data.length; at += at & -at) {
+        const before = bit[at];
+        bit[at] += delta;
+        events.push(
+          event(
+            "DP_UPDATE",
+            [`dp:${at}`],
+            `Fenwick cell ${at} covers ${at - (at & -at) + 1}…${at}.`,
+            { value: bit[at] },
+            3,
+            {
+              schemaVersion: "0.1",
+              equation: `bit[${at}]: ${before} + ${delta} = ${bit[at]}`,
+              reason: `Propagate to ${at} + lowbit(${at}) = ${at + (at & -at)}.`,
+              range: {
+                low: at - (at & -at),
+                high: at - 1,
+                label: "Covered array indices",
+              },
+            },
+          ),
+        );
+      }
     };
     const prefix = (index: number) => {
       let sum = 0;
@@ -547,11 +632,21 @@ const dynamicRangeSum = defineProblem({
         sum += bit[at];
         events.push(
           event(
-            "ANNOTATE",
-            [],
+            "DP_READ",
+            [`dp:${at}`],
             `Read Fenwick cell ${at}: running sum ${sum}.`,
             { variable: "prefix", value: sum },
             2,
+            {
+              schemaVersion: "0.1",
+              equation: `sum + bit[${at}] (${bit[at]}) = ${sum}`,
+              reason: `Next prefix cell: ${at} − lowbit(${at}) = ${at - (at & -at)}.`,
+              range: {
+                low: at - (at & -at),
+                high: at - 1,
+                label: "Prefix contribution",
+              },
+            },
           ),
         );
       }

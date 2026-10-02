@@ -61,7 +61,12 @@ const editDistance = defineProblem({
           label: `${i},${j}`,
           value: 0,
           status: "idle",
-          metadata: { row: i, col: j },
+          metadata: {
+            row: i,
+            col: j,
+            rowLabel: i ? first[i - 1] : "∅",
+            colLabel: j ? second[j - 1] : "∅",
+          },
         };
       }
     for (let i = 1; i <= first.length; i++) {
@@ -109,6 +114,11 @@ const editDistance = defineProblem({
             `${first.slice(0, i)} → ${second.slice(0, j)} needs ${value} edits; ${cost === 0 ? "letters match" : "letters differ"}.`,
             { value },
             5,
+            {
+              schemaVersion: "0.1",
+              equation: `min(delete ${dp[i - 1][j]} + 1, insert ${dp[i][j - 1]} + 1, ${cost ? "replace" : "match"} ${dp[i - 1][j - 1]} + ${cost}) = ${value}`,
+              reason: `${first[i - 1]} ${cost ? "≠" : "="} ${second[j - 1]}. Choose the cheapest last operation for these prefixes.`,
+            },
           ),
         );
       }
@@ -165,6 +175,17 @@ const stringMatching = defineProblem({
         status: "idle",
       };
     });
+    [...pattern].forEach((char, i) => {
+      const id = `dp:${i}`;
+      state.entities[id] = {
+        id,
+        kind: "dp",
+        label: String(i),
+        value: 0,
+        status: "idle",
+        metadata: { colLabel: char },
+      };
+    });
     for (let i = 1; i < pattern.length; i++) {
       let j = pi[i - 1];
       while (j > 0 && pattern[i] !== pattern[j]) j = pi[j - 1];
@@ -172,11 +193,21 @@ const stringMatching = defineProblem({
       pi[i] = j;
       events.push(
         event(
-          "ANNOTATE",
-          [],
+          "DP_UPDATE",
+          [`dp:${i}`],
           `Pattern prefix table at ${i} is ${j}.`,
           { variable: "border", value: j },
           1,
+          {
+            schemaVersion: "0.1",
+            reason: `The longest proper prefix matching a suffix through pattern index ${i} has length ${j}.`,
+            alignment: {
+              text: pattern,
+              pattern: pattern.slice(0, j),
+              offset: i - j + 1,
+              matched: j,
+            },
+          },
         ),
       );
     }
@@ -191,6 +222,11 @@ const stringMatching = defineProblem({
           `Compare text ${char} with pattern at offset ${matched}.`,
           { status: "active" },
           4,
+          {
+            schemaVersion: "0.1",
+            equation: `text[${i}] (${char}) ${char === pattern[matched] ? "=" : "≠"} pattern[${matched}] (${pattern[matched]})`,
+            alignment: { text, pattern, offset: i - matched, matched },
+          },
         ),
       );
       while (matched > 0 && char !== pattern[matched]) {
@@ -202,6 +238,12 @@ const stringMatching = defineProblem({
             `Mismatch: reuse border of length ${matched}.`,
             { variable: "matched", value: matched },
             4,
+            {
+              schemaVersion: "0.1",
+              reason:
+                "Reuse the longest matching border from the prefix table. The text cursor does not move backward.",
+              alignment: { text, pattern, offset: i - matched, matched },
+            },
           ),
         );
       }
@@ -293,7 +335,7 @@ const queens = defineProblem({
           kind: "grid",
           label: char === "*" ? "#" : ".",
           status: char === "*" ? "blocked" : "idle",
-          metadata: { row: r, col: c },
+          metadata: { row: r, col: c, queen: true },
         };
       }),
     );
@@ -331,6 +373,11 @@ const queens = defineProblem({
             `Place a queen at row ${row + 1}, column ${col + 1}.`,
             { status: "path" },
             5,
+            {
+              schemaVersion: "0.1",
+              reason: `Row ${row + 1}: column ${col + 1} and both diagonals are free. Choose this square and descend to row ${row + 2}.`,
+              labels: [{ entityId: id, label: "Choose ♛", role: "accepted" }],
+            },
           ),
         );
         search(row + 1);
@@ -341,6 +388,12 @@ const queens = defineProblem({
             `Backtrack from row ${row + 1}, column ${col + 1}.`,
             {},
             5,
+            {
+              schemaVersion: "0.1",
+              reason:
+                "Return from the recursive branch. Remove this queen and release its column and diagonals before trying another choice.",
+              labels: [{ entityId: id, label: "Undo ♛", role: "rejected" }],
+            },
           ),
         );
         columns.delete(col);
@@ -405,6 +458,12 @@ const exponentiation = defineProblem({
             `Odd exponent: multiply result by ${power} modulo 1,000,000,007.`,
             { variable: "result", value: Number(result) },
             3,
+            {
+              schemaVersion: "0.1",
+              equation: `exponent ${remaining} is odd · result × ${power} mod 1,000,000,007 = ${result}`,
+              reason:
+                "An odd low bit contributes the current power to the product.",
+            },
           ),
         );
       }
@@ -417,6 +476,12 @@ const exponentiation = defineProblem({
           `Square power to ${power}; remaining exponent ${remaining}.`,
           { variable: "power", value: Number(power) },
           4,
+          {
+            schemaVersion: "0.1",
+            equation: `power² mod 1,000,000,007 = ${power}`,
+            reason:
+              "Squaring advances to the next binary place; halve the remaining exponent.",
+          },
         ),
       );
       events.push(
@@ -495,6 +560,9 @@ const polygonArea = defineProblem({
   trace({ points }) {
     const state = numberState(points.map(() => 0)),
       events: EventDraft[] = [];
+    points.forEach(([x, y], i) => {
+      state.entities[`array:${i}`].metadata = { x, y };
+    });
     let doubled = 0;
     points.forEach(([x1, y1], i) => {
       const [x2, y2] = points[(i + 1) % points.length];
@@ -507,6 +575,11 @@ const polygonArea = defineProblem({
           `Edge (${x1},${y1})→(${x2},${y2}) contributes ${cross}.`,
           { value: cross },
           4,
+          {
+            schemaVersion: "0.1",
+            equation: `${x1} × ${y2} − ${y1} × ${x2} = ${cross}`,
+            reason: `Add this directed edge's signed cross product. Running signed doubled area: ${doubled}. The final absolute value is twice the area.`,
+          },
         ),
       );
       events.push(

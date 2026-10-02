@@ -12,22 +12,66 @@
     "latestImplementationCommit": "1b70043"
   },
   "lots": {
-    "01": { "status": "complete", "report": "docs/progress/LOT-01.md" },
-    "02": { "status": "complete", "report": "docs/progress/LOT-02.md" },
-    "03": { "status": "complete", "report": "docs/progress/LOT-03.md" },
-    "04": { "status": "complete", "report": "docs/progress/LOT-04.md" },
-    "05": { "status": "complete", "report": "docs/progress/LOT-05.md" },
-    "06": { "status": "complete", "report": "docs/progress/LOT-06.md" },
-    "07": { "status": "complete", "report": "docs/progress/LOT-07.md" },
-    "08": { "status": "complete", "report": "docs/progress/LOT-08.md" },
-    "09": { "status": "complete", "report": "docs/progress/LOT-09.md" },
-    "10": { "status": "complete", "report": "docs/progress/LOT-10.md" },
-    "11": { "status": "complete", "report": "docs/progress/LOT-11.md" },
-    "12": { "status": "partial", "report": "docs/progress/LOT-12.md" }
+    "10": {
+      "status": "complete",
+      "report": "docs/progress/LOT-10.md"
+    },
+    "11": {
+      "status": "complete",
+      "report": "docs/progress/LOT-11.md"
+    },
+    "12": {
+      "status": "partial",
+      "report": "docs/progress/LOT-12.md"
+    },
+    "01": {
+      "status": "complete",
+      "report": "docs/progress/LOT-01.md"
+    },
+    "02": {
+      "status": "complete",
+      "report": "docs/progress/LOT-02.md"
+    },
+    "03": {
+      "status": "complete",
+      "report": "docs/progress/LOT-03.md"
+    },
+    "04": {
+      "status": "complete",
+      "report": "docs/progress/LOT-04.md"
+    },
+    "05": {
+      "status": "complete",
+      "report": "docs/progress/LOT-05.md"
+    },
+    "06": {
+      "status": "complete",
+      "report": "docs/progress/LOT-06.md"
+    },
+    "07": {
+      "status": "complete",
+      "report": "docs/progress/LOT-07.md"
+    },
+    "08": {
+      "status": "complete",
+      "report": "docs/progress/LOT-08.md"
+    },
+    "09": {
+      "status": "complete",
+      "report": "docs/progress/LOT-09.md"
+    }
   },
   "verification": {
-    "unitAndIntegration": { "passed": 126, "failed": 0, "skipped": 4 },
-    "e2e": { "passed": 19, "failed": 0, "skipped": 1 },
+    "unitAndIntegration": {
+      "passed": 126,
+      "failed": 0,
+      "skipped": 4
+    },
+    "e2e": {
+      "passed": 19,
+      "failed": 0,
+      "skipped": 1
+    },
     "format": "passed",
     "lint": "passed",
     "typecheck": "passed",
@@ -38,5 +82,16 @@
     "productionDependencyAudit": "no-known-advisories",
     "developmentDependencyAudit": "no-known-advisories"
   },
-  "auditRecord": "docs/audit/status.json"
+  "auditRecord": "docs/audit/status.json",
+  "vnext": {
+    "baselineCommit": "5a5e6c7baffe369949f25a78b6c65f71ac2fe3cb",
+    "branch": "feature/vnext-visual-auth-python",
+    "lots": {
+      "visual": "locally-verified",
+      "auth": "pending",
+      "python": "pending"
+    },
+    "finalGate": "pending",
+    "freshClone": "pending"
+  }
 }

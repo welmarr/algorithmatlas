@@ -32,6 +32,7 @@ export interface ProblemDefinition<T> {
   metadata: ProblemMetadata;
   defaultInput: T;
   source: string;
+  teachingStrategy?: "monotone-array";
   parseInput(raw: unknown): T;
   trace(input: T): TraceResult;
   inputSchema?: {
@@ -243,7 +244,11 @@ export function runProblem<T>(
   const trace = problem.trace(input);
   const events = createEvents(trace.events, `${problem.metadata.id}:v0.1`);
   const timeline = new SimulationTimeline(trace.initialState, events, {
-    metadata: { problemId: problem.metadata.id, algorithmVersion: "0.1" },
+    metadata: {
+      problemId: problem.metadata.id,
+      algorithmVersion: "0.1",
+      teachingStrategy: problem.teachingStrategy ?? "events",
+    },
   });
   const teachingSteps = problem.teachingMapping
     ? problem.teachingMapping(timeline, trace.output)

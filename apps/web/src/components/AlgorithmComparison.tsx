@@ -10,7 +10,7 @@ import {
   type ComparisonResult,
 } from "../lib/algorithm-comparison";
 import type { LabRun } from "../lib/algorithm-lab";
-import { Visuals } from "./Visuals";
+import { ChoreographyStage } from "./ChoreographyStage";
 import {
   CodeVisual,
   CollectionVisual,
@@ -109,7 +109,13 @@ function ComparisonPane({
         </p>
       </div>
       <div className="comparison-visual" aria-label={`${title} visualization`}>
-        <Visuals kind={structure} state={state} />
+        <ChoreographyStage
+          timeline={timeline}
+          kind={structure}
+          state={state}
+          tags={[run.info.id]}
+          playing={timeline.playing}
+        />
       </div>
       <div className="comparison-counters">
         <div>

@@ -1,4 +1,9 @@
-import type { Primitive, RawTraceEvent, SourceRef } from "@sim/domain";
+import type {
+  PedagogyHint,
+  Primitive,
+  RawTraceEvent,
+  SourceRef,
+} from "@sim/domain";
 
 export const EVENT_TYPES = [
   "SELECT",
@@ -115,6 +120,7 @@ export interface AlgorithmEvent {
   payload: Record<string, Primitive>;
   explanation: string;
   sourceRef?: SourceRef;
+  pedagogy?: PedagogyHint;
 }
 
 export type EventDraft = Omit<
@@ -406,6 +412,49 @@ export function validateEvent(input: unknown): AlgorithmEvent {
       event.sourceRef.line < 1)
   )
     throw new ProtocolError("INVALID_EVENT", "Invalid source reference");
+  if (event.pedagogy) {
+    const hint = event.pedagogy;
+    const text = (value: unknown) =>
+      value === undefined ||
+      (typeof value === "string" && value.length <= 1024);
+    if (
+      hint.schemaVersion !== "0.1" ||
+      !text(hint.equation) ||
+      !text(hint.reason) ||
+      (hint.labels &&
+        (!Array.isArray(hint.labels) ||
+          hint.labels.length > 64 ||
+          hint.labels.some(
+            (label) =>
+              !isEntityId(label.entityId) ||
+              !text(label.label) ||
+              ![
+                "current",
+                "comparison",
+                "changed",
+                "dependency",
+                "accepted",
+                "rejected",
+                "path",
+              ].includes(label.role),
+          ))) ||
+      (hint.range &&
+        (!text(hint.range.label) ||
+          [
+            hint.range.low,
+            hint.range.high,
+            hint.range.mid,
+            hint.range.previousLow,
+            hint.range.previousHigh,
+          ].some((value) => value !== undefined && !Number.isFinite(value)))) ||
+      (hint.alignment &&
+        (!text(hint.alignment.text) ||
+          !text(hint.alignment.pattern) ||
+          !Number.isSafeInteger(hint.alignment.offset) ||
+          !Number.isSafeInteger(hint.alignment.matched)))
+    )
+      throw new ProtocolError("INVALID_EVENT", "Invalid pedagogy facts");
+  }
   validatePayload(event as AlgorithmEvent);
   return event as AlgorithmEvent;
 }

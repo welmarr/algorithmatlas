@@ -11,7 +11,8 @@ import {
   type LabRun,
   type LabStructure,
 } from "../lib/algorithm-lab";
-import { Visuals, rendererLegends } from "./Visuals";
+import { rendererLegends } from "./Visuals";
+import { ChoreographyStage } from "./ChoreographyStage";
 import {
   CodeVisual,
   CollectionVisual,
@@ -150,7 +151,7 @@ export function AlgorithmLab() {
         teachingStepAtPosition(run.teachingSteps, timeline.position) + 1;
       if (next >= run.teachingSteps.length) setLearningPlaying(false);
       else seekTeachingStep(timeline, run.teachingSteps, next);
-    }, 950);
+    }, 2600 / timeline.speed);
     return () => clearInterval(timer);
   }, [learningPlaying, learningPosition, run, timeline]);
 
@@ -676,7 +677,14 @@ export function AlgorithmLab() {
           role="region"
           aria-label="Lab visualization"
         >
-          <Visuals kind={run.info.structure} state={state} />
+          <ChoreographyStage
+            timeline={timeline}
+            kind={run.info.structure}
+            state={state}
+            tags={[run.info.id]}
+            step={mode === "learning" ? lesson : undefined}
+            playing={playing}
+          />
         </div>
         <div className="lab-legend">
           {rendererLegends[run.info.structure].map((item) => (

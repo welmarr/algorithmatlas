@@ -50,6 +50,9 @@ importers:
       '@sim/simulation-core':
         specifier: workspace:*
         version: link:packages/simulation-core
+      '@sim/visual-choreography':
+        specifier: workspace:*
+        version: link:packages/visual-choreography
       '@types/node':
         specifier: ^22.15.0
         version: 22.20.4
@@ -110,6 +113,9 @@ importers:
       '@sim/simulation-core':
         specifier: workspace:*
         version: link:../../packages/simulation-core
+      '@sim/visual-choreography':
+        specifier: workspace:*
+        version: link:../../packages/visual-choreography
       next:
         specifier: ^15.3.1
         version: 15.5.26(@playwright/test@1.55.1)(@types/node@22.20.4)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -221,6 +227,18 @@ importers:
       '@sim/semantic-events':
         specifier: workspace:*
         version: link:../semantic-events
+
+  packages/visual-choreography:
+    dependencies:
+      '@sim/domain':
+        specifier: workspace:*
+        version: link:../domain
+      '@sim/semantic-events':
+        specifier: workspace:*
+        version: link:../semantic-events
+      '@sim/simulation-core':
+        specifier: workspace:*
+        version: link:../simulation-core
 
 packages:
 
