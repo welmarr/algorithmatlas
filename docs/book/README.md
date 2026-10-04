@@ -1,6 +1,6 @@
 # Reconstructing Algorithm Atlas
 
-This book describes the implemented platform. The original build lots are followed by the [visual/account/Python milestone chapter](vnext-visual-auth-python.md). Start with the frozen prototype audit in `docs/audit`, then read `docs/progress/LOT-01.md` through `LOT-12.md` in order. Each lot records an implementation checkpoint. The separate case studies in `docs/problem-case-studies` follow complete problem paths.
+This book describes the implemented platform. The original build lots are followed by the [visual/account/Python milestone chapter](vnext-visual-auth-python.md) and the [CSES 50 dynamic programming and scans case study](cses-dp-and-scans.md). Start with the frozen prototype audit in `docs/audit`, then read `docs/progress/LOT-01.md` through `LOT-12.md` in order. Each lot records an implementation checkpoint. The separate case studies in `docs/problem-case-studies` follow complete problem paths.
 
 ## 1. Domain and dependency direction
 

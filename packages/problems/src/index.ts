@@ -20,6 +20,8 @@ import { arrayProblems } from "./extended-arrays";
 import { graphProblems } from "./extended-graphs";
 import { mixedProblems } from "./extended-mixed";
 import { introductoryProblems } from "./introductory";
+import { sortingSearchingProblems } from "./sorting-searching";
+import { dynamicProgrammingProblems } from "./dynamic-programming";
 
 function meta(
   input: Omit<
@@ -795,6 +797,8 @@ export const problems: ProblemEntry[] = [
   ...graphProblems,
   ...mixedProblems,
   ...introductoryProblems,
+  ...sortingSearchingProblems,
+  ...dynamicProgrammingProblems,
 ];
 export function getProblem(id: string): ProblemEntry | undefined {
   return problems.find((problem) => problem.metadata.id === id);

@@ -35,6 +35,12 @@ function phaseLabel(purpose: Purpose, strategy: Strategy): string {
   return "See the result";
 }
 
+function strategyLabel(plan: ChoreographyPlan): string {
+  if (plan.strategy === "generic")
+    return plan.renderer === "grid" ? "GRID REASONING" : "ALGORITHM REASONING";
+  return plan.strategy.replaceAll("-", " ").toUpperCase();
+}
+
 function Geometry({ state }: { state: SimulationState }) {
   const points = Object.values(state.entities).filter(
     (entity) =>
@@ -169,8 +175,7 @@ function Frame({
     >
       <div className="reasoning-toolbar">
         <span className="eyebrow">
-          {plan.strategy.replaceAll("-", " ").toUpperCase()} ·{" "}
-          {phaseLabel(frame.purpose, plan.strategy)}
+          {strategyLabel(plan)} · {phaseLabel(frame.purpose, plan.strategy)}
         </span>
         <button
           type="button"

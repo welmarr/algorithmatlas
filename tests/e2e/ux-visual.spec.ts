@@ -8,7 +8,7 @@ test.skip(
 );
 
 test("capture the real anonymous UX wave", async ({ page }) => {
-  test.setTimeout(240000);
+  test.setTimeout(360000);
   const root = resolve("artifacts/visual-audit/cses100-ux-polish");
   mkdirSync(root, { recursive: true });
   const shots: Array<{ route: string; file: string; viewport: string }> = [];
@@ -26,6 +26,11 @@ test("capture the real anonymous UX wave", async ({ page }) => {
     ["/problems/tree-diameter", "tree"],
     ["/problems/string-matching", "strings"],
     ["/problems/polygon-area", "geometry"],
+    ["/problems/maximum-subarray-sum", "kadane"],
+    ["/problems/subarray-sums-ii", "prefix-sums"],
+    ["/problems/minimizing-coins", "coin-dp"],
+    ["/problems/grid-paths-i", "grid-dp"],
+    ["/problems/array-description", "table-dp"],
     ["/lab", "lab"],
     ["/lab/compare", "compare"],
     ["/own-code", "own-code"],
@@ -48,6 +53,7 @@ test("capture the real anonymous UX wave", async ({ page }) => {
     ["/problems", "library"],
     ["/account/login", "login"],
     ["/problems/increasing-array", "array"],
+    ["/problems/grid-paths-i", "grid-dp"],
   ] as const) {
     await page.goto(route);
     if (route.startsWith("/problems/")) {
@@ -62,5 +68,5 @@ test("capture the real anonymous UX wave", async ({ page }) => {
     resolve(root, "manifest.json"),
     JSON.stringify(shots, null, 2) + "\n",
   );
-  expect(shots).toHaveLength(20);
+  expect(shots).toHaveLength(26);
 });

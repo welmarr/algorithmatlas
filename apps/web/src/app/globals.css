@@ -29,7 +29,6 @@
   --category-orange-ink: #99501f;
   --category-rose-ink: #954c70;
   --shadow-blue-soft: #173a5910;
-  --shadow-blue-sticky: #173a591a;
 }
 * {
   box-sizing: border-box;
@@ -1316,13 +1315,6 @@ select:focus-visible {
   }
 }
 @media (max-width: 700px) {
-  .controls-panel {
-    position: sticky;
-    bottom: 0;
-    z-index: 8;
-    border-color: var(--brand-primary);
-    box-shadow: 0 -8px 24px var(--shadow-blue-sticky);
-  }
   .related-problems > div:last-child {
     grid-template-columns: 1fr;
   }
