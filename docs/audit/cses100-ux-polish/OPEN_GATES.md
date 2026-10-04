@@ -1,8 +1,8 @@
 # Open gates — interim checkpoint
 
-This directory is an in-progress audit, not a release audit. Current certified unique CSES count is **50/100** on `feature/cses100-ux-polish` at implementation SHA `f283230`; see `docs/progress/CSES-WAVE-50.md` for the checkpoint. `main` remains at pre-milestone SHA `ec610a1`.
+This directory is an in-progress audit, not a release audit. Current certified unique CSES count is **75/100** on `feature/cses100-ux-polish` at implementation SHA `10cc540`; see `docs/progress/CSES-WAVE-75.md` for the checkpoint. `main` remains at pre-milestone SHA `ec610a1`.
 
-1. Add and independently certify 50 more unique official CSES tasks across the required families; run `pnpm problems:release` successfully.
+1. Add and independently certify 25 more unique official CSES tasks across the required families; run `pnpm problems:release` successfully. Split the workbench's eager implementation registry before the catalog grows further.
 2. Complete `pnpm verify:full` and the public-runner/prod-ops gates in a working isolated PostgreSQL/Mailpit environment. Local Docker Desktop's published Mailpit SMTP port currently accepts TCP without returning a `220` greeting.
 3. Resolve the full dependency audit's high-severity `braces` advisory in the transitive development lint dependency. Production audit passed at baseline. Do not weaken the audit threshold.
 4. Complete the 100+ visual, accessibility, mobile, reduced-motion, and performance reviews; capture authenticated/dashboard views and every new major visual family.
