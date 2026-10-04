@@ -170,6 +170,68 @@ const families: Family[] = [
     load: () =>
       import("./dag-routes").then((module) => module.dagRouteProblems),
   },
+  {
+    ids: [
+      "exponentiation-ii",
+      "fibonacci-numbers",
+      "counting-divisors",
+      "common-divisors",
+      "binomial-coefficients",
+      "creating-strings-ii",
+      "distributing-apples",
+    ],
+    load: () =>
+      import("./mathematics-advanced").then(
+        (module) => module.advancedMathematicsProblems,
+      ),
+  },
+  {
+    ids: ["point-location-test", "line-segment-intersection"],
+    load: () =>
+      import("./geometry-primitives").then(
+        (module) => module.geometryPrimitiveProblems,
+      ),
+  },
+  {
+    ids: [
+      "hotel-queries",
+      "list-removals",
+      "prefix-sum-queries",
+      "pizzeria-queries",
+    ],
+    load: () =>
+      import("./range-wave-100").then((module) => module.wave100RangeProblems),
+  },
+  {
+    ids: [
+      "company-queries-ii",
+      "distance-queries",
+      "finding-a-centroid",
+      "subtree-queries",
+      "distinct-colors",
+    ],
+    load: () =>
+      import("./tree-wave-100").then((module) => module.wave100TreeProblems),
+  },
+  {
+    ids: [
+      "round-trip",
+      "planets-queries-i",
+      "planets-and-kingdoms",
+      "cycle-finding",
+    ],
+    load: () =>
+      import("./graph-wave-100-core").then(
+        (module) => module.wave100GraphCoreProblems,
+      ),
+  },
+  {
+    ids: ["flight-discount", "investigation", "high-score"],
+    load: () =>
+      import("./graph-wave-100-paths").then(
+        (module) => module.wave100GraphPathProblems,
+      ),
+  },
 ];
 
 export const lazyProblemIds = families.flatMap((family) => family.ids);

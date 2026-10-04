@@ -67,6 +67,8 @@ try {
     names[1],
     "--label",
     "com.algorithmatlas.scope=isolated-verification",
+    "-e",
+    "MP_SMTP_DISABLE_RDNS=true",
     "-p",
     `127.0.0.1:${smtpPort}:1025`,
     "-p",

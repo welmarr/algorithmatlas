@@ -10,7 +10,7 @@ import { entry, event, metadata } from "./extended-shared";
 
 type Edge = [number, number];
 
-function treeInput(raw: unknown) {
+export function treeInput(raw: unknown) {
   const object = readObject(raw),
     nodes = integer(object.nodes, "nodes", 1, 12),
     value = object.edges;
@@ -50,7 +50,7 @@ function adjacency(nodes: number, edges: Edge[]) {
   return adj;
 }
 
-function treeState(nodes: number, edges: Edge[]) {
+export function treeState(nodes: number, edges: Edge[]) {
   const state = emptyState(),
     adj = adjacency(nodes, edges),
     seen = new Set([1]),

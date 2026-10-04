@@ -13,6 +13,12 @@ import { rangeAlgorithmProblems } from "./range-algorithms";
 import { stringAlgorithmProblems } from "./string-algorithms";
 import { dynamicAdvancedProblems } from "./dynamic-advanced";
 import { dagRouteProblems } from "./dag-routes";
+import { advancedMathematicsProblems } from "./mathematics-advanced";
+import { geometryPrimitiveProblems } from "./geometry-primitives";
+import { wave100RangeProblems } from "./range-wave-100";
+import { wave100TreeProblems } from "./tree-wave-100";
+import { wave100GraphCoreProblems } from "./graph-wave-100-core";
+import { wave100GraphPathProblems } from "./graph-wave-100-paths";
 
 export type { ProblemEntry } from "@sim/problem-sdk";
 export const problems: ProblemEntry[] = [
@@ -30,6 +36,12 @@ export const problems: ProblemEntry[] = [
   ...stringAlgorithmProblems,
   ...dynamicAdvancedProblems,
   ...dagRouteProblems,
+  ...advancedMathematicsProblems,
+  ...geometryPrimitiveProblems,
+  ...wave100RangeProblems,
+  ...wave100TreeProblems,
+  ...wave100GraphCoreProblems,
+  ...wave100GraphPathProblems,
 ];
 export function getProblem(id: string): ProblemEntry | undefined {
   return problems.find((problem) => problem.metadata.id === id);
