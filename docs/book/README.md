@@ -2,6 +2,7 @@
 
 The CSES expansion includes a [graph algorithms case study](cses-graph-algorithms.md).
 Wave 75 adds a [tree, range, string, and advanced DP case study](cses-wave-75-families.md).
+Wave 100 adds a [math, geometry, dynamic range, tree, and graph case study](cses-wave-100-families.md).
 
 This book describes the implemented platform. The original build lots are followed by the [visual/account/Python milestone chapter](vnext-visual-auth-python.md) and the [CSES 50 dynamic programming and scans case study](cses-dp-and-scans.md). Start with the frozen prototype audit in `docs/audit`, then read `docs/progress/LOT-01.md` through `LOT-12.md` in order. Each lot records an implementation checkpoint. The separate case studies in `docs/problem-case-studies` follow complete problem paths.
 
