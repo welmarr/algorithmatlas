@@ -72,14 +72,23 @@ async function snapProblem(
 test("public routes, all registered problems and representative reasoning phases", async ({
   page,
 }) => {
-  test.setTimeout(240000);
+  test.setTimeout(900000);
   await page.goto("/");
   await capture(
     page,
     "00-overview",
     "home-catalog",
-    "Home and catalog share one route; inspect navigation, primary action and problem discovery.",
+    "Home live demo, featured paths, navigation and the catalog entry point.",
   );
+  for (const [route, name, description] of [
+    ["/problems", "problems-library", "Searchable 100-problem library."],
+    ["/account/register", "register", "Dedicated account registration."],
+    ["/account/reset", "reset-legacy", "Legacy password reset route."],
+    ["/account/verify", "verify-legacy", "Legacy email verification route."],
+  ]) {
+    await page.goto(route);
+    await capture(page, "01-public", name, description);
+  }
   for (const problem of problems) {
     const id = problem.metadata.id,
       index = representative(id);

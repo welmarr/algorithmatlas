@@ -9,7 +9,7 @@ export function ProblemsLibrary({
   exploredIds,
   initialConcept,
 }: {
-  entries: ProblemMetadata[];
+  entries: Array<ProblemMetadata & { algorithm: string }>;
   exploredIds: string[];
   initialConcept: string;
 }) {
@@ -56,6 +56,7 @@ export function ProblemsLibrary({
           csesSourceId(entry),
           entry.category,
           group,
+          entry.algorithm,
           ...entry.tags,
         ]
           .join(" ")

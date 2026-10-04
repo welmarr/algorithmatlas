@@ -126,7 +126,16 @@ try {
     "Fresh disposable PostgreSQL and Mailpit ready; no external email or AI.",
   );
   const mode = process.argv[2] ?? "full";
-  if (!["full", "public-runner", "prod-ops", "capture", "email"].includes(mode))
+  if (
+    ![
+      "full",
+      "public-runner",
+      "prod-ops",
+      "capture",
+      "browser",
+      "email",
+    ].includes(mode)
+  )
     throw new Error("Invalid verification mode");
   const args =
     mode === "email"

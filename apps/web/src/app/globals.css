@@ -1186,12 +1186,16 @@ select:focus-visible {
 .code-line {
   display: flex;
   gap: 15px;
-  white-space: pre;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
   font:
     11px/1.8 "DM Mono",
     monospace;
   color: #d8e6de;
   padding: 1px 16px;
+}
+.code-line code {
+  min-width: 0;
 }
 .code-line > span {
   color: #769388;

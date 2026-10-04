@@ -4,9 +4,13 @@ import { randomBytes } from "node:crypto";
 
 const mode = process.argv[2] ?? "fast";
 const full = mode === "full";
-const serviceGate = ["full", "public-runner", "prod-ops", "capture"].includes(
-  mode,
-);
+const serviceGate = [
+  "full",
+  "public-runner",
+  "prod-ops",
+  "capture",
+  "browser",
+].includes(mode);
 const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 
 function run(label, args, extraEnv = {}, command = pnpm) {
@@ -150,6 +154,20 @@ if (mode === "capture") {
     {},
     process.execPath,
   );
+  process.exit(0);
+}
+if (mode === "browser") {
+  run("production web build", ["build"]);
+  run("browser regression with disposable services", ["test:e2e"], {
+    E2E_DATABASE_URL: process.env.DATABASE_URL,
+  });
+  run(
+    "web Docker build",
+    ["build", "-t", "simulator-web:verified", "."],
+    {},
+    "docker",
+  );
+  console.info("Supplemental browser and web-image verification passed.");
   process.exit(0);
 }
 for (const command of ["format:check", "lint", "typecheck", "test", "build"]) {

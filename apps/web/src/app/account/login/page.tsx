@@ -66,7 +66,13 @@ export default async function LoginPage({
           </Link>
         </div>
       </section>
-      <Link href="/problems">Continue learning anonymously</Link>
+      <Link
+        href={
+          params.returnTo && returnTo !== "/dashboard" ? returnTo : "/problems"
+        }
+      >
+        Continue learning anonymously
+      </Link>
     </main>
   );
 }

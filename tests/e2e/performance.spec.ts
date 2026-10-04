@@ -31,3 +31,39 @@ test("measure bounded array player generation and browser seek", async ({
     `BROWSER_PERF ${JSON.stringify({ eventCount, generationAndRenderMs, seekAndRenderMs, ...rendered })}\n`,
   );
 });
+
+test("measure production Home and 100-entry Library interactions", async ({
+  page,
+}) => {
+  test.skip(process.env.PERF_BROWSER !== "1", "opt-in browser benchmark");
+  const homeStart = Date.now();
+  await page.goto("/");
+  await expect(
+    page.getByRole("region", { name: "Watch a greedy choice take shape" }),
+  ).toBeVisible();
+  const homeReadyMs = Date.now() - homeStart;
+
+  const libraryStart = Date.now();
+  await page.goto("/problems");
+  await expect(page.getByRole("status")).toContainText("100 of 100");
+  const libraryReadyMs = Date.now() - libraryStart;
+  const search = page.getByRole("searchbox", { name: "Search problems" });
+  const searches: Record<string, number> = {};
+  for (const [query, expected] of [
+    ["Dijkstra shortest-path DAG counting", "1 of 100"],
+    ["1094", "1 of 100"],
+    ["orientation", "2 of 100"],
+  ]) {
+    const start = Date.now();
+    await search.fill(query);
+    await expect(page.getByRole("status")).toContainText(expected);
+    searches[query] = Date.now() - start;
+  }
+  const clearStart = Date.now();
+  await page.getByRole("button", { name: "Clear filters" }).click();
+  await expect(page.getByRole("status")).toContainText("100 of 100");
+  const clearMs = Date.now() - clearStart;
+  process.stdout.write(
+    `LIBRARY_PERF ${JSON.stringify({ homeReadyMs, libraryReadyMs, searches, clearMs })}\n`,
+  );
+});

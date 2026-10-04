@@ -35,7 +35,7 @@ test("new representative problems regenerate their own traces from custom input"
   page,
 }) => {
   await page.goto("/");
-  await expect(page.locator(".problem-card")).toHaveCount(20);
+  await expect(page.locator(".problem-card")).toHaveCount(4);
   await page.goto("/problems/edit-distance");
   await page.waitForLoadState("networkidle");
   await page.getByLabel("JSON input").fill('{"first":"CAT","second":"CUT"}');
@@ -70,6 +70,7 @@ test("custom input regenerates a deterministic trace and built-in teacher explai
   await page.getByRole("button", { name: /Run simulation/ }).click();
   await page.getByRole("button", { name: "Technical events" }).click();
   await page.getByRole("button", { name: "Next step" }).click();
+  await page.locator("details.workbench-secondary summary").click();
   await page.getByRole("button", { name: "Explain current event" }).click();
   await expect(page.locator(".teacher-panel p")).toContainText("Read index 0");
   await page.getByRole("button", { name: "Hint for current step" }).click();
@@ -121,6 +122,7 @@ test("color and text distinguish reads from writes during replay", async ({
   await expect(page.locator(".step-action")).toContainText("READY");
   await page.getByRole("button", { name: "Technical events" }).click();
   await page.getByRole("button", { name: "Next step" }).click();
+  await page.locator("details.workbench-secondary summary").click();
   await expect(page.locator(".step-action.action-inspect")).toContainText(
     "READING",
   );
@@ -150,6 +152,7 @@ test("edited code and input change the executed trace", async ({ page }) => {
   await page.getByLabel("JSON input").fill('{"values":[8,2,5,1,7]}');
   await page.getByRole("button", { name: "Run simulation" }).click();
   await page.getByRole("button", { name: "Technical events" }).click();
+  await page.locator("details.workbench-secondary summary").click();
   const expectedWrites = [
     { values: [8, 8, 5, 1, 7], moves: "6", detail: "Index 1: 2 → 8" },
     { values: [8, 8, 8, 1, 7], moves: "9", detail: "Index 2: 5 → 8" },

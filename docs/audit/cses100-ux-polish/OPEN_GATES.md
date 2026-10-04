@@ -1,10 +1,9 @@
-# Open gates — interim checkpoint
+# Open release gates
 
-This directory is an in-progress audit, not a release audit. Current certified unique CSES count is **100/100** on `feature/cses100-ux-polish` at implementation SHA `b6508e5`; see `docs/progress/CSES-WAVE-100.md` for the checkpoint. `main` remains at pre-milestone SHA `ec610a1`.
+The feature branch has **100/100 certified official CSES problems**, but it is not releasable yet.
 
-1. Resolve the full dependency audit's high-severity `braces` advisory in the transitive development Next ESLint dependency. The advisory lists no patched version. The production audit passes; keep the all-dependency audit threshold unchanged. `pnpm verify:isolated` now reaches this exact gate after migrations, 347 service-backed tests, and production build.
-2. Complete public-runner and prod-ops regression gates, then rerun the full gate through browser and web-image stages. Disposable Mailpit now supplies its `220` greeting after its reverse DNS lookup was disabled.
-3. Complete 100-task visual, accessibility, mobile, reduced-motion, and performance reviews; capture authenticated/dashboard views and every major new visual family.
-4. Push a final candidate, inspect GitHub CI, reproduce from a fresh clone, and complete the final audit reports. Then and only then consider a non-force merge and annotated release tag.
+1. The mandatory all-dependency audit fails on a high-severity `braces <=3.0.3` stack-exhaustion advisory in `@next/eslint-plugin-next > fast-glob > micromatch > braces`. The advisory lists **no patched version**. The production-only audit passes. Keep the full audit threshold unchanged and resolve this dependency before release, or obtain an explicit decision on the material development-tool security tradeoff.
+2. Push a frozen candidate, run GitHub CI and reproduce the gates in a fresh clone with frozen dependencies and disposable services. Record the exact results in the audit.
+3. Merge to `main` by non-force merge and create/push an annotated release tag only after every mandatory gate passes. `main` remains at pre-milestone SHA `ec610a1443a58473936c6bdab00ef184a9a404e5`; no release tag exists for this milestone.
 
-The CI problem-certification job deliberately runs `pnpm problems:release`; its hard count gate now passes at 100. An earlier automatic approval review rejected changing that job to a softer push-time check; the strict gate remains intact.
+The browser regression and web-image build were verified separately from the strict full gate. That does not turn the full gate green.

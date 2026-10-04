@@ -8,7 +8,7 @@ test.skip(
 );
 
 test("capture the real anonymous UX wave", async ({ page }) => {
-  test.setTimeout(360000);
+  test.setTimeout(480000);
   const root = resolve("artifacts/visual-audit/cses100-ux-polish");
   mkdirSync(root, { recursive: true });
   const shots: Array<{ route: string; file: string; viewport: string }> = [];
@@ -40,6 +40,17 @@ test("capture the real anonymous UX wave", async ({ page }) => {
     ["/problems/minimizing-coins", "coin-dp"],
     ["/problems/grid-paths-i", "grid-dp"],
     ["/problems/array-description", "table-dp"],
+    ["/problems/exponentiation-ii", "nested-modular-power"],
+    ["/problems/point-location-test", "point-orientation"],
+    ["/problems/line-segment-intersection", "segment-intersection"],
+    ["/problems/hotel-queries", "hotel-segment-tree"],
+    ["/problems/prefix-sum-queries", "maximum-prefix"],
+    ["/problems/company-queries-ii", "lca"],
+    ["/problems/subtree-queries", "subtree-fenwick"],
+    ["/problems/planets-and-kingdoms", "strong-components"],
+    ["/problems/flight-discount", "discounted-shortest-path"],
+    ["/problems/cycle-finding", "negative-cycle"],
+    ["/problems/high-score", "high-score"],
     ["/lab", "lab"],
     ["/lab/compare", "compare"],
     ["/own-code", "own-code"],
@@ -76,6 +87,10 @@ test("capture the real anonymous UX wave", async ({ page }) => {
     ["/problems/course-schedule", "topological-sort"],
     ["/problems/forest-queries", "forest-prefix"],
     ["/problems/word-combinations", "word-combinations"],
+    ["/problems/point-location-test", "point-orientation"],
+    ["/problems/hotel-queries", "hotel-segment-tree"],
+    ["/problems/company-queries-ii", "lca"],
+    ["/problems/flight-discount", "discounted-shortest-path"],
   ] as const) {
     await page.goto(route);
     if (route.startsWith("/problems/")) {
@@ -92,5 +107,5 @@ test("capture the real anonymous UX wave", async ({ page }) => {
     resolve(root, "manifest.json"),
     JSON.stringify(shots, null, 2) + "\n",
   );
-  expect(shots).toHaveLength(39);
+  expect(shots).toHaveLength(54);
 });

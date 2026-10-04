@@ -72,7 +72,13 @@ export default async function RegisterPage({
           </Link>
         </div>
       </section>
-      <Link href="/problems">Continue learning anonymously</Link>
+      <Link
+        href={
+          params.returnTo && returnTo !== "/dashboard" ? returnTo : "/problems"
+        }
+      >
+        Continue learning anonymously
+      </Link>
     </main>
   );
 }

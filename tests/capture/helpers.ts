@@ -119,15 +119,24 @@ export async function seek(
   });
   await slider.fill(String(step));
   await expect(slider).toHaveValue(String(step));
-  await page
-    .getByRole("group", { name: "Reasoning phases" })
-    .getByRole("button", { name: phase, exact: true })
-    .click();
+  const entry = plans(id)[step];
+  const phaseIndex = entry.plan.phases.findIndex(
+    (item) => item.purpose === phase,
+  );
+  if (phaseIndex < 0) throw new Error(`Missing ${phase} phase for ${id}`);
+  if (
+    (await page.locator(".choreography-stage").getAttribute("data-phase")) !==
+    phase
+  )
+    await page
+      .getByRole("group", { name: "Reasoning phases" })
+      .getByRole("button")
+      .nth(phaseIndex)
+      .click();
   await expect(page.locator(".choreography-stage")).toHaveAttribute(
     "data-phase",
     phase,
   );
-  const entry = plans(id)[step];
   return {
     fixture: fixture(id),
     teachingStep: entry.step.id,
@@ -262,8 +271,8 @@ export function writeManifest(complete: boolean) {
       {
         routes: inventory,
         notes: [
-          "Home is also the catalog.",
-          "Sign-in and registration share /account.",
+          "Home has a live demo; /problems is the searchable catalog.",
+          "Sign-in, registration, recovery, reset and verification have dedicated routes.",
           "Error boundaries are states, not separate routes.",
           "There is no public administration route.",
         ],

@@ -1,0 +1,7 @@
+# Performance at 100 problems
+
+The production Next build generated **130 static pages**, including all 100 problem paths. Reported first-load JavaScript: Home **107 kB**, Library **108 kB**, selected problem route **133 kB**. The selected-family client import split reduced the problem-route figure from 219 kB at the earlier 75-task state. Home uses three compact demo frames; neither Home nor Library ships all runners to the client.
+
+An opt-in Chromium check against a local production build measured Home demo ready in **1,533 ms** on a cold first navigation and Library result count ready in **193 ms** on the subsequent navigation. UI-complete search interactions over 100 entries took **18 ms** for CSES ID `1094`, **23 ms** for the full algorithm phrase `Dijkstra shortest-path DAG counting`, and **17 ms** for `orientation`; clearing filters took **53 ms**. A 64-value array run generated/rendered 383 events in **131 ms**, and final seek/render took **45 ms**. These are single local observations, not percentile or network benchmarks. `tests/e2e/performance.spec.ts` prints the values on repeat runs.
+
+The Library filters and sorts 100 lightweight metadata records in the browser. The server registry still constructs all problem implementations for static generation, so server import cost and build memory should be profiled as the catalog grows toward 200. Build memory was not isolated from other local Node processes in this run.

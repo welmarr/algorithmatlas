@@ -24,6 +24,7 @@
     "verify:public-runner": "node scripts/verify-isolated.mjs public-runner",
     "email:worker": "node apps/email/worker.mjs",
     "verify:prod-ops": "node scripts/verify-isolated.mjs prod-ops",
+    "verify:browser": "node scripts/verify-isolated.mjs browser",
     "db:backup": "node scripts/pg-backup.mjs backup",
     "db:restore": "node scripts/pg-backup.mjs restore",
     "ops:status": "node scripts/operations.mjs status",

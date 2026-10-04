@@ -22,6 +22,8 @@ The exact `Graphs` category contains 17 entries; the separate `Shortest Path` an
 
 The existing 39-view anonymous visual harness passed at the 75-task checkpoint; final 100-task representative and authenticated captures remain to be completed. Reference snippets in some workspaces are visually compressed because several sources are a single line, despite being executable and correct. Final accessibility/color/mobile review remains open.
 
+Post-checkpoint update: the 100-task route smoke passed again, a 54-view anonymous matrix passed, and the full authenticated capture passed with 234 screenshots and no missing inventory route or page-level overflow. Long source lines now wrap in the code panel; see `docs/audit/cses100-ux-polish/VISUAL_REVIEW_REPORT.md` for the remaining geometry and code-format limitations.
+
 ## Performance, limitations, and cleanup
 
 At 100 tasks the production build reports Home **107 kB**, Library **108 kB**, and problem-route **133 kB** first-load JavaScript. The selected-family registry split kept the problem-route figure at the 75-task level; 100 route pages were statically generated. Search latency and build memory were not separately measured. The server still eagerly constructs the implementation registry, which is a candidate for a generated metadata manifest if future measurement warrants it.

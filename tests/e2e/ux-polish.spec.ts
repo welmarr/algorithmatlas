@@ -29,6 +29,12 @@ test("library searches metadata and filters without downloading a simulator", as
   await expect(page.locator(".library-row")).toHaveCount(1);
   await expect(page.locator(".library-row")).toContainText("Increasing Array");
   await page.getByRole("button", { name: "Clear filters" }).click();
+  await page
+    .getByRole("searchbox", { name: "Search problems" })
+    .fill("Dijkstra shortest-path DAG counting");
+  await expect(page.locator(".library-row")).toHaveCount(1);
+  await expect(page.locator(".library-row")).toContainText("Investigation");
+  await page.getByRole("button", { name: "Clear filters" }).click();
   await page.getByLabel("Concept or algorithm").selectOption({ label: "BFS" });
   await expect(page.locator(".library-row").first()).toBeVisible();
   await page.getByRole("button", { name: "Clear filters" }).click();

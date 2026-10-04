@@ -1,5 +1,6 @@
 import { databaseReady, dashboardData } from "@sim/persistence";
 import { problems } from "@sim/problems";
+import { certificationEvidence } from "@sim/problems/certification";
 import { ProblemsLibrary } from "../../components/ProblemsLibrary";
 import { currentUser } from "../../lib/auth";
 import "./problems.css";
@@ -25,7 +26,11 @@ export default async function ProblemsPage({
         an interactive workspace.
       </p>
       <ProblemsLibrary
-        entries={problems.map((problem) => problem.metadata)}
+        entries={problems.map((problem) => ({
+          ...problem.metadata,
+          algorithm:
+            certificationEvidence[problem.metadata.id]?.algorithm ?? "",
+        }))}
         exploredIds={exploredIds}
         initialConcept={params.concept ?? ""}
       />
