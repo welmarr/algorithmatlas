@@ -4,7 +4,7 @@ import { problems } from "@sim/problems";
 test("every registered CSES route opens a working simulator", async ({
   page,
 }) => {
-  test.setTimeout(240000);
+  test.setTimeout(600000);
   for (const problem of problems) {
     const response = await page.goto("/problems/" + problem.metadata.id);
     expect(response?.status(), problem.metadata.id).toBe(200);

@@ -1,6 +1,6 @@
 # CSES 200 roadmap
 
-Current verified wave: 100 unique certified CSES entries. The 200 target remains planning only; the 100-task release is still gated by the development dependency audit, final visual/service regressions, fresh clone, and remote CI.
+The 200-problem expansion is underway on `codex/cses200-animations`. The first foundation wave raises the machine-verified catalog from 100 to 111 unique certified CSES entries, with a hard release target of 200. The earlier 100-task branch remains held by the strict development dependency audit; no 200-task release is claimed.
 
 ## Candidate waves
 
@@ -12,7 +12,7 @@ Current verified wave: 100 unique certified CSES entries. The 200 target remains
 | 100 → 150 | CSES breadth in remaining categories                                            | Reuse existing family strategies and add oracles                                       |
 | 150 → 200 | Advanced variants and hard graph/range tasks                                    | Profile large traces, virtualize long timelines, incremental browser smoke             |
 
-The next content gap is 100 additional genuinely certified problems. Sorting/searching (10 exact-category entries), string variants (5), and advanced graph/geometry problems remain useful candidate areas. The current 100 includes 17 exact `Graphs` entries plus graph-oriented `Shortest Path` and `Depth-First Search` entries, 10 `Trees`, 10 `Range Queries`, 8 `Mathematics`, and 3 `Geometry`. Selection must follow official IDs and a correctness oracle; do not fill quotas with duplicates or metadata-only pages.
+The remaining content gap is 89 genuinely certified problems. The foundation wave adds four introductory and seven sorting/searching tasks. String variants and advanced graph/geometry problems remain useful candidate areas. Selection must follow official IDs and an independent correctness oracle; do not fill quotas with duplicates or metadata-only pages.
 
 ## Bottlenecks
 

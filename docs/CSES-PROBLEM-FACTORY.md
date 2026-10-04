@@ -16,9 +16,9 @@ The catalog is a set of executable `ProblemDefinition` entries, not a list of li
 
 ## Certificate rules
 
-`tests/problem-certification.test.ts` audits unique task IDs, metadata, bounds, trace and Teaching Steps, repeatability, replayed final state, renderer support, example execution, and choreography for every step. `pnpm problems:status` runs the complete evidence suite before publishing `docs/progress/cses-status.json` and `docs/CSES-CATALOG.md`. `pnpm problems:verify` also reruns every registered route and its example as custom input. `pnpm problems:release` adds the hard minimum of 100 certified unique CSES tasks.
+`tests/problem-certification.test.ts` audits unique task IDs, metadata, bounds, trace and Teaching Steps, repeatability, replayed final state, renderer support, example execution, and choreography for every step. `pnpm problems:status` runs the complete evidence suite before publishing `docs/progress/cses-status.json` and `docs/CSES-CATALOG.md`. `pnpm problems:verify` also reruns every registered route and its example as custom input. On the active CSES 200 branch, `pnpm problems:release` requires at least 200 certified unique CSES tasks.
 
-Certificate evidence points to source tests and the all-route browser smoke. Contributors must add meaningful assertions at those locations; a file path alone is not an oracle. The current checker verifies evidence file existence but does not statically prove that a named test covers every claim. Review each new test and its failure behavior.
+Certificate evidence points to source tests and the all-route browser smoke. Contributors must add meaningful assertions at those locations; a file path alone is not an oracle. The current checker verifies evidence file existence but does not statically prove that a named test covers every claim. Review each new test and its failure behavior. The active `codex/cses200-animations` release target is 200 certified unique tasks; earlier 100-task audit documents remain historical.
 
 ## Architecture and performance
 
@@ -28,4 +28,4 @@ Home renders one compact server-computed demo trace; the client receives only th
 
 ## Release sequence
 
-For a wave: implement → write independent evidence → run fast and problem gates → inspect representative visuals → update catalog and report → commit → push. The final release additionally needs full operations gates, dependency audits, a fresh-clone reproduction, remote CI, and the 100-problem count. Never merge a wave to `main` merely because its own tests pass.
+For a wave: implement → write independent evidence → run fast and problem gates → inspect representative visuals → update catalog and report → commit → push. The final 200-task release additionally needs full operations gates, dependency audits, a fresh-clone reproduction, remote CI, and the hard 200-problem count. Never merge a wave to `main` merely because its own tests pass.

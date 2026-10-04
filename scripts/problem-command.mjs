@@ -25,6 +25,7 @@ const files = [
   "tests/range-wave-100.test.ts",
   "tests/tree-wave-100.test.ts",
   "tests/graph-wave-100.test.ts",
+  "tests/wave-200-foundations.test.ts",
 ];
 const result = spawnSync(pnpm, ["exec", "vitest", "run", ...files], {
   stdio: "inherit",

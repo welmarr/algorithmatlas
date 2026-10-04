@@ -232,6 +232,25 @@ const families: Family[] = [
         (module) => module.wave100GraphPathProblems,
       ),
   },
+  {
+    ids: [
+      "palindrome-reorder",
+      "gray-code",
+      "creating-strings",
+      "apple-division",
+      "apartments",
+      "ferris-wheel",
+      "restaurant-customers",
+      "movie-festival",
+      "towers",
+      "tasks-and-deadlines",
+      "reading-books",
+    ],
+    load: () =>
+      import("./wave-200-foundations").then(
+        (module) => module.wave200FoundationProblems,
+      ),
+  },
 ];
 
 export const lazyProblemIds = families.flatMap((family) => family.ids);

@@ -161,7 +161,7 @@ describe("CSES problem certification", () => {
       uniqueRegistered: new Set(statuses.map((item) => item.sourceId)).size,
       certified: certified.length,
       partial: statuses.filter((item) => item.status === "PARTIAL").length,
-      target: 100,
+      target: 200,
       byCategory: counts(statuses, "category"),
       byAlgorithm: counts(statuses, "algorithm"),
       byRenderer: counts(statuses, "renderer"),
@@ -204,8 +204,8 @@ describe("CSES problem certification", () => {
     expect(statuses).toHaveLength(problems.length);
     expect(report.failed).toEqual([]);
     if (process.env.PROBLEMS_MODE === "release")
-      expect(certified.length, "CSES 100 release gate").toBeGreaterThanOrEqual(
-        100,
+      expect(certified.length, "CSES 200 release gate").toBeGreaterThanOrEqual(
+        200,
       );
   });
 
