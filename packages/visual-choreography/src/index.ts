@@ -17,6 +17,7 @@ export type Strategy =
   | "bfs"
   | "dfs"
   | "shortest-path"
+  | "topological-sort"
   | "tree"
   | "dp"
   | "range"
@@ -81,10 +82,11 @@ export function strategyFor(
   if (has("shoelace formula", "cross product", "geometry")) return "geometry";
   if (has("backtracking", "recursion")) return "backtracking";
   if (has("dijkstra", "weighted graph")) return "shortest-path";
+  if (has("topological sort")) return "topological-sort";
   if (has("fenwick tree")) return "fenwick";
   if (has("disjoint set union", "dsu", "union-find")) return "dsu";
   if (has("prefix sums", "range queries")) return "range";
-  if (has("kmp", "prefix function")) return "strings";
+  if (has("kmp", "prefix function", "z-function")) return "strings";
   if (has("binary search", "monotone predicate")) return "binary-search";
   if (has("sliding window")) return "sliding-window";
   if (has("two pointers")) return "two-pointers";
@@ -265,7 +267,11 @@ export function createChoreography(
   if (hint?.range) relations.push({ type: "SHOW_RANGE", range: hint.range });
   if (hint?.alignment)
     relations.push({ type: "SHOW_ALIGNMENT", alignment: hint.alignment });
-  if (["bfs", "dfs", "shortest-path", "tree"].includes(strategy)) {
+  if (
+    ["bfs", "dfs", "shortest-path", "topological-sort", "tree"].includes(
+      strategy,
+    )
+  ) {
     for (const [collection, items] of Object.entries(after.collections))
       relations.push({ type: "SHOW_FRONTIER", collection, items });
   }

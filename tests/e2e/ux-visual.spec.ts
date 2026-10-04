@@ -21,6 +21,15 @@ test("capture the real anonymous UX wave", async ({ page }) => {
     ["/account/verify-email", "verify-email"],
     ["/problems/increasing-array", "array"],
     ["/problems/message-route", "graph"],
+    ["/problems/course-schedule", "topological-sort"],
+    ["/problems/road-reparation", "mst"],
+    ["/problems/shortest-routes-ii", "all-pairs-shortest-path"],
+    ["/problems/company-queries-i", "binary-lifting"],
+    ["/problems/forest-queries", "forest-prefix"],
+    ["/problems/string-functions", "string-functions"],
+    ["/problems/word-combinations", "word-combinations"],
+    ["/problems/elevator-rides", "bitmask-dp"],
+    ["/problems/counting-towers", "tower-dp"],
     ["/problems/edit-distance", "dp"],
     ["/problems/dynamic-range-sum", "range"],
     ["/problems/tree-diameter", "tree"],
@@ -41,6 +50,15 @@ test("capture the real anonymous UX wave", async ({ page }) => {
     if (route.startsWith("/problems/")) {
       await expect(page.locator(".choreography-stage")).toBeVisible();
       await page.getByRole("button", { name: "Next step" }).click();
+      if (
+        [
+          "mst",
+          "all-pairs-shortest-path",
+          "forest-prefix",
+          "word-combinations",
+        ].includes(name)
+      )
+        await page.getByRole("button", { name: "Next step" }).click();
     }
     const file = "desktop-" + name + ".png";
     await page.screenshot({ path: resolve(root, file), fullPage: true });
@@ -54,11 +72,17 @@ test("capture the real anonymous UX wave", async ({ page }) => {
     ["/account/login", "login"],
     ["/problems/increasing-array", "array"],
     ["/problems/grid-paths-i", "grid-dp"],
+    ["/problems/road-reparation", "mst"],
+    ["/problems/course-schedule", "topological-sort"],
+    ["/problems/forest-queries", "forest-prefix"],
+    ["/problems/word-combinations", "word-combinations"],
   ] as const) {
     await page.goto(route);
     if (route.startsWith("/problems/")) {
       await expect(page.locator(".choreography-stage")).toBeVisible();
       await page.getByRole("button", { name: "Next step" }).click();
+      if (["mst", "forest-prefix", "word-combinations"].includes(name))
+        await page.getByRole("button", { name: "Next step" }).click();
     }
     const file = "mobile-" + name + ".png";
     await page.screenshot({ path: resolve(root, file), fullPage: true });
@@ -68,5 +92,5 @@ test("capture the real anonymous UX wave", async ({ page }) => {
     resolve(root, "manifest.json"),
     JSON.stringify(shots, null, 2) + "\n",
   );
-  expect(shots).toHaveLength(26);
+  expect(shots).toHaveLength(39);
 });

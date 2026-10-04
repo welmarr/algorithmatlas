@@ -12,6 +12,13 @@ const files = [
   "tests/introductory-problems.test.ts",
   "tests/sorting-searching-problems.test.ts",
   "tests/dynamic-programming-problems.test.ts",
+  "tests/graph-foundations.test.ts",
+  "tests/graph-algorithms.test.ts",
+  "tests/tree-algorithms.test.ts",
+  "tests/range-algorithms.test.ts",
+  "tests/string-algorithms.test.ts",
+  "tests/dynamic-advanced.test.ts",
+  "tests/dag-routes.test.ts",
 ];
 const result = spawnSync(pnpm, ["exec", "vitest", "run", ...files], {
   stdio: "inherit",

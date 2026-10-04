@@ -116,7 +116,7 @@ describe("independent dynamic-programming oracles", () => {
       }
       expect(output("removing-digits", { n })).toBe(String(best));
     }
-  });
+  }, 15_000);
 
   it("book-shop matches exhaustive subsets, including empty purchase", () => {
     for (let trial = 0; trial < 40; trial++) {

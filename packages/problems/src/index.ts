@@ -22,6 +22,13 @@ import { mixedProblems } from "./extended-mixed";
 import { introductoryProblems } from "./introductory";
 import { sortingSearchingProblems } from "./sorting-searching";
 import { dynamicProgrammingProblems } from "./dynamic-programming";
+import { graphFoundationProblems } from "./graph-foundations";
+import { graphAlgorithmProblems } from "./graph-algorithms";
+import { treeAlgorithmProblems } from "./tree-algorithms";
+import { rangeAlgorithmProblems } from "./range-algorithms";
+import { stringAlgorithmProblems } from "./string-algorithms";
+import { dynamicAdvancedProblems } from "./dynamic-advanced";
+import { dagRouteProblems } from "./dag-routes";
 
 function meta(
   input: Omit<
@@ -799,6 +806,13 @@ export const problems: ProblemEntry[] = [
   ...introductoryProblems,
   ...sortingSearchingProblems,
   ...dynamicProgrammingProblems,
+  ...graphFoundationProblems,
+  ...graphAlgorithmProblems,
+  ...treeAlgorithmProblems,
+  ...rangeAlgorithmProblems,
+  ...stringAlgorithmProblems,
+  ...dynamicAdvancedProblems,
+  ...dagRouteProblems,
 ];
 export function getProblem(id: string): ProblemEntry | undefined {
   return problems.find((problem) => problem.metadata.id === id);
