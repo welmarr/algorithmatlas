@@ -20,6 +20,8 @@ import { wave100TreeProblems } from "./tree-wave-100";
 import { wave100GraphCoreProblems } from "./graph-wave-100-core";
 import { wave100GraphPathProblems } from "./graph-wave-100-paths";
 import { wave200FoundationProblems } from "./wave-200-foundations";
+import { wave200DpSearchProblems } from "./wave-200-dp-search";
+import { wave200SortingIIProblems } from "./wave-200-sorting-ii";
 
 export type { ProblemEntry } from "@sim/problem-sdk";
 export const problems: ProblemEntry[] = [
@@ -44,6 +46,8 @@ export const problems: ProblemEntry[] = [
   ...wave100GraphCoreProblems,
   ...wave100GraphPathProblems,
   ...wave200FoundationProblems,
+  ...wave200DpSearchProblems,
+  ...wave200SortingIIProblems,
 ];
 export function getProblem(id: string): ProblemEntry | undefined {
   return problems.find((problem) => problem.metadata.id === id);

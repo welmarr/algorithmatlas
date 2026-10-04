@@ -251,6 +251,32 @@ const families: Family[] = [
         (module) => module.wave200FoundationProblems,
       ),
   },
+  {
+    ids: [
+      "digit-queries",
+      "array-division",
+      "removal-game",
+      "longest-common-subsequence",
+      "josephus-problem-i",
+    ],
+    load: () =>
+      import("./wave-200-dp-search").then(
+        (module) => module.wave200DpSearchProblems,
+      ),
+  },
+  {
+    ids: [
+      "concert-tickets",
+      "traffic-lights",
+      "sum-of-three-values",
+      "sum-of-four-values",
+      "maximum-subarray-sum-ii",
+    ],
+    load: () =>
+      import("./wave-200-sorting-ii").then(
+        (module) => module.wave200SortingIIProblems,
+      ),
+  },
 ];
 
 export const lazyProblemIds = families.flatMap((family) => family.ids);
