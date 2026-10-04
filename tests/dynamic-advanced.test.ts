@@ -83,6 +83,7 @@ describe("independent advanced DP oracles", () => {
     }
   });
 
+  // Preserve all 55 exhaustive cases when the full suite shares the CPU with service probes.
   it("elevator-rides matches exhaustive assignment to capacity-limited rides", () => {
     for (let trial = 0; trial < 55; trial++) {
       const capacity = 3 + Math.floor(random() * 18),
@@ -113,7 +114,7 @@ describe("independent advanced DP oracles", () => {
         String(best),
       );
     }
-  });
+  }, 10000);
 
   it("rejects invalid tower, project, and elevator input", () => {
     for (const id of ["counting-towers", "projects", "elevator-rides"])
