@@ -1,8 +1,8 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getProblem, problems } from "@sim/problems";
-import type { ProblemRun } from "@sim/problem-sdk";
+import type { ProblemMetadata } from "@sim/domain";
+import type { ProblemEntry, ProblemRun } from "@sim/problem-sdk";
 import { seekTeachingStep, teachingStepAtPosition } from "@sim/simulation-core";
 import {
   localTeacher,
@@ -25,26 +25,14 @@ import {
   type CollectionKind,
 } from "./StructureVisuals";
 
-export function ProblemWorkspace({ problemId }: { problemId: string }) {
-  const problem = getProblem(problemId)!;
-  const related = problems
-    .filter((candidate) => candidate.metadata.id !== problemId)
-    .map((candidate) => ({
-      candidate,
-      score:
-        candidate.metadata.tags.filter((tag) =>
-          problem.metadata.tags.includes(tag),
-        ).length *
-          2 +
-        Number(candidate.metadata.category === problem.metadata.category),
-    }))
-    .filter((item) => item.score > 0)
-    .sort(
-      (a, b) =>
-        b.score - a.score ||
-        a.candidate.metadata.title.localeCompare(b.candidate.metadata.title),
-    )
-    .slice(0, 3);
+export function ProblemWorkspace({
+  problem,
+  related,
+}: {
+  problem: ProblemEntry;
+  related: ProblemMetadata[];
+}) {
+  const problemId = problem.metadata.id;
   const [mode, setMode] = useState<"learn" | "simulate">("simulate");
   const [playbackMode, setPlaybackMode] = useState<"learning" | "technical">(
     "learning",
@@ -1002,13 +990,10 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
           <div className="eyebrow">KEEP EXPLORING</div>
           <h2 id="related-title">Related problems</h2>
           <div>
-            {related.map(({ candidate }) => (
-              <Link
-                key={candidate.metadata.id}
-                href={"/problems/" + candidate.metadata.id}
-              >
-                <strong>{candidate.metadata.title}</strong>
-                <span>{candidate.metadata.tags.slice(0, 2).join(" · ")}</span>
+            {related.map((candidate) => (
+              <Link key={candidate.id} href={"/problems/" + candidate.id}>
+                <strong>{candidate.title}</strong>
+                <span>{candidate.tags.slice(0, 2).join(" · ")}</span>
                 <span aria-hidden="true">↗</span>
               </Link>
             ))}

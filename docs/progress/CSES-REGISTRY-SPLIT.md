@@ -1,0 +1,7 @@
+# Selected-runner registry checkpoint
+
+After the 75-task wave, `ProblemWorkspace` no longer imports the complete `@sim/problems` registry in the browser. The five original definitions moved into `packages/problems/src/core.ts`. The server registry in `index.ts` still enumerates all definitions for metadata and static path generation. The browser imports `lazy.ts`, which maps each ID to one family module and loads that module when its problem page opens. The server passes three related-problem metadata entries to the client; it does not serialize executable definitions.
+
+`tests/lazy-problem-registry.test.ts` asserts that every server-registered ID appears exactly once in the lazy map and resolves to the same official CSES source. The problem certification command includes this test, so a newly registered task cannot silently omit its client import mapping. The full fast gate passed with 260 tests, and the production build retained 105 static pages. Reported first-load JS for `/problems/[id]` fell from **219 kB to 133 kB** at 75 tasks; Home remained 107 kB and Library 108 kB. The all-route browser gate passed for all 75 routes and reran each published example after this change.
+
+The remaining architecture cost is server-side eager registry construction and the size of individual family chunks. A generated metadata manifest and smaller family splits can address those only if measurements at 100–200 show a real problem. This refactor leaves the simulation core, reducer, SDK, renderers, and deterministic problem definitions unchanged.

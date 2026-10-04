@@ -11,7 +11,7 @@ The catalog is a set of executable `ProblemDefinition` entries, not a list of li
 5. Implement `trace(input)` as deterministic events over `SimulationState`. Use stable IDs (`array:i`, `graph:node:x`, `dp:i`, etc.), valid semantic events, and a result derived from the same computation. State changes belong in semantic events; React and renderers must never calculate the answer.
 6. Provide clear Teaching Steps. The SDK can derive them from events; supply a custom mapping when the default grouping obscures a key decision. For every step, `createChoreography` must produce a valid plan. Select a family strategy through tags and renderer. Static equations or variable changes are appropriate when movement would mislead.
 7. Add known fixtures, handwritten edge cases, and an independent oracle or property test. Use brute force for small bounds, exhaustive enumeration for constructions, or a deliberately different algorithm. Seed random tests. Check output **semantics** for tasks with multiple valid answers.
-8. Register the `ProblemEntry` once in `packages/problems/src/index.ts`, then add its official ID, algorithm, strategy, oracle, edge-case, and browser evidence to `certification.ts`.
+8. Register the `ProblemEntry` once in `packages/problems/src/index.ts` and map its ID to its family import in `packages/problems/src/lazy.ts`. The lazy-registry test must cover every catalog ID exactly once. Then add its official ID, algorithm, strategy, oracle, edge-case, and browser evidence to `certification.ts`.
 9. Run `pnpm problems:status`, `pnpm problems:verify`, and `pnpm verify`. Inspect the generated certificate in `artifacts/problem-certificates/<id>.json` and the route in a real browser. Do not mark an entry certified when any evidence fails.
 
 ## Certificate rules
@@ -24,7 +24,7 @@ Certificate evidence points to source tests and the all-route browser smoke. Con
 
 The simulation core accepts semantic events and produces replay state. The renderer observes that state; choreography observes a Teaching Step and never mutates canonical state. Keep algorithm-specific branches inside problem definitions or reusable family primitives. Prefer one family helper over many problem-ID branches in generic layers.
 
-Home renders one compact server-computed demo trace; the client receives only the selected frames. `/problems` passes only metadata into its client search/filter component. The server currently imports the full registry for both routes; this is acceptable at 30 entries but should be split into lightweight metadata and lazy implementation loaders before the catalog approaches 100–200. Watch build time, server import cost, Home and Library JS, and the workbench bundle after each wave.
+Home renders one compact server-computed demo trace; the client receives only the selected frames. `/problems` passes only metadata into its client search/filter component. The server still imports the full registry for these routes and static problem path generation. The client workbench imports a lightweight ID-to-family map and dynamically loads only the selected family through `ProblemWorkspaceLoader`; the five original problems live in `core.ts`. `tests/lazy-problem-registry.test.ts` checks map completeness and uniqueness against the server registry. Add new IDs to both the server registry and the lazy map. The route's initial JS dropped from 219 kB to 133 kB at 75 tasks; watch selected-family chunk size, build time, server import cost, Home and Library JS, and search latency as the catalog grows.
 
 ## Release sequence
 

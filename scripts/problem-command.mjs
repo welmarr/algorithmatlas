@@ -7,6 +7,7 @@ if (!["status", "verify", "release"].includes(mode))
 const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 const files = [
   "tests/problem-certification.test.ts",
+  "tests/lazy-problem-registry.test.ts",
   "tests/representative-problems.test.ts",
   "tests/correctness.test.ts",
   "tests/introductory-problems.test.ts",
