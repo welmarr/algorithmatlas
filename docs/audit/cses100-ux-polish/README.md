@@ -1,8 +1,8 @@
 # CSES 100 and UX polish audit
 
-This audit records the `feature/cses100-ux-polish` candidate against the attached milestone prompt. The pre-milestone main SHA is `ec610a1443a58473936c6bdab00ef184a9a404e5`, preserved remotely as branch `archive/pre-cses100-ux-polish` and annotated tag `pre-cses100-ux-polish`. The milestone adds 80 verified official CSES tasks, reaching **100 registered and 100 certified** with zero partial/failed entries.
+This audit records the `feature/cses100-ux-polish` code candidate at `442f9634caece565542fbb7918b0d7fc414babc5` against the attached milestone prompt. The pre-milestone main SHA is `ec610a1443a58473936c6bdab00ef184a9a404e5`, preserved remotely as branch `archive/pre-cses100-ux-polish` and annotated tag `pre-cses100-ux-polish`. The milestone adds 80 verified official CSES tasks, reaching **100 registered and 100 certified** with zero partial/failed entries.
 
-The UX work separates account flows, adds a restrained semantic palette and real Home demo, scales the Library to 100 entries, improves the Dashboard and workbench, and checks mobile/reduced-motion views. The release branch remains open because the all-dependency security audit fails on a development-tool transitive advisory with no patched version. `main` is unchanged and there is no `cses100-ux-v1` tag.
+The UX work separates account flows, adds a restrained semantic palette and real Home demo, scales the Library to 100 entries, improves the Dashboard and workbench, and checks mobile/reduced-motion views. The release branch remains open because the all-dependency security audit fails on a development-tool transitive advisory with no patched version in local, clean-clone and CI runs. `main` is unchanged and there is no `cses100-ux-v1` tag.
 
 ## Audit files
 
