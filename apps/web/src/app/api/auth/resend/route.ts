@@ -22,11 +22,15 @@ export async function POST(request: Request) {
     await accountQuota(request, "resend", email, 3, 3600);
     const user = await findUserByEmail(email);
     if (user && !user.emailVerified) await sendAccountLink(user, "verify");
-    return accountReply(request, "/account?notice=verification-sent", {
-      ok: true,
-      message: "If verification is needed, a link has been sent.",
-    });
+    return accountReply(
+      request,
+      "/account/verify-email?notice=verification-sent",
+      {
+        ok: true,
+        message: "If verification is needed, a link has been sent.",
+      },
+    );
   } catch (error) {
-    return accountFailure(request, error);
+    return accountFailure(request, error, "/account/verify-email");
   }
 }

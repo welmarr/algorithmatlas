@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     const token = await newSession(user.id, user.passwordHash);
     const response = accountReply(
       request,
-      "/account?notice=verification-sent&returnTo=" +
+      "/account/verify-email?notice=verification-sent&returnTo=" +
         encodeURIComponent(safeReturn(form.get("returnTo"))),
       { ok: true, emailVerified: false },
       201,
@@ -67,6 +67,6 @@ export async function POST(request: Request) {
       error.code === "23505"
     )
       return accountFailure(request, new AuthError("AUTH_ACCOUNT_EXISTS", 409));
-    return accountFailure(request, error);
+    return accountFailure(request, error, "/account/register");
   }
 }

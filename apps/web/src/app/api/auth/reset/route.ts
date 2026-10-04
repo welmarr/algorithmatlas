@@ -38,15 +38,19 @@ export async function POST(request: Request) {
       ))
     )
       throw new AuthError("AUTH_TOKEN_INVALID");
-    const response = accountReply(request, "/account?notice=password-reset", {
-      ok: true,
-    });
+    const response = accountReply(
+      request,
+      "/account/login?notice=password-reset",
+      {
+        ok: true,
+      },
+    );
     response.cookies.set(SESSION_COOKIE, "", {
       ...sessionCookieOptions(),
       maxAge: 0,
     });
     return response;
   } catch (error) {
-    return accountFailure(request, error);
+    return accountFailure(request, error, "/account/reset-password");
   }
 }

@@ -19,6 +19,8 @@ export type AuthCode =
   | "AUTH_ACCOUNT_EXISTS"
   | "AUTH_EMAIL_UNVERIFIED"
   | "AUTH_TOKEN_INVALID"
+  | "AUTH_TOKEN_EXPIRED"
+  | "AUTH_TOKEN_ALREADY_USED"
   | "AUTH_RATE_LIMITED"
   | "AUTH_ORIGIN_REJECTED"
   | "AUTH_STORAGE_UNAVAILABLE"
@@ -40,8 +42,11 @@ export const authMessages: Record<AuthCode, string> = {
   AUTH_ACCOUNT_EXISTS:
     "An account already uses that email. Sign in or reset your password.",
   AUTH_EMAIL_UNVERIFIED: "Verify your email before saving your work.",
-  AUTH_TOKEN_INVALID:
-    "This link is invalid, expired or already used. Request a new link.",
+  AUTH_TOKEN_INVALID: "This link could not be verified. Request a new link.",
+  AUTH_TOKEN_EXPIRED:
+    "This link has expired. Request a new verification email.",
+  AUTH_TOKEN_ALREADY_USED:
+    "This link was already used. Sign in or request a new link.",
   AUTH_RATE_LIMITED: "Too many attempts. Please try again later.",
   AUTH_ORIGIN_REJECTED:
     "This request could not be verified. Return to the account page.",

@@ -172,7 +172,9 @@ export class EmailStore {
     );
     const row = { id: randomUUID(), user_id: user.id, purpose };
     const url = new URL(
-      purpose === "verify" ? "/account/verify" : "/account/reset",
+      purpose === "verify"
+        ? "/account/verify-email"
+        : "/account/reset-password",
       this.origin,
     );
     url.hash = new URLSearchParams({ token }).toString();
@@ -255,7 +257,12 @@ export class EmailStore {
       const parsed = new URL(url);
       if (
         parsed.origin !== this.origin ||
-        !["/account/verify", "/account/reset"].includes(parsed.pathname)
+        ![
+          "/account/verify",
+          "/account/reset",
+          "/account/verify-email",
+          "/account/reset-password",
+        ].includes(parsed.pathname)
       )
         throw new Error("EMAIL_PAYLOAD_INVALID");
       const { from } = smtpConfig(this.env);
@@ -297,6 +304,9 @@ export class EmailStore {
           id: row.id,
           status: terminal ? "failed" : "retry",
           attempt: row.attempt_count,
+          ...(this.env.DISPOSABLE_VERIFICATION === "1"
+            ? { errorCode: error?.code ?? error?.name ?? "UNKNOWN" }
+            : {}),
         }),
       );
       return terminal ? "failed" : "retry";

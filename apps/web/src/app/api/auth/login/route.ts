@@ -44,6 +44,6 @@ export async function POST(request: Request) {
     return response;
   } catch (error) {
     logSecurityEvent("login", "rejected");
-    return accountFailure(request, error);
+    return accountFailure(request, error, "/account/login");
   }
 }

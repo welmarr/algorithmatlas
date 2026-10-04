@@ -40,7 +40,7 @@ test("account inspection and password-confirmed deletion revoke sessions and sav
     await form.getByRole("button").click();
     await expect(page.getByRole("status")).toContainText("deleted");
     await page.goto("/account/settings");
-    await expect(page).toHaveURL(/\/account$/);
+    await expect(page).toHaveURL(/\/account\/login$/);
     expect(
       (
         await databasePool().query(

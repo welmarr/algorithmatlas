@@ -239,6 +239,21 @@ export async function consumeAccountToken(
   }
 }
 
+/** Safe status only; never return the account or token to the caller. */
+export async function accountTokenStatus(
+  hash: string,
+  purpose: AccountTokenPurpose,
+): Promise<"pending" | "expired" | "already-used" | "invalid"> {
+  const result = await databasePool().query(
+    "SELECT consumed_at IS NOT NULL AS used, expires_at <= now() AS expired FROM account_tokens WHERE token_hash = $1 AND purpose = $2",
+    [hash, purpose],
+  );
+  if (!result.rowCount) return "invalid";
+  if (result.rows[0].used) return "already-used";
+  if (result.rows[0].expired) return "expired";
+  return "pending";
+}
+
 export async function deleteSession(tokenHash: string): Promise<void> {
   await databasePool().query("DELETE FROM sessions WHERE token_hash = $1", [
     tokenHash,
@@ -428,6 +443,7 @@ export async function setLearningProgress(
 
 export interface DashboardData {
   problemsExplored: number;
+  exploredProblemIds: string[];
   simulationsCompleted: number;
   recentRuns: Array<{
     id: string;
@@ -446,9 +462,13 @@ export interface DashboardData {
 }
 
 export async function dashboardData(userId: string): Promise<DashboardData> {
-  const [summary, runs, inputs, learning] = await Promise.all([
+  const [summary, explored, runs, inputs, learning] = await Promise.all([
     databasePool().query(
       "SELECT count(*)::int AS problems_explored, coalesce(sum(simulation_count), 0)::int AS simulations_completed FROM problem_progress WHERE user_id = $1",
+      [userId],
+    ),
+    databasePool().query(
+      "SELECT problem_id FROM problem_progress WHERE user_id = $1 ORDER BY coalesce(last_run_at, explored_at) DESC",
       [userId],
     ),
     databasePool().query(
@@ -466,6 +486,7 @@ export async function dashboardData(userId: string): Promise<DashboardData> {
   ]);
   return {
     problemsExplored: summary.rows[0].problems_explored,
+    exploredProblemIds: explored.rows.map((row) => row.problem_id),
     simulationsCompleted: summary.rows[0].simulations_completed,
     recentRuns: runs.rows.map((row) => ({
       id: row.id,

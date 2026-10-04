@@ -13,10 +13,10 @@ function random(seed: number): () => number {
 }
 
 describe("representative problem suite", () => {
-  it("has twenty unique, sourced, executable problems with learning steps", () => {
-    expect(problems).toHaveLength(20);
+  it("has unique, sourced, executable problems with learning steps", () => {
+    expect(problems.length).toBeGreaterThanOrEqual(20);
     expect(new Set(problems.map((problem) => problem.metadata.id)).size).toBe(
-      20,
+      problems.length,
     );
     for (const problem of problems) {
       expect(problem.metadata.source.url).toMatch(

@@ -32,7 +32,7 @@ test("verified auth, reset, private ownership, abuse limits and anonymous draft 
       .locator('a[href="/account?returnTo=/problems/increasing-array"]')
       .click();
     await page
-      .getByRole("link", { name: "Continue learning", exact: true })
+      .getByRole("link", { name: "Continue learning anonymously", exact: true })
       .click();
     await expect(page.getByLabel("JSON input")).toHaveValue(
       '{"values":[8,2,5,1,7]}',

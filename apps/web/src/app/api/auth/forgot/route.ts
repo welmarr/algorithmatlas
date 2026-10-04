@@ -28,12 +28,12 @@ export async function POST(request: Request) {
     await new Promise((resolve) =>
       setTimeout(resolve, Math.max(0, 750 - (Date.now() - started))),
     );
-    return accountReply(request, "/account/forgot?notice=sent", {
+    return accountReply(request, "/account/forgot-password?notice=sent", {
       ok: true,
       message:
         "If an account matches that email, a password reset link has been sent.",
     });
   } catch (error) {
-    return accountFailure(request, error, "/account/forgot");
+    return accountFailure(request, error, "/account/forgot-password");
   }
 }

@@ -21,7 +21,7 @@ export default function RootLayout({
             ◈ <span>Algorithm Atlas</span>
           </Link>
           <nav aria-label="Main navigation">
-            <Link href="/">Problems</Link>
+            <Link href="/problems">Problems</Link>
             <Link href="/lab">Algorithm Lab</Link>
             <Link href="/lab/compare">Compare</Link>
             <Link href="/own-code">Own Code</Link>

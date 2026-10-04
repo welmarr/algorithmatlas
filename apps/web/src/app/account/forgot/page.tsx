@@ -30,7 +30,7 @@ export default async function ForgotPage({
           <button type="submit">Send reset link</button>
         </form>
       </section>
-      <Link href="/account">Back to sign in</Link>
+      <Link href="/account/login">Back to sign in</Link>
     </main>
   );
 }

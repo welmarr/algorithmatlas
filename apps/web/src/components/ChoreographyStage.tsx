@@ -6,9 +6,34 @@ import {
   createChoreography,
   presentationState,
   type ChoreographyPlan,
+  type Purpose,
+  type Strategy,
 } from "@sim/visual-choreography";
 import { Visuals, DPVisual } from "./Visuals";
 import { PresentationContext } from "./PresentationContext";
+
+function phaseLabel(purpose: Purpose, strategy: Strategy): string {
+  if (purpose === "orient") return "See the starting state";
+  if (purpose === "focus") return "Look at the current part";
+  if (purpose === "compare")
+    return strategy === "two-pointers"
+      ? "Compare the values"
+      : strategy === "shortest-path"
+        ? "Compare route lengths"
+        : "Compare the choices";
+  if (purpose === "decide")
+    return strategy === "two-pointers"
+      ? "Choose which pointer moves"
+      : "Choose the next move";
+  if (purpose === "transform")
+    return strategy === "shortest-path"
+      ? "Update the distance"
+      : strategy === "bfs"
+        ? "Explore the next layer"
+        : "Update the state";
+  if (purpose === "confirm") return "Check the decision";
+  return "See the result";
+}
 
 function Geometry({ state }: { state: SimulationState }) {
   const points = Object.values(state.entities).filter(
@@ -145,7 +170,7 @@ function Frame({
       <div className="reasoning-toolbar">
         <span className="eyebrow">
           {plan.strategy.replaceAll("-", " ").toUpperCase()} ·{" "}
-          {frame.purpose.toUpperCase()}
+          {phaseLabel(frame.purpose, plan.strategy)}
         </span>
         <button
           type="button"
@@ -185,7 +210,7 @@ function Frame({
               setPhase(index);
             }}
           >
-            {item.purpose}
+            {phaseLabel(item.purpose, plan.strategy)}
           </button>
         ))}
       </div>

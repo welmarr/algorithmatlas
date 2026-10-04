@@ -10,7 +10,9 @@ test("reasoning phases show the comparison before a forced increment and settle 
   await expect(page.locator(".reasoning-equation")).toContainText(
     "2 < 8 · 2 → 8 · +6 · total 6",
   );
-  await page.getByRole("button", { name: "compare", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Compare the choices", exact: true })
+    .click();
   await expect(page.locator(".array-visual strong")).toHaveText([
     "8",
     "2",
@@ -22,7 +24,9 @@ test("reasoning phases show the comparison before a forced increment and settle 
     "Previous",
     "Current",
   ]);
-  await page.getByRole("button", { name: "settle", exact: true }).click();
+  await page
+    .getByRole("button", { name: "See the result", exact: true })
+    .click();
   await expect(page.locator(".array-visual strong")).toHaveText([
     "8",
     "8",
@@ -62,7 +66,9 @@ test("sorting moves identified cards and reduced motion keeps the reasoning", as
   await page.getByRole("button", { name: "Next step", exact: true }).click();
   await expect(page.locator(".original-index")).toHaveCount(6);
   await page.getByRole("button", { name: "Animate reasoning" }).click();
-  await page.getByRole("button", { name: "transform", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Update the state", exact: true })
+    .click();
   await expect
     .poll(() =>
       page

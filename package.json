@@ -28,7 +28,10 @@
     "db:restore": "node scripts/pg-backup.mjs restore",
     "ops:status": "node scripts/operations.mjs status",
     "ops:control": "node scripts/operations.mjs control",
-    "capture:visual": "node scripts/verify-isolated.mjs capture"
+    "capture:visual": "node scripts/verify-isolated.mjs capture",
+    "problems:status": "node scripts/problem-command.mjs status",
+    "problems:verify": "node scripts/problem-command.mjs verify",
+    "problems:release": "node scripts/problem-command.mjs release"
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "15.5.26",

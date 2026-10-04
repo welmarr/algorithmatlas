@@ -8,7 +8,7 @@ export default function ResetPage() {
       <section className="panel account-card">
         <AccountTokenForm purpose="reset" />
       </section>
-      <Link href="/account/forgot">Request a new reset link</Link>
+      <Link href="/account/forgot-password">Request a new reset link</Link>
     </main>
   );
 }

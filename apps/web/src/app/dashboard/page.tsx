@@ -5,19 +5,39 @@ import {
   databaseReady,
   listPythonWorkspaces,
 } from "@sim/persistence";
-import { getProblem } from "@sim/problems";
+import { getProblem, problems } from "@sim/problems";
 import { currentUser } from "../../lib/auth";
+import { catalogCategory } from "../../lib/catalog";
 import "../account.css";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  if (!(await databaseReady())) redirect("/account");
+  if (!(await databaseReady())) redirect("/account/login");
   const user = await currentUser();
-  if (!user) redirect("/account");
-  if (!user.emailVerified) redirect("/account?error=AUTH_EMAIL_UNVERIFIED");
+  if (!user) redirect("/account/login");
+  if (!user.emailVerified)
+    redirect("/account/verify-email?error=AUTH_EMAIL_UNVERIFIED");
   const data = await dashboardData(user.id);
   const workspaces = await listPythonWorkspaces(user.id);
+  const explored = new Set(data.exploredProblemIds);
+  const continueProblem =
+    data.recentRuns[0]?.problemId ??
+    problems.find((problem) => !explored.has(problem.metadata.id))?.metadata.id;
+  const categories = [
+    ...new Set(problems.map((problem) => catalogCategory(problem.metadata))),
+  ];
+  const categoryProgress = categories.map((name) => {
+    const entries = problems.filter(
+      (problem) => catalogCategory(problem.metadata) === name,
+    );
+    return {
+      name,
+      explored: entries.filter((problem) => explored.has(problem.metadata.id))
+        .length,
+      total: entries.length,
+    };
+  });
   return (
     <main className="account-page dashboard-page">
       <div className="dashboard-heading">
@@ -45,6 +65,28 @@ export default async function DashboardPage() {
           <span>Saved inputs</span>
         </section>
       </div>
+      <section className="panel account-card dashboard-continue">
+        <div>
+          <div className="eyebrow">CONTINUE LEARNING</div>
+          <h2>
+            {continueProblem
+              ? (getProblem(continueProblem)?.metadata.title ??
+                "Explore a problem")
+              : "Choose your first problem"}
+          </h2>
+          <p>
+            {continueProblem && explored.has(continueProblem)
+              ? "Return to a recent simulation and try a different input."
+              : "Start with a problem and follow its reasoning step by step."}
+          </p>
+        </div>
+        <Link
+          className="primary-link"
+          href={continueProblem ? "/problems/" + continueProblem : "/problems"}
+        >
+          Open simulation →
+        </Link>
+      </section>
       <div className="dashboard-columns">
         <section className="panel account-card">
           <h2>Recent runs</h2>
@@ -87,6 +129,33 @@ export default async function DashboardPage() {
           )}
         </section>
       </div>
+      <section className="panel account-card dashboard-category-progress">
+        <div className="section-heading">
+          <div>
+            <div className="eyebrow">EXPLORE BY CATEGORY</div>
+            <h2>Where you have practiced</h2>
+          </div>
+          <Link href="/problems">Browse library →</Link>
+        </div>
+        <div className="dashboard-category-grid">
+          {categoryProgress.map((item) => (
+            <div key={item.name}>
+              <div className="dashboard-category-label">
+                <strong>{item.name}</strong>
+                <span>
+                  {item.explored} of {item.total} explored
+                </span>
+              </div>
+              <progress
+                value={item.explored}
+                max={item.total}
+                aria-label={item.name + " explored"}
+              />
+            </div>
+          ))}
+        </div>
+        <p>Explored means you saved a run. It does not imply mastery.</p>
+      </section>
       {data.learning.length > 0 && (
         <section className="panel account-card">
           <h2>Concepts</h2>
@@ -115,8 +184,8 @@ export default async function DashboardPage() {
         )}
         <Link href="/own-code">Open Own Code</Link>
       </section>
-      <Link className="primary-link" href="/">
-        Explore problems
+      <Link className="primary-link" href="/problems">
+        Explore all problems
       </Link>
     </main>
   );

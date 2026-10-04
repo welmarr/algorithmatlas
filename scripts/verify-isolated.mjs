@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { createServer } from "node:net";
+import { createConnection, createServer } from "node:net";
 const prefix = "atlas-verify-" + randomBytes(5).toString("hex");
 const names = [prefix + "-db", prefix + "-mail"];
 const password = randomBytes(24).toString("hex");
@@ -10,6 +10,21 @@ async function port() {
   const value = server.address().port;
   await new Promise((resolve) => server.close(resolve));
   return value;
+}
+async function smtpReady(value) {
+  return new Promise((resolve) => {
+    const socket = createConnection({ host: "127.0.0.1", port: value });
+    socket.setTimeout(1000);
+    socket.once("data", (chunk) => {
+      resolve(chunk.toString().startsWith("220"));
+      socket.destroy();
+    });
+    socket.once("error", () => resolve(false));
+    socket.once("timeout", () => {
+      resolve(false);
+      socket.destroy();
+    });
+  });
 }
 const [dbPort, smtpPort, mailPort, webPort, runnerPort, emailPort] =
   await Promise.all(Array.from({ length: 6 }, port));
@@ -68,7 +83,7 @@ try {
     ) {
       try {
         const res = await fetch(`http://127.0.0.1:${mailPort}/api/v1/messages`);
-        if (res.ok) {
+        if (res.ok && (await smtpReady(smtpPort))) {
           ready = true;
           break;
         }
@@ -78,7 +93,11 @@ try {
     }
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
-  if (!ready) throw new Error("Disposable test services did not become ready");
+  if (!ready) {
+    console.error(docker(["logs", names[1]], false).stdout);
+    console.error(docker(["port", names[1]], false).stdout);
+    throw new Error("Disposable test services did not become ready");
+  }
   const env = {
     ...process.env,
     DATABASE_URL: `postgres://simulator:${password}@127.0.0.1:${dbPort}/simulator`,
@@ -105,9 +124,18 @@ try {
     "Fresh disposable PostgreSQL and Mailpit ready; no external email or AI.",
   );
   const mode = process.argv[2] ?? "full";
-  if (!["full", "public-runner", "prod-ops", "capture"].includes(mode))
+  if (!["full", "public-runner", "prod-ops", "capture", "email"].includes(mode))
     throw new Error("Invalid verification mode");
-  const result = spawnSync(process.execPath, ["scripts/verify.mjs", mode], {
+  const args =
+    mode === "email"
+      ? [
+          "node_modules/vitest/vitest.mjs",
+          "run",
+          "tests/email-operations.test.ts",
+        ]
+      : ["scripts/verify.mjs", mode];
+  if (mode === "email") env.DB_TEST_URL = env.DATABASE_URL;
+  const result = spawnSync(process.execPath, args, {
     env,
     stdio: "inherit",
     windowsHide: true,

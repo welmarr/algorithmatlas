@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getProblem } from "@sim/problems";
+import { getProblem, problems } from "@sim/problems";
 import type { ProblemRun } from "@sim/problem-sdk";
 import { seekTeachingStep, teachingStepAtPosition } from "@sim/simulation-core";
 import {
@@ -27,6 +27,24 @@ import {
 
 export function ProblemWorkspace({ problemId }: { problemId: string }) {
   const problem = getProblem(problemId)!;
+  const related = problems
+    .filter((candidate) => candidate.metadata.id !== problemId)
+    .map((candidate) => ({
+      candidate,
+      score:
+        candidate.metadata.tags.filter((tag) =>
+          problem.metadata.tags.includes(tag),
+        ).length *
+          2 +
+        Number(candidate.metadata.category === problem.metadata.category),
+    }))
+    .filter((item) => item.score > 0)
+    .sort(
+      (a, b) =>
+        b.score - a.score ||
+        a.candidate.metadata.title.localeCompare(b.candidate.metadata.title),
+    )
+    .slice(0, 3);
   const [mode, setMode] = useState<"learn" | "simulate">("simulate");
   const [playbackMode, setPlaybackMode] = useState<"learning" | "technical">(
     "learning",
@@ -64,6 +82,22 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
   const [saveStatus, setSaveStatus] = useState("");
   const [hydrated, setHydrated] = useState(false);
   const [, redraw] = useState(0);
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("atlas:opened") ?? "[]");
+      const ids = Array.isArray(saved)
+        ? saved.filter((item): item is string => typeof item === "string")
+        : [];
+      localStorage.setItem(
+        "atlas:opened",
+        JSON.stringify(
+          [problemId, ...ids.filter((id) => id !== problemId)].slice(0, 400),
+        ),
+      );
+    } catch {
+      /* Browser storage is optional. */
+    }
+  }, [problemId]);
   useEffect(() => {
     try {
       const saved = JSON.parse(
@@ -348,7 +382,7 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
     <main className="workspace">
       <div className="workspace-heading">
         <div>
-          <Link className="back-link" href="/">
+          <Link className="back-link" href="/problems">
             ← All problems
           </Link>
           <div className="eyebrow">
@@ -770,9 +804,11 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
               <div className="eyebrow">
                 {problem.runCode
                   ? "EXECUTED JAVASCRIPT"
-                  : "ILLUSTRATIVE REFERENCE"}
+                  : "REFERENCE ALGORITHM"}
               </div>
-              <h2>{problem.runCode ? "Edit and run code" : "Code trace"}</h2>
+              <h2>
+                {problem.runCode ? "Edit and run code" : "Reference code"}
+              </h2>
               {problem.runCode && (
                 <div className="code-editor-wrap">
                   <p>
@@ -841,112 +877,143 @@ export function ProblemWorkspace({ problemId }: { problemId: string }) {
                 label={problem.runCode ? "Executed code" : "Reference code"}
               />
             </section>
-            <section className="panel teacher-panel">
-              <div className="eyebrow">OPTIONAL TEACHER</div>
-              <h2>Explain this step</h2>
-              <select
-                aria-label="Teacher provider"
-                value={teacherMode}
-                onChange={(e) => {
-                  const mode = e.target.value as typeof teacherMode;
-                  setTeacherMode(mode);
-                  setTeacherAnswer(null);
-                  setHintAnswer(null);
-                  setEndpoint(
-                    mode === "local-model"
-                      ? "http://localhost:11434/v1/chat/completions"
-                      : "",
-                  );
-                }}
-              >
-                <option value="built-in">Built-in explanation</option>
-                <option value="local-model">Local model</option>
-                <option value="external">Compatible HTTPS model</option>
-              </select>
-              {teacherMode !== "built-in" && (
-                <>
-                  <label htmlFor="teacher-endpoint">Endpoint</label>
-                  <input
-                    id="teacher-endpoint"
-                    value={endpoint}
-                    placeholder="https://provider.example/v1/chat/completions"
-                    onChange={(e) => setEndpoint(e.target.value)}
-                  />
-                  <label htmlFor="teacher-model">Model</label>
-                  <input
-                    id="teacher-model"
-                    value={model}
-                    onChange={(e) => setModel(e.target.value)}
-                  />
-                  <label htmlFor="teacher-key">API key (session only)</label>
-                  <input
-                    id="teacher-key"
-                    type="password"
-                    value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
-                  />
-                </>
-              )}
-              <button onClick={explainStep} disabled={!event || teacherBusy}>
-                {teacherBusy ? "Explaining…" : "Explain current event"}
-              </button>
-              <button onClick={hintStep} disabled={!event || teacherBusy}>
-                {teacherBusy ? "Working…" : "Hint for current step"}
-              </button>
-              {teacherAnswer && teacherAnswer.eventId === event?.eventId && (
-                <p aria-live="polite">{teacherAnswer.text}</p>
-              )}
-              {hintAnswer && hintAnswer.eventId === event?.eventId && (
-                <p aria-live="polite">Hint: {hintAnswer.text}</p>
-              )}
-              {teacherError && (
-                <p className="error" role="alert">
-                  {teacherError}
-                </p>
-              )}
-            </section>
-            {playbackMode === "learning" ? (
-              <section className="panel event-panel teaching-panel">
-                <div className="eyebrow">LEARNING STEPS</div>
-                <h2>Meaningful changes</h2>
-                <ol>
-                  {run.teachingSteps.map((item, i) => (
-                    <li key={item.id}>
-                      <button
-                        className={i === learningPosition ? "current" : ""}
-                        onClick={() => {
-                          setLearningPlaying(false);
-                          seekTeachingStep(timeline, run.teachingSteps, i);
-                        }}
-                      >
-                        <span>{String(i).padStart(2, "0")}</span>
-                        {item.title}
-                      </button>
-                    </li>
-                  ))}
-                </ol>
-              </section>
-            ) : (
-              <section className="panel event-panel">
-                <div className="eyebrow">TECHNICAL EVENT LOG</div>
-                <h2>Trace</h2>
-                <ol>
-                  {run.events.map((item, i) => (
-                    <li key={item.eventId}>
-                      <button
-                        className={i + 1 === timeline.position ? "current" : ""}
-                        onClick={() => timeline.seek(i + 1)}
-                      >
-                        <span>{String(i + 1).padStart(2, "0")}</span>
-                        {item.type.replaceAll("_", " ")}
-                      </button>
-                    </li>
-                  ))}
-                </ol>
-              </section>
-            )}
+            <details className="workbench-secondary">
+              <summary>Teacher and step index</summary>
+              <div className="workbench-secondary-content">
+                <section className="panel teacher-panel">
+                  <div className="eyebrow">OPTIONAL TEACHER</div>
+                  <h2>Explain this step</h2>
+                  <select
+                    aria-label="Teacher provider"
+                    value={teacherMode}
+                    onChange={(e) => {
+                      const mode = e.target.value as typeof teacherMode;
+                      setTeacherMode(mode);
+                      setTeacherAnswer(null);
+                      setHintAnswer(null);
+                      setEndpoint(
+                        mode === "local-model"
+                          ? "http://localhost:11434/v1/chat/completions"
+                          : "",
+                      );
+                    }}
+                  >
+                    <option value="built-in">Built-in explanation</option>
+                    <option value="local-model">Local model</option>
+                    <option value="external">Compatible HTTPS model</option>
+                  </select>
+                  {teacherMode !== "built-in" && (
+                    <>
+                      <label htmlFor="teacher-endpoint">Endpoint</label>
+                      <input
+                        id="teacher-endpoint"
+                        value={endpoint}
+                        placeholder="https://provider.example/v1/chat/completions"
+                        onChange={(e) => setEndpoint(e.target.value)}
+                      />
+                      <label htmlFor="teacher-model">Model</label>
+                      <input
+                        id="teacher-model"
+                        value={model}
+                        onChange={(e) => setModel(e.target.value)}
+                      />
+                      <label htmlFor="teacher-key">
+                        API key (session only)
+                      </label>
+                      <input
+                        id="teacher-key"
+                        type="password"
+                        value={apiKey}
+                        onChange={(e) => setApiKey(e.target.value)}
+                      />
+                    </>
+                  )}
+                  <button
+                    onClick={explainStep}
+                    disabled={!event || teacherBusy}
+                  >
+                    {teacherBusy ? "Explaining…" : "Explain current event"}
+                  </button>
+                  <button onClick={hintStep} disabled={!event || teacherBusy}>
+                    {teacherBusy ? "Working…" : "Hint for current step"}
+                  </button>
+                  {teacherAnswer &&
+                    teacherAnswer.eventId === event?.eventId && (
+                      <p aria-live="polite">{teacherAnswer.text}</p>
+                    )}
+                  {hintAnswer && hintAnswer.eventId === event?.eventId && (
+                    <p aria-live="polite">Hint: {hintAnswer.text}</p>
+                  )}
+                  {teacherError && (
+                    <p className="error" role="alert">
+                      {teacherError}
+                    </p>
+                  )}
+                </section>
+                {playbackMode === "learning" ? (
+                  <section className="panel event-panel teaching-panel">
+                    <div className="eyebrow">LEARNING STEPS</div>
+                    <h2>Meaningful changes</h2>
+                    <ol>
+                      {run.teachingSteps.map((item, i) => (
+                        <li key={item.id}>
+                          <button
+                            className={i === learningPosition ? "current" : ""}
+                            onClick={() => {
+                              setLearningPlaying(false);
+                              seekTeachingStep(timeline, run.teachingSteps, i);
+                            }}
+                          >
+                            <span>{String(i).padStart(2, "0")}</span>
+                            {item.title}
+                          </button>
+                        </li>
+                      ))}
+                    </ol>
+                  </section>
+                ) : (
+                  <section className="panel event-panel">
+                    <div className="eyebrow">TECHNICAL EVENT LOG</div>
+                    <h2>Trace</h2>
+                    <ol>
+                      {run.events.map((item, i) => (
+                        <li key={item.eventId}>
+                          <button
+                            className={
+                              i + 1 === timeline.position ? "current" : ""
+                            }
+                            onClick={() => timeline.seek(i + 1)}
+                          >
+                            <span>{String(i + 1).padStart(2, "0")}</span>
+                            {item.type.replaceAll("_", " ")}
+                          </button>
+                        </li>
+                      ))}
+                    </ol>
+                  </section>
+                )}
+              </div>
+            </details>
           </aside>
         </div>
+      )}
+      {related.length > 0 && (
+        <section className="related-problems" aria-labelledby="related-title">
+          <div className="eyebrow">KEEP EXPLORING</div>
+          <h2 id="related-title">Related problems</h2>
+          <div>
+            {related.map(({ candidate }) => (
+              <Link
+                key={candidate.metadata.id}
+                href={"/problems/" + candidate.metadata.id}
+              >
+                <strong>{candidate.metadata.title}</strong>
+                <span>{candidate.metadata.tags.slice(0, 2).join(" · ")}</span>
+                <span aria-hidden="true">↗</span>
+              </Link>
+            ))}
+          </div>
+        </section>
       )}
     </main>
   );

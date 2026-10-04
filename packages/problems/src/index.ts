@@ -19,6 +19,7 @@ import { mapBfsTrace, recordBfs } from "./bfs-mapper";
 import { arrayProblems } from "./extended-arrays";
 import { graphProblems } from "./extended-graphs";
 import { mixedProblems } from "./extended-mixed";
+import { introductoryProblems } from "./introductory";
 
 function meta(
   input: Omit<
@@ -793,6 +794,7 @@ export const problems: ProblemEntry[] = [
   ...arrayProblems,
   ...graphProblems,
   ...mixedProblems,
+  ...introductoryProblems,
 ];
 export function getProblem(id: string): ProblemEntry | undefined {
   return problems.find((problem) => problem.metadata.id === id);

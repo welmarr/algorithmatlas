@@ -21,6 +21,7 @@ export type Strategy =
   | "dp"
   | "range"
   | "fenwick"
+  | "dsu"
   | "strings"
   | "backtracking"
   | "number-theory"
@@ -81,6 +82,7 @@ export function strategyFor(
   if (has("backtracking", "recursion")) return "backtracking";
   if (has("dijkstra", "weighted graph")) return "shortest-path";
   if (has("fenwick tree")) return "fenwick";
+  if (has("disjoint set union", "dsu", "union-find")) return "dsu";
   if (has("prefix sums", "range queries")) return "range";
   if (has("kmp", "prefix function")) return "strings";
   if (has("binary search", "monotone predicate")) return "binary-search";

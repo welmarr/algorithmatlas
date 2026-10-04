@@ -15,7 +15,7 @@ test("account saves a curated run and restores a private input", async ({
   process.env.DATABASE_URL = process.env.E2E_DATABASE_URL;
   const email = `learner-${randomUUID()}@example.test`;
   try {
-    await page.goto("/account");
+    await page.goto("/account/register");
     await page.getByRole("heading", { name: "Create account" }).waitFor();
     const signup = page.locator("form[action='/api/auth/register']");
     await signup.getByLabel("Display name").fill("Learner");
@@ -80,7 +80,7 @@ test("account saves a curated run and restores a private input", async ({
     await page.goto("/dashboard");
     await page.getByRole("button", { name: "Sign out" }).click();
     await page.goto("/dashboard");
-    await expect(page).toHaveURL(/\/account$/);
+    await expect(page).toHaveURL(/\/account\/login$/);
     const signin = page.locator("form[action='/api/auth/login']");
     await signin.getByLabel("Email").fill(email);
     await signin.getByLabel("Password").fill("a-long-local-test-password");
